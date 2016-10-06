@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "strictNullChecks": true
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

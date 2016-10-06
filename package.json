@@ -1,0 +1,37 @@
+{
+  "name": "battlecode-client-js",
+  "version": "0.0.1",
+  "description": "Battlecode 2017 Client",
+  "private": "true",
+  "scripts": {
+    "clean": "rm -rf out",
+    "lint": "tslint \"**/*.ts\" -e \"out/**\"",
+    "build": "webpack",
+    "prod": "webpack -p",
+    "watch": "webpack-dev-server && open localhost:8080",
+    "test": "tsc --outDir outtest && blue-tape outtest/test/*.js | tap-dot"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/battlecode/battlecode-client-js.git"
+  },
+  "author": "Teh Devs",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/battlecode/battlecode-client-js/issues"
+  },
+  "homepage": "https://github.com/battlecode/battlecode-client-js#readme",
+  "dependencies": {
+    "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#80a810734d523d9ba19e3879bbcf57fe31147e84"
+  },
+  "devDependencies": {
+    "@types/blue-tape": "^0.1.30",
+    "blue-tape": "^1.0.0",
+    "tap-dot": "^1.0.5",
+    "ts-loader": "^0.8.2",
+    "tslint": "^3.15.1",
+    "typescript": "^2.0.3",
+    "webpack": "^1.13.2",
+    "webpack-dev-server": "^1.16.1"
+  }
+}
