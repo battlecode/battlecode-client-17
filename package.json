@@ -1,5 +1,5 @@
 {
-  "name": "battlecode-client-js",
+  "name": "battlecode-client-17",
   "version": "0.0.1",
   "description": "Battlecode 2017 Client",
   "private": "true",
@@ -13,14 +13,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/battlecode/battlecode-client-js.git"
+    "url": "git+https://github.com/battlecode/battlecode-client-17.git"
   },
   "author": "Teh Devs",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/battlecode/battlecode-client-js/issues"
+    "url": "https://github.com/battlecode/battlecode-client-17/issues"
   },
-  "homepage": "https://github.com/battlecode/battlecode-client-js#readme",
+  "homepage": "https://github.com/battlecode/battlecode-client-17#readme",
   "dependencies": {
     "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#80a810734d523d9ba19e3879bbcf57fe31147e84"
   },

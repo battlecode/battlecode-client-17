@@ -30,11 +30,32 @@ class Client {
     this.root = root;
     this.conf = config.defaults(conf);
 
-    // set up a placeholder
-    let text = document.createTextNode('Loading...');
-    let p = document.createElement('p');
-    p.appendChild(text);
-    root.appendChild(p);
+    // set up canvas
+    let canvas = document.createElement("canvas");
+    canvas.setAttribute("id", "canvas");
+    canvas.setAttribute("width", this.conf.width);
+    canvas.setAttribute("height", this.conf.height);
+    canvas.setAttribute("style", "border: 1px solid black");
+
+    // try drawing an image
+    let ctx = canvas.getContext("2d");
+    let img = new Image();
+    img.onload = function () {
+        ctx.drawImage(img, 200, 200);
+    }
+    img.src = 'http://findicons.com/files/icons/98/nx11/256/internet_real.png';
+    // img.src = require('./img/sprites/archon_white.png');
+
+    root.appendChild(canvas)
+    
+    // set up game controls
+    let pause = document.createElement('button');
+    pause.appendChild(document.createTextNode('Pause'));
+    pause.setAttribute('type', 'button');
+    pause.setAttribute('id', 'pause');
+    pause.setAttribute('onclick', 'this.pause()');  // this does not work
+    
+    root.appendChild(pause);
   }
 
   /**
