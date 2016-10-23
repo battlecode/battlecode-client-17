@@ -15,8 +15,8 @@ export interface Config {
   /**
    * Dimensions of the canvas
    */
-  readonly width: string;
-  readonly height: string;
+  readonly width: number;
+  readonly height: number;
 }
 
 /**
@@ -27,7 +27,7 @@ export function defaults(supplied?: any): Config {
   return {
     gameVersion: supplied.gameVersion || "ANY",
     fullscreen: supplied.fullscreen || false,
-    width: supplied.width || '960',
-    height: supplied.height || '720'
+    width: supplied.width || 540,
+    height: supplied.height || 540
   };
 }
