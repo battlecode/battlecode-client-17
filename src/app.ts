@@ -118,21 +118,6 @@ class Client {
   }
 
   /**
-   * Display neutral trees.
-   */
-  loadNeutralTrees(ctx) {
-    let treeRadius = 15;
-    let treeCenterX = 300;
-    let treeCenterY = 250;
-
-    let fullHealthTree = new Image();
-    fullHealthTree.src = require('./img/map/full_health_tree.png');
-    // Client.fullHealthTree.onload = () => {
-      // ctx.drawImage(Client.fullHealthTree, treeCenterX - treeRadius, treeCenterY - treeRadius);
-    // }
-  }
-
-  /**
    * Plays the entire match.
    */
   processMatch(ctx) {
@@ -147,6 +132,17 @@ class Client {
   }
 
   /**
+   * Display neutral trees.
+   */
+  loadNeutralTrees(ctx) {
+    let treeRadius = 15;
+    let treeCenterX = 300;
+    let treeCenterY = 250;
+
+    ctx.drawImage(Client.imgs.fullHealthTree, treeCenterX - treeRadius, treeCenterY - treeRadius);
+  }
+
+  /**
    * Display robots and player trees of one team.
    */
   loadRobots(ctx) {
@@ -155,16 +151,12 @@ class Client {
     let robotCenterY: number = 300;
     let robotHealthRatio: number = 0.7;
 
-    let robot = new Image();
-    robot.src = require('./img/sprites/gardener_white.png');
-    robot.onload = function() {
-      ctx.drawImage(robot, robotCenterX - robotRadius, robotCenterY - robotRadius);
-      ctx.fillStyle = "green";
-      ctx.strokeStyle = "black";
-      ctx.fillRect(robotCenterX - 10, robotCenterY + robotRadius, 20 * robotHealthRatio, 5);
-      ctx.rect(robotCenterX - 10, robotCenterY + robotRadius, 20, 5);
-      ctx.stroke();
-    }
+    ctx.drawImage(Client.imgs.archonWhite, robotCenterX - robotRadius, robotCenterY - robotRadius);
+    ctx.fillStyle = "green";
+    ctx.strokeStyle = "black";
+    ctx.fillRect(robotCenterX - 10, robotCenterY + robotRadius, 20 * robotHealthRatio, 5);
+    ctx.rect(robotCenterX - 10, robotCenterY + robotRadius, 20, 5);
+    ctx.stroke();
   }
 
   /**
@@ -175,11 +167,7 @@ class Client {
     let bulletY: number = 150;
     let bulletImageRadius: number = 5;
 
-    let bullet = new Image();
-    bullet.src = require('./img/bullets/fast_bullet.png');
-    bullet.onload = function() {
-      ctx.drawImage(bullet, bulletX - bulletImageRadius, bulletY - bulletImageRadius);
-    }
+    ctx.drawImage(Client.imgs.fastBullet, bulletX - bulletImageRadius, bulletY - bulletImageRadius);
   }
 
   /**
