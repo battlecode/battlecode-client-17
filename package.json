@@ -27,6 +27,7 @@
   "devDependencies": {
     "@types/blue-tape": "^0.1.30",
     "blue-tape": "^1.0.0",
+    "copy-webpack-plugin": "^4.0.0",
     "file-loader": "^0.9.0",
     "raw-loader": "^0.5.1",
     "tap-dot": "^1.0.5",
