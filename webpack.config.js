@@ -18,6 +18,7 @@ module.exports = {
     // Add `.ts` and `.tsx` as a resolvable extension.
     extensions: ['', '.webpack.js', '.web.js', '.ts', '.js', '.png', '.jpg', '.glsl']
   },
+  devtool: 'source-map',
   module: {
     loaders: [
       { test: /\.ts$/, loader: 'ts-loader' },
