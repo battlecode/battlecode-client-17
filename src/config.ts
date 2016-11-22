@@ -11,6 +11,12 @@ export interface Config {
    * Whether to try to run the game in full-screen
    */
   readonly fullscreen: boolean;
+
+  /**
+   * Dimensions of the canvas
+   */
+  readonly width: number;
+  readonly height: number;
 }
 
 /**
@@ -20,6 +26,8 @@ export function defaults(supplied?: any): Config {
   supplied = supplied || {};
   return {
     gameVersion: supplied.gameVersion || "ANY",
-    fullscreen: supplied.fullscreen || false
+    fullscreen: supplied.fullscreen || false,
+    width: supplied.width || 540,
+    height: supplied.height || 540
   };
 }
