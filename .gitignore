@@ -42,6 +42,7 @@ typings
 
 # any javascript sources
 src/**/*.js
+test/**/*.js
 
 # any battlecode files
 *.bc17
@@ -50,3 +51,6 @@ src/**/*.js
 outtest/
 # webpack bundle folder
 bc17/
+
+# who even uses macs i mean god
+**/.DS_Store
