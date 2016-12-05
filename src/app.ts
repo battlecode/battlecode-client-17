@@ -3,10 +3,11 @@ import {Game, Match, Metadata} from 'battlecode-playback';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
-import NextStep from './nextstep';
 import Controls from './controls';
-import Stats from './stats';
+import NextStep from './nextstep';
 import Renderer from './renderer';
+import Stats from './stats';
+import TickCounter from './fps';
 
 /**
  * The entrypoint to the battlecode client.
@@ -116,15 +117,8 @@ export default class Client {
     let goalUPS = 10;
 
     // A variety of stuff to track how fast the simulation is going
-    // running updates-per-second average
-    let ups = 0;
-    // running renders-per-second average
-    let rps = 0;
-    // renders since last fps update
-    let rendersThisSecond = 0;
-    let updatesThisSecond = 0;
-    // the timestamp of the last fps update
-    let lastFPSUpdate = 0;
+    let rendersPerSecond = new TickCounter(.5, 100);
+    let updatesPerSecond = new TickCounter(.5, 100);
 
     // The current time in the simulation, interpolated between frames
     let interpGameTime = 0;
@@ -164,21 +158,14 @@ export default class Client {
         match.seek(interpGameTime | 0);
       }
 
-      // update rps
-      if (curTime > lastFPSUpdate + 1000) {
-        // Exponential moving average
-        ups = 0.75 * updatesThisSecond + (1 - 0.75) * ups;
-        rps = 0.75 * rendersThisSecond + (1 - 0.75) * rps;
-        lastFPSUpdate = curTime;
-        updatesThisSecond = 0;
-        rendersThisSecond = 0;
-      }
-      updatesThisSecond += delta;
-      rendersThisSecond += 1;
+      // update fps
+      rendersPerSecond.update(curTime, 1);
+      updatesPerSecond.update(curTime, delta);
+      
       this.controls.setTime(match.current.turn,
                             match['_farthest'].turn,
-                            ups,
-                            rps);
+                            updatesPerSecond.tps,
+                            rendersPerSecond.tps);
 
       // run simulation
       // this may look innocuous, but it's a large chunk of the run time
@@ -186,8 +173,13 @@ export default class Client {
 
       lastTime = curTime;
 
+      // only interpolate if:
+      // - we want to
+      // - we have another frame
+      // - we're going slow enough for it to matter
       if (this.conf.interpolate &&
-          match.current.turn + 1 < match.deltas.length) {
+          match.current.turn + 1 < match.deltas.length &&
+          goalUPS < rendersPerSecond.tps) {
 
         nextStep.loadNextStep(
           match.current,
