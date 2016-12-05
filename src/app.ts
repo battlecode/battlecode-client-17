@@ -7,8 +7,6 @@ import Controls from './controls';
 import Stats from './stats';
 import Renderer from './renderer';
 
-import * as events from 'events';
-
 /**
  * The entrypoint to the battlecode client.
  * 
