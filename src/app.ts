@@ -3,6 +3,7 @@ import {Game, Match, Metadata} from 'battlecode-playback';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
+import NextStep from './nextstep';
 import Controls from './controls';
 import Stats from './stats';
 import Renderer from './renderer';
@@ -104,6 +105,9 @@ export default class Client {
     const meta = game.meta as Metadata;
     const match = game.getMatch(0) as Match;
 
+    // keep around to avoid reallocating
+    const nextStep = new NextStep();
+
     // Configure renderer for this match
     // (radii, etc. may change between matches)
     const renderer = new Renderer(this.canvas, this.imgs, this.conf, game.meta as Metadata);
@@ -182,8 +186,22 @@ export default class Client {
 
       lastTime = curTime;
 
-      // interpGameTime might be incorrect if we haven't computed fast enough
-      renderer.render(match.current, interpGameTime, match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
+      if (this.conf.interpolate &&
+          match.current.turn + 1 < match.deltas.length) {
+
+        nextStep.loadNextStep(
+          match.current,
+          match.deltas[match.current.turn + 1]
+        );
+
+        let lerp = Math.min(interpGameTime - match.current.turn, 1);
+
+        renderer.render(match.current, nextStep, lerp, match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
+      } else {
+        // interpGameTime might be incorrect if we haven't computed fast enough
+        renderer.render(match.current, nextStep, 0, match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
+
+      }
 
       this.loopID = window.requestAnimationFrame(loop);
     };
