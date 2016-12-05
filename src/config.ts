@@ -17,6 +17,13 @@ export interface Config {
    */
   readonly width: number;
   readonly height: number;
+
+  /**
+   * Turns per second.
+   * 
+   * (DISTINCT from fps!)
+   */
+  readonly defaultTPS: number;
 }
 
 /**
@@ -27,7 +34,8 @@ export function defaults(supplied?: any): Config {
   return {
     gameVersion: supplied.gameVersion || "ANY",
     fullscreen: supplied.fullscreen || false,
-    width: supplied.width || 540,
-    height: supplied.height || 540
+    width: supplied.width || 600,
+    height: supplied.height || 600,
+    defaultTPS: supplied.defaultTPS || 20,
   };
 }

@@ -1,10 +1,13 @@
 import {schema, flatbuffers} from 'battlecode-schema';
-import {Game} from 'battlecode-playback';
+import {Game, Match, Metadata} from 'battlecode-playback';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
 import Controls from './controls';
 import Stats from './stats';
+import Renderer from './renderer';
+
+import * as events from 'events';
 
 /**
  * The entrypoint to the battlecode client.
@@ -25,7 +28,7 @@ window['battlecode'] = {
 /**
  * The interface a web page uses to talk to a client.
  */
-class Client {
+export default class Client {
   readonly conf: config.Config;
   readonly root: HTMLElement;
   readonly ctx: CanvasRenderingContext2D;
@@ -35,102 +38,157 @@ class Client {
   controls: Controls = new Controls();
   stats: Stats = new Stats();
 
+  canvas: HTMLCanvasElement;
+
+  currentGame: Game | null;
+
+  // used to cancel the main loop
+  loopID: number | null;
+
   constructor(root: HTMLElement, conf?: any) {
     console.log('Battlecode client loading...');
 
     this.root = root;
     this.conf = config.defaults(conf);
 
-    let canvas: HTMLCanvasElement = document.createElement('canvas');
-    let ctx = canvas.getContext("2d");
+    this.canvas = document.createElement('canvas');
 
-    if (ctx === null) {
-        throw new Error("Couldn't load cavas2d context");
-    } else {
-        this.ctx = ctx;
-    }
+    this.loadCanvas();
 
-    this.loadCanvas(canvas, this.conf.width, this.conf.height);
-
-    root.appendChild(canvas);
+    root.appendChild(this.canvas);
     root.appendChild(this.controls.div);
-    root.appendChild(this.stats.div);
+    //root.appendChild(this.stats.div);
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
-      this.processMatch();
+      this.ready();
     });
   }
 
   /**
    * Loads canvas to display game world.
    */
-  loadCanvas(canvas: HTMLCanvasElement, width: number, height: number) {
-    canvas.setAttribute("id", "battlecode-canvas");
-    canvas.setAttribute("style", "border: 1px solid black");
-    canvas.width = width;
-    canvas.height = height;
+  loadCanvas() {
+    this.canvas.setAttribute("id", "battlecode-canvas");
+    this.canvas.setAttribute("style", "border: 1px solid black");
+    this.canvas.setAttribute("width", `${this.conf.width}`);
+    this.canvas.setAttribute("height", `${this.conf.height}`);
   }
 
   /**
-   * Plays the entire match.
+   * Marks the client as fully loaded.
    */
-  processMatch() {
-    // fill canvas with tiled background
-    this.ctx.rect(0, 0, this.conf.width, this.conf.height);
-    this.ctx.fillStyle = this.ctx.createPattern(this.imgs["background"], "repeat");
-    this.ctx.fill();
+  ready() {
+    this.controls.onGameLoaded = (data: ArrayBuffer) => {
+      const wrapper = schema.GameWrapper.getRootAsGameWrapper(
+        new flatbuffers.ByteBuffer(new Uint8Array(data))
+      );
+      this.currentGame = new Game();
+      this.currentGame.loadFullGame(wrapper);
 
-    // FOR EACH ROUND
-
-    this.loadNeutralTrees();
-    this.loadRobots();
-    this.loadBullets();
+      this.runMatch();
+    }
   }
 
-  /**
-   * Display neutral trees.
-   */
-  loadNeutralTrees() {
-    let treeRadius = 15;
-    let treeCenterX = 300;
-    let treeCenterY = 250;
+  private runMatch() {
+    // TODO(jhgilles): this is a mess
+    
+    console.log('Running match.');
 
-    this.ctx.drawImage(this.imgs["tree"]["fullHealth"], treeCenterX - treeRadius, treeCenterY - treeRadius);
-  }
+    // Cancel previous games if they're running
+    if (this.loopID !== null) {
+      window.cancelAnimationFrame(this.loopID);
+      this.loopID = null;
+    }
+    
+    // For convenience
+    const game = this.currentGame as Game;
+    const meta = game.meta as Metadata;
+    const match = game.getMatch(0) as Match;
 
-  /**
-   * Display robots and player trees of one team.
-   */
-  loadRobots() {
-    let robotRadius: number = 20;
-    let robotCenterX: number = 50;
-    let robotCenterY: number = 300;
-    let robotHealthRatio: number = 0.7;
+    // Configure renderer for this match
+    // (radii, etc. may change between matches)
+    const renderer = new Renderer(this.canvas, this.imgs, this.conf, game.meta as Metadata);
 
-    this.ctx.drawImage(this.imgs["robot"]["archon"][0], robotCenterX - robotRadius, robotCenterY - robotRadius);
-    this.ctx.fillStyle = "green";
-    this.ctx.strokeStyle = "white";
-    this.ctx.fillRect(robotCenterX - 10, robotCenterY + robotRadius, 20 * robotHealthRatio, 5);
-    this.ctx.rect(robotCenterX - 10, robotCenterY + robotRadius, 20, 5);
-    this.ctx.stroke();
-  }
+    // How fast the simulation should progress
+    let goalUPS = 10;
 
-  /**
-   * Display bullets.
-   */
-  loadBullets() {
-    let bulletX: number = 200;
-    let bulletY: number = 150;
-    let bulletImageRadius: number = 5;
+    // A variety of stuff to track how fast the simulation is going
+    // running updates-per-second average
+    let ups = 0;
+    // running renders-per-second average
+    let rps = 0;
+    // renders since last fps update
+    let rendersThisSecond = 0;
+    let updatesThisSecond = 0;
+    // the timestamp of the last fps update
+    let lastFPSUpdate = 0;
 
-    this.ctx.drawImage(this.imgs["bullet"]["fast"], bulletX - bulletImageRadius, bulletY - bulletImageRadius);
-  }
+    // The current time in the simulation, interpolated between frames
+    let interpGameTime = 0;
+    // The time of the last frame
+    let lastTime: number | null = null;
+    // whether we're seeking
+    let externalSeek = false;
 
-  /**
-   * Display robot explosions, bullet explosions, etc.
-   */
-  loadAnimations() {
+    this.controls.onTogglePause = () => {
+      goalUPS = goalUPS === 0? 10 : 0;
+    };
+    this.controls.onToggleForward = () => {
+      goalUPS = goalUPS === 10 ? 300 : 10;
+    };
+    this.controls.onSeek = (turn: number) => {
+      externalSeek = true;
+      match.seek(turn);
+      interpGameTime = turn;
+    };
 
+    // The main update loop
+    const loop = (curTime) => {
+      let delta = 0;
+      if (lastTime === null) {
+        // first simulation step
+        // do initial stuff?
+      } else if (externalSeek) {
+        if (match.current.turn === match.seekTo) {
+          externalSeek = false;
+        }
+      } else if (Math.abs(interpGameTime - match.current.turn) < 10) {
+        // only update time if we're not seeking
+        delta = goalUPS * (curTime - lastTime) / 1000;
+        interpGameTime += delta;
+
+        // tell the simulation to go to our time goal
+        match.seek(interpGameTime | 0);
+      }
+
+      // update rps
+      if (curTime > lastFPSUpdate + 1000) {
+        // Exponential moving average
+        ups = 0.75 * updatesThisSecond + (1 - 0.75) * ups;
+        rps = 0.75 * rendersThisSecond + (1 - 0.75) * rps;
+        lastFPSUpdate = curTime;
+        updatesThisSecond = 0;
+        rendersThisSecond = 0;
+      }
+      updatesThisSecond += delta;
+      rendersThisSecond += 1;
+      this.controls.setTime(match.current.turn,
+                            match['_farthest'].turn,
+                            ups,
+                            rps);
+
+      // run simulation
+      // this may look innocuous, but it's a large chunk of the run time
+      match.compute(5 /* ms */);
+
+      lastTime = curTime;
+
+      // interpGameTime might be incorrect if we haven't computed fast enough
+      renderer.render(match.current, interpGameTime, match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
+
+      this.loopID = window.requestAnimationFrame(loop);
+    };
+    this.loopID = window.requestAnimationFrame(loop);
   }
 }

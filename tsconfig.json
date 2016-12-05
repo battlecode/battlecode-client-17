@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "sourceMap": true
   },
   "exclude": [
     "node_modules"

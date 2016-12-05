@@ -4,6 +4,7 @@ type Image = HTMLImageElement;
 
 export type AllImages = {
   background: Image,
+  unknown: Image,
   tree: {
     fullHealth: Image, 
     lowHealth: Image, 
@@ -21,13 +22,14 @@ export type AllImages = {
     recruit: Array<Image>, 
     scout: Array<Image>, 
     soldier: Array<Image>, 
-    tank: Array<Image> 
+    tank: Array<Image>,
+    bulletTree: Array<Image>
   },
 };
 
 export function loadAll(config: Config, finished: (AllImages) => void) {
   let expected = 0, loaded = 0;
-  let result: any = {tree: {}, bullet: {}, robot: {archon: [], gardener: [], lumberjack: [], recruit: [], scout: [], soldier: [], tank: []}};
+  let result: any = {tree: {}, bullet: {}, robot: {archon: [], gardener: [], lumberjack: [], recruit: [], scout: [], soldier: [], tank: [], bulletTree: []}};
 
   // write loaded image to obj[slot]
   function img(obj, slot, url: string) {
@@ -55,6 +57,7 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   }
 
   img(result, 'background', require('./img/map/tiled_1.jpg'));
+  img(result, 'unknown', require('./img/sprites/unknown.png'));
 
   img(result.tree, 'fullHealth', require('./img/map/full_health_tree.png'));
   img(result.tree, 'lowHealth', require('./img/map/low_health_tree.png'));
@@ -71,6 +74,9 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.robot.archon, 0, require('./img/sprites/archon_white.png'));
   img(result.robot.archon, 1, require('./img/sprites/archon_black.png'));
   img(result.robot.archon, 2, require('./img/sprites/archon_neutral.png'));
+  img(result.robot.bulletTree, 0, require('./img/sprites/bullet_tree_black.png'));
+  img(result.robot.bulletTree, 1, require('./img/sprites/bullet_tree_white.png'));
+  img(result.robot.bulletTree, 2, require('./img/sprites/bullet_tree_neutral.png'));
   img(result.robot.gardener, 0, require('./img/sprites/gardener_white.png'));
   img(result.robot.gardener, 1, require('./img/sprites/gardener_black.png'));
   img(result.robot.gardener, 2, require('./img/sprites/gardener_neutral.png'));
