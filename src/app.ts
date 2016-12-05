@@ -188,10 +188,13 @@ export default class Client {
 
         let lerp = Math.min(interpGameTime - match.current.turn, 1);
 
-        renderer.render(match.current, nextStep, lerp, match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
+        renderer.render(match.current, 
+                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
+                        nextStep, lerp);
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
-        renderer.render(match.current, nextStep, 0, match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
+        renderer.render(match.current,
+                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
 
       }
 

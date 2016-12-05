@@ -47,7 +47,7 @@ export default class Renderer {
    * viewMin: min corner of view (in world units)
    * viewSize: width / height of view (in world units)
    */
-  render(world: GameWorld, nextStep: NextStep, lerpAmount: number, viewMin: Victor, viewWidth: number) {
+  render(world: GameWorld, viewMin: Victor, viewWidth: number, nextStep?: NextStep, lerpAmount?: numbe ) {
     // setup correct rendering
     const scale = this.canvas.width / viewWidth;
     
@@ -57,12 +57,12 @@ export default class Renderer {
 
     this.renderBackground(world);
 
-    if (this.conf.interpolate) {
-      this.renderBodiesInterpolated(world, nextStep, lerpAmount);
+    if (lerpAmount != null && nextStep != null) {
       this.renderBullets(world, lerpAmount);
+      this.renderBodiesInterpolated(world, nextStep, lerpAmount);
     } else {
-      this.renderBodies(world);
       this.renderBullets(world, 0);
+      this.renderBodies(world);
     }
     
     // restore default rendering
