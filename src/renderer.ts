@@ -47,7 +47,7 @@ export default class Renderer {
    * viewMin: min corner of view (in world units)
    * viewSize: width / height of view (in world units)
    */
-  render(world: GameWorld, viewMin: Victor, viewWidth: number, nextStep?: NextStep, lerpAmount?: numbe ) {
+  render(world: GameWorld, viewMin: Victor, viewWidth: number, nextStep?: NextStep, lerpAmount?: number) {
     // setup correct rendering
     const scale = this.canvas.width / viewWidth;
     
