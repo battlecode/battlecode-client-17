@@ -120,7 +120,8 @@ export default class Client {
    * Loads stats bar with team information
    */
   loadStats() {
-    this.stats = new Stats();
+    this.stats = new Stats(["Chicken Pad Thai", "Vegetable Fried Rice"]);
+    this.stats.setRobotCount(0, "archon", 25);
     return this.stats.div;
   }
 

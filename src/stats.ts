@@ -5,40 +5,48 @@ export default class Stats {
 
   div: HTMLDivElement;
 
-  teams: Object = {};
+  robotTds: Object[] = [Object, Object];
+  statTds: Object[] = [Object, Object];
 
-  constructor() {
-    /**
-    *TEAM NAME
-    *Victory Points
-    *Bullets:
-    *Robot Count:
-    */
+  readonly stats: string[] = ["VP", "bullets", "trees"];
+  readonly colors: string[] = ["red", "blue"];
+  readonly robots: string[] = ["archon", "gardener", "lumberjack", "recruit",
+                               "scout", "soldier", "tank"];
+
+  constructor(teamNames: string[]) {
     this.div = this.baseDiv();
     this.div.appendChild(this.battlecodeLogo());
 
-    let teamNames = ["Chicken Pad Thai", "Vegetable Fried rice"];
     for (var i = 0; i < teamNames.length; i++) {
-      let teamName = teamNames[i];
-      this.teams[teamName] = {
-        "points": this.titleValueNode("Points", "0"),
-        "bullets": this.titleValueNode("Bullets", "100"),
-        "robots": this.titleValueNode("Robot Count", "1")
-      };
+      // Add the team name banner
+      this.div.appendChild(this.teamHeaderNode(teamNames[i], this.colors[i]));
 
-      let div = document.createElement("div");
-      div.setAttribute("id", teamName);
-      let title = document.createElement("h2");
-      title.appendChild(this.teamHeaderNode(teamName, "red"));
-      div.appendChild(title);
-      div.appendChild(this.teams[teamName].points);
-      div.appendChild(this.teams[teamName].bullets);
-      div.appendChild(this.teams[teamName].robots);
+      // Create td elements for the robot counts and store them in robotTds
+      // so we can update these robot counts later
+      let initialRobotCount: Object = {};
+      for (let robot of this.robots) {
+        let td: HTMLTableDataCellElement = document.createElement("td");
+        td.innerHTML = "0";
+        initialRobotCount[robot] = td;
+      }
+      this.robotTds[i] = initialRobotCount;
 
-      this.div.appendChild(div);
+      // Similarly create td elements for the VPs, bullet count, and tree count
+      let initialStats: Object = {};
+      for (let stat of this.stats) {
+        initialStats[stat] = document.createElement("td");
+        initialStats[stat].innerHTML = 0;
+      }
+      this.statTds[i] = initialStats;
+
+      this.div.appendChild(this.robotTable(i));
+      this.div.appendChild(this.overallStatsTable(i));
     }
   }
 
+  /**
+   * Initializes the styles for the stats div
+   */
   baseDiv() {
     let div = document.createElement("div");
 
@@ -63,6 +71,9 @@ export default class Stats {
     return div;
   }
 
+  /**
+   * Battlecode logo or title, at the top of the stats bar
+   */
   battlecodeLogo() {
     let logo: HTMLDivElement = document.createElement("div");
     logo.style.fontWeight = "bold";
@@ -74,6 +85,9 @@ export default class Stats {
     return logo;
   }
 
+  /**
+   * Colored banner labeled with the given teamName
+   */
   teamHeaderNode(teamName: string, color: string) {
     let teamHeader: HTMLDivElement = document.createElement("div");
     teamHeader.style.padding = "14px";
@@ -88,19 +102,78 @@ export default class Stats {
     return teamHeader;
   }
 
-  robotTable() {
+  /**
+   * Create the table that displays the robot images along with their counts.
+   * Uses the teamID to decide which color image to display.
+   */
+  robotTable(teamID: number) {
+    let teamColor: string = this.colors[teamID];
+    let table: HTMLTableElement = document.createElement("table");
+    table.setAttribute("align", "center");
 
+    // Create the table row with the robot images
+    let robotImages: HTMLTableRowElement = document.createElement("tr");
+    for (let robot of this.robots) {
+      let td: HTMLTableCellElement = document.createElement("td");
+      let fileName: string = `${robot}_${teamColor}.png`;
+      // TODO: put an image here
+      td.appendChild(document.createTextNode("A"));
+      robotImages.appendChild(td);
+    }
+    table.appendChild(robotImages);
+
+    // Create the table row with the robot counts
+    let robotCounts: HTMLTableRowElement = document.createElement("tr");
+    for (let robot of this.robots) {
+      let td: HTMLTableCellElement = this.robotTds[teamID][robot];
+      robotCounts.appendChild(td);
+    }
+    table.appendChild(robotCounts);
+
+    return table;
   }
 
-  titleValueNode(title: string, value: string) {
-    let span = document.createElement("span");
-    let titleNode = document.createElement("b");
-    let titleText = document.createTextNode(`\t${title}: `);
-    titleNode.appendChild(titleText);
-    let valueNode = document.createTextNode(value);
-    span.appendChild(titleNode);
-    span.appendChild(valueNode);
-    return span;
+
+  overallStatsTable(teamID: number) {
+    let teamColor: string = this.colors[teamID];
+    let table: HTMLTableElement = document.createElement("table");
+    table.setAttribute("align", "center");
+
+    // Create the table row with the stats images
+    let imgs: HTMLTableRowElement = document.createElement("tr");
+    for (let stat of this.stats) {
+      let td: HTMLTableCellElement = document.createElement("td");
+      let fileName: string = `${stat}_${teamColor}.png`;
+      // TODO: put an image here
+      td.appendChild(document.createTextNode("B"));
+      imgs.appendChild(td);
+    }
+    table.appendChild(imgs);
+
+    // Create the table row with the stat counts
+    let statCounts: HTMLTableRowElement = document.createElement("tr");
+    for (let stat of this.stats) {
+      let td: HTMLTableCellElement = this.statTds[teamID][stat];
+      statCounts.appendChild(td);
+    }
+    table.appendChild(statCounts);
+
+    return table;
   }
 
+  /**
+   * Change the robot count on the stats bar
+   */
+  setRobotCount(teamID: number, robotType: string, count: number) {
+    let td: HTMLTableCellElement = this.robotTds[teamID][robotType];
+    td.innerHTML = String(count);
+  }
+
+  /**
+   * Change the robot count on the stats bar
+   */
+  setTeamStat(teamID: number, stat: string, count: number) {
+    let td: HTMLTableCellElement = this.statTds[teamID][stat];
+    td.innerHTML = String(count);
+  }
 }
