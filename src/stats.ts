@@ -3,7 +3,8 @@
 */
 export default class Stats {
 
-  div: HTMLDivElement = document.createElement("div");
+  div: HTMLDivElement;
+
   teams: Object = {};
 
   constructor() {
@@ -13,7 +14,10 @@ export default class Stats {
     *Bullets:
     *Robot Count:
     */
-    let teamNames = ["HAGS", "BATTLECODE"];
+    this.div = this.baseDiv();
+    this.div.appendChild(this.battlecodeLogo());
+
+    let teamNames = ["Chicken Pad Thai", "Vegetable Fried rice"];
     for (var i = 0; i < teamNames.length; i++) {
       let teamName = teamNames[i];
       this.teams[teamName] = {
@@ -25,8 +29,7 @@ export default class Stats {
       let div = document.createElement("div");
       div.setAttribute("id", teamName);
       let title = document.createElement("h2");
-      let teamNameNode = document.createTextNode(teamName);
-      title.appendChild(teamNameNode);
+      title.appendChild(this.teamHeaderNode(teamName, "red"));
       div.appendChild(title);
       div.appendChild(this.teams[teamName].points);
       div.appendChild(this.teams[teamName].bullets);
@@ -34,6 +37,59 @@ export default class Stats {
 
       this.div.appendChild(div);
     }
+  }
+
+  baseDiv() {
+    let div = document.createElement("div");
+
+    // Positioning
+    div.style.height = "100%";
+    div.style.width = "300px";
+    div.style.position = "fixed";
+    div.style.zIndex = "1";
+    div.style.top = "0";
+    div.style.left = "0";
+    div.style.overflowX = "hidden";
+
+    // Inner style
+    div.style.backgroundColor = "#222222";
+    div.style.color = "white";
+    div.style.textAlign = "center";
+    div.style.fontFamily = "Bungee";
+
+    // Inner formatting
+    div.style.padding = "10px";
+
+    return div;
+  }
+
+  battlecodeLogo() {
+    let logo: HTMLDivElement = document.createElement("div");
+    logo.style.fontWeight = "bold";
+    logo.style.fontSize = "40px";
+    logo.style.textAlign = "center";
+
+    let text = document.createTextNode("Battlecode");
+    logo.appendChild(text);
+    return logo;
+  }
+
+  teamHeaderNode(teamName: string, color: string) {
+    let teamHeader: HTMLDivElement = document.createElement("div");
+    teamHeader.style.padding = "14px";
+    teamHeader.style.fontSize = "20px";
+    teamHeader.style.marginTop = "5px";
+    teamHeader.style.marginBottom = "10px";
+    teamHeader.style.fontFamily = "Bungee";
+
+    let teamNameNode = document.createTextNode(teamName);
+    teamHeader.style.backgroundColor = color;
+    teamHeader.appendChild(teamNameNode);
+    return teamHeader;
+  }
+
+  robotTable() {
+
   }
 
   titleValueNode(title: string, value: string) {
@@ -46,5 +102,5 @@ export default class Stats {
     span.appendChild(valueNode);
     return span;
   }
-  
+
 }

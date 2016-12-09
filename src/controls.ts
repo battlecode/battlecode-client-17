@@ -2,7 +2,7 @@
  * Game controls: pause/unpause, fast forward, rewind
  */
 export default class Controls {
-  readonly div: HTMLDivElement = document.createElement('div');
+  div: HTMLDivElement;
 
   readonly speedReadout: Text;
 
@@ -14,6 +14,8 @@ export default class Controls {
   onSeek: (frame: number) => void;
 
   constructor() {
+    this.div = this.baseDiv();
+
     let pause = document.createElement('button');
     pause.appendChild(document.createTextNode('Pause'));
     pause.setAttribute('type', 'button');
@@ -40,6 +42,28 @@ export default class Controls {
     this.div.appendChild(forward);
     this.div.appendChild(restart);
     this.div.appendChild(this.speedReadout);
+  }
+
+  /**
+   * Make the controls look good
+   */
+  baseDiv() {
+    let div = document.createElement("div");
+
+    // Positioning
+    div.style.width = "100%";
+    div.style.height = "40px";
+    div.style.marginLeft = "310px";
+    div.style.position = "fixed";
+    div.style.zIndex = "0.5";
+    div.style.top = "0";
+    div.style.overflowX = "hidden";
+
+    // Inner style and formatting
+    div.style.backgroundColor = "gray";
+    div.style.padding = "10px";
+
+    return div;
   }
 
   /**
@@ -81,9 +105,9 @@ export default class Controls {
   }
 
   setTime(time: number, loadedTime: number, ups: number, fps: number) {
-    this.speedReadout.textContent = 
+    this.speedReadout.textContent =
       ` TIME: ${time} LOADED: ${loadedTime} UPS: ${ups | 0} FPS: ${fps | 0}`;
-    
+
   }
 
   /**
