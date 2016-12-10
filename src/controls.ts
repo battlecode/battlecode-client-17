@@ -60,7 +60,7 @@ export default class Controls {
     div.style.overflowX = "hidden";
 
     // Inner style and formatting
-    div.style.backgroundColor = "gray";
+    div.style.backgroundColor = "#333";
     div.style.padding = "10px";
 
     return div;

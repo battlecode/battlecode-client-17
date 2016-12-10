@@ -51,12 +51,12 @@ export default class Client {
 
     this.loadRootStyle();
 
-    root.appendChild(this.loadGameArea());
-    root.appendChild(this.loadControls());
-    root.appendChild(this.loadStats());
+    this.root.appendChild(this.loadGameArea());
+    this.root.appendChild(this.loadControls());
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
+      this.root.appendChild(this.loadStats());
       this.ready();
     });
   }
@@ -91,10 +91,16 @@ export default class Client {
     gameArea.style.top = "60px";
     gameArea.style.left = "320px";
     // Style
-    gameArea.style.backgroundColor = "#eeeeee";
+    gameArea.style.background = "#444"
+    gameArea.style.background = "-webkit-linear-gradient(#ccc, #444)"
+    gameArea.style.background = "-o-linear-gradient(#ccc, #444)"
+    gameArea.style.background = "-moz-linear-gradient(#ccc, #444)"
+    gameArea.style.background = "linear-gradient(#ccc, #444)"
 
     let canvasWrapper: HTMLDivElement = document.createElement("div");
     canvasWrapper.style.display = "block";
+    canvasWrapper.style.textAlign = "center";
+    canvasWrapper.style.paddingRight = "320px";
 
     let canvas: HTMLCanvasElement = document.createElement('canvas');
     canvas.setAttribute("id", "battlecode-canvas");
@@ -120,7 +126,8 @@ export default class Client {
    * Loads stats bar with team information
    */
   loadStats() {
-    this.stats = new Stats(["Chicken Pad Thai", "Vegetable Fried Rice"]);
+    let teamNames: string[] = ["Chicken Pad Thai", "Vegetable Fried Rice"];
+    this.stats = new Stats(teamNames, this.imgs);
     this.stats.setRobotCount(0, "archon", 25);
     return this.stats.div;
   }

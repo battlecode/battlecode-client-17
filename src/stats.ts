@@ -1,3 +1,5 @@
+import * as imageloader from './imageloader';
+
 /**
 * Loads game stats: team name, victory points, bullets, robot count
 */
@@ -7,29 +9,31 @@ export default class Stats {
 
   robotTds: Object[] = [Object, Object];
   statTds: Object[] = [Object, Object];
+  images: imageloader.AllImages;
 
-  readonly stats: string[] = ["VP", "bullets", "trees"];
+  readonly stats: string[] = ["Bullets", "Victory Points"];
   readonly colors: string[] = ["red", "blue"];
   readonly robots: string[] = ["archon", "gardener", "lumberjack", "recruit",
                                "scout", "soldier", "tank"];
 
-  constructor(teamNames: string[]) {
+  constructor(teamNames: string[], images: imageloader.AllImages) {
+    this.images = images;
     this.div = this.baseDiv();
     this.div.appendChild(this.battlecodeLogo());
 
-    for (var i = 0; i < teamNames.length; i++) {
+    for (var teamID = 0; teamID < teamNames.length; teamID++) {
       // Add the team name banner
-      this.div.appendChild(this.teamHeaderNode(teamNames[i], this.colors[i]));
+      this.div.appendChild(this.teamHeaderNode(teamNames[teamID], this.colors[teamID]));
 
       // Create td elements for the robot counts and store them in robotTds
       // so we can update these robot counts later
       let initialRobotCount: Object = {};
       for (let robot of this.robots) {
-        let td: HTMLTableDataCellElement = document.createElement("td");
+        let td: HTMLTableCellElement = document.createElement("td");
         td.innerHTML = "0";
         initialRobotCount[robot] = td;
       }
-      this.robotTds[i] = initialRobotCount;
+      this.robotTds[teamID] = initialRobotCount;
 
       // Similarly create td elements for the VPs, bullet count, and tree count
       let initialStats: Object = {};
@@ -37,10 +41,13 @@ export default class Stats {
         initialStats[stat] = document.createElement("td");
         initialStats[stat].innerHTML = 0;
       }
-      this.statTds[i] = initialStats;
+      this.statTds[teamID] = initialStats;
 
-      this.div.appendChild(this.robotTable(i));
-      this.div.appendChild(this.overallStatsTable(i));
+      this.div.appendChild(this.robotTable(teamID));
+      this.div.appendChild(this.overallStatsTable(teamID));
+
+      this.div.appendChild(document.createElement("br"));
+      this.div.appendChild(document.createElement("br"));
     }
   }
 
@@ -60,9 +67,10 @@ export default class Stats {
     div.style.overflowX = "hidden";
 
     // Inner style
-    div.style.backgroundColor = "#222222";
+    div.style.backgroundColor = "#000";
     div.style.color = "white";
     div.style.textAlign = "center";
+    div.style.fontSize = "16px";
     div.style.fontFamily = "Bungee";
 
     // Inner formatting
@@ -79,6 +87,10 @@ export default class Stats {
     logo.style.fontWeight = "bold";
     logo.style.fontSize = "40px";
     logo.style.textAlign = "center";
+    logo.style.fontFamily = "Bungee";
+
+    logo.style.paddingTop = "15px";
+    logo.style.paddingBottom = "15px";
 
     let text = document.createTextNode("Battlecode");
     logo.appendChild(text);
@@ -94,7 +106,6 @@ export default class Stats {
     teamHeader.style.fontSize = "20px";
     teamHeader.style.marginTop = "5px";
     teamHeader.style.marginBottom = "10px";
-    teamHeader.style.fontFamily = "Bungee";
 
     let teamNameNode = document.createTextNode(teamName);
     teamHeader.style.backgroundColor = color;
@@ -115,9 +126,7 @@ export default class Stats {
     let robotImages: HTMLTableRowElement = document.createElement("tr");
     for (let robot of this.robots) {
       let td: HTMLTableCellElement = document.createElement("td");
-      let fileName: string = `${robot}_${teamColor}.png`;
-      // TODO: put an image here
-      td.appendChild(document.createTextNode("A"));
+      td.appendChild(this.images.robot[robot][teamID]);
       robotImages.appendChild(td);
     }
     table.appendChild(robotImages);
@@ -138,25 +147,27 @@ export default class Stats {
     let teamColor: string = this.colors[teamID];
     let table: HTMLTableElement = document.createElement("table");
     table.setAttribute("align", "center");
+    table.style.marginTop = "10px";
 
-    // Create the table row with the stats images
-    let imgs: HTMLTableRowElement = document.createElement("tr");
+    // Create a table row for each stat
     for (let stat of this.stats) {
-      let td: HTMLTableCellElement = document.createElement("td");
-      let fileName: string = `${stat}_${teamColor}.png`;
-      // TODO: put an image here
-      td.appendChild(document.createTextNode("B"));
-      imgs.appendChild(td);
-    }
-    table.appendChild(imgs);
+      let tr: HTMLTableRowElement = document.createElement("tr");
 
-    // Create the table row with the stat counts
-    let statCounts: HTMLTableRowElement = document.createElement("tr");
-    for (let stat of this.stats) {
-      let td: HTMLTableCellElement = this.statTds[teamID][stat];
-      statCounts.appendChild(td);
+      let tdLabel: HTMLTableCellElement = document.createElement("td");
+      tdLabel.appendChild(document.createTextNode(stat));
+      tdLabel.style.fontFamily = "Bungee";
+      tdLabel.style.color = this.colors[teamID];
+      tdLabel.style.textAlign = "right";
+      tdLabel.style.padding = "5px";
+      tr.appendChild(tdLabel);
+
+      let tdCount: HTMLTableCellElement = this.statTds[teamID][stat];
+      tdCount.style.paddingLeft = "10px";
+      tdCount.style.textAlign = "left";
+      tr.appendChild(tdCount);
+
+      table.appendChild(tr);
     }
-    table.appendChild(statCounts);
 
     return table;
   }
@@ -170,7 +181,8 @@ export default class Stats {
   }
 
   /**
-   * Change the robot count on the stats bar
+   * Change the count on the stats bar
+   * @param stat "Victory Points" or "Bullets"
    */
   setTeamStat(teamID: number, stat: string, count: number) {
     let td: HTMLTableCellElement = this.statTds[teamID][stat];
