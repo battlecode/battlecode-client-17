@@ -11,7 +11,7 @@ import TickCounter from './fps';
 
 /**
  * The entrypoint to the battlecode client.
- * 
+ *
  * We "mount" the application at a particular HTMLElement - everything we create
  * on the page will live as a child of that element.
  *
@@ -21,7 +21,7 @@ import TickCounter from './fps';
  * This architecture makes it easy to reuse the client on different web pages.
  */
 window['battlecode'] = {
-  mount: (root: HTMLElement, conf?: any): Client => 
+  mount: (root: HTMLElement, conf?: any): Client =>
     new Client(root, conf),
 };
 
@@ -35,8 +35,8 @@ export default class Client {
 
   imgs: imageloader.AllImages;
 
-  controls: Controls = new Controls();
-  stats: Stats = new Stats();
+  controls: Controls;
+  stats: Stats;
 
   canvas: HTMLCanvasElement;
 
@@ -51,28 +51,87 @@ export default class Client {
     this.root = root;
     this.conf = config.defaults(conf);
 
-    this.canvas = document.createElement('canvas');
+    this.loadRootStyle();
 
-    this.loadCanvas();
-
-    root.appendChild(this.canvas);
-    root.appendChild(this.controls.div);
-    //root.appendChild(this.stats.div);
+    this.root.appendChild(this.loadGameArea());
+    this.root.appendChild(this.loadControls());
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
+      this.root.appendChild(this.loadStats());
       this.ready();
     });
   }
 
   /**
+   * Sets css of root element and load fonts
+   */
+  loadRootStyle() {
+    this.root.style.fontFamily = "tahoma, sans-serif";
+    this.root.style.fontSize = "14px";
+    this.root.style.width = "100%";
+    this.root.style.height = "100%";
+    this.root.style.margin = "0px";
+
+    // Bungee font
+    let fonts: HTMLLinkElement = document.createElement("link");
+    fonts.setAttribute("href", "https://fonts.googleapis.com/css?family=Bungee");
+    fonts.setAttribute("rel", "stylesheet");
+    this.root.appendChild(fonts);
+  }
+
+  /**
    * Loads canvas to display game world.
    */
-  loadCanvas() {
-    this.canvas.setAttribute("id", "battlecode-canvas");
-    this.canvas.setAttribute("style", "border: 1px solid black");
-    this.canvas.setAttribute("width", `${this.conf.width}`);
-    this.canvas.setAttribute("height", `${this.conf.height}`);
+  loadGameArea() {
+    let gameArea: HTMLDivElement = document.createElement("div");
+    // Positioning
+    gameArea.style.width = "100%";
+    gameArea.style.height = "100%";
+    gameArea.style.zIndex = "0.1";
+    gameArea.style.position = "fixed";
+    gameArea.style.top = "60px";
+    gameArea.style.left = "320px";
+    // Style
+    gameArea.style.background = "#444"
+    gameArea.style.background = "-webkit-linear-gradient(#ccc, #444)"
+    gameArea.style.background = "-o-linear-gradient(#ccc, #444)"
+    gameArea.style.background = "-moz-linear-gradient(#ccc, #444)"
+    gameArea.style.background = "linear-gradient(#ccc, #444)"
+
+    let canvasWrapper: HTMLDivElement = document.createElement("div");
+    canvasWrapper.style.display = "block";
+    canvasWrapper.style.textAlign = "center";
+    canvasWrapper.style.paddingRight = "320px";
+
+    let canvas: HTMLCanvasElement = document.createElement('canvas');
+    canvas.setAttribute("id", "battlecode-canvas");
+    canvas.setAttribute("style", "border: 1px solid black");
+    canvas.setAttribute("width", `${this.conf.width}`);
+    canvas.setAttribute("height", `${this.conf.height}`);
+    this.canvas = canvas;
+
+    gameArea.appendChild(canvasWrapper);
+    canvasWrapper.appendChild(canvas);
+    return gameArea;
+  }
+
+  /**
+   * Loads control bar and timeline
+   */
+  loadControls() {
+    this.controls = new Controls();
+    return this.controls.div;
+  }
+
+  /**
+   * Loads stats bar with team information
+   */
+  loadStats() {
+    let teamNames: string[] = ["Chicken Pad Thai", "Vegetable Fried Rice"];
+    this.stats = new Stats(teamNames, this.imgs);
+    this.stats.setRobotCount(0, "archon", 25);
+    return this.stats.div;
   }
 
   /**
@@ -92,7 +151,7 @@ export default class Client {
 
   private runMatch() {
     // TODO(jhgilles): this is a mess
-    
+
     console.log('Running match.');
 
     // Cancel previous games if they're running
@@ -100,7 +159,7 @@ export default class Client {
       window.cancelAnimationFrame(this.loopID);
       this.loopID = null;
     }
-    
+
     // For convenience
     const game = this.currentGame as Game;
     const meta = game.meta as Metadata;
