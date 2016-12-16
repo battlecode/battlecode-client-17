@@ -97,12 +97,12 @@ export default class Renderer {
   private renderBodies(world: GameWorld) {
     const bodies = world.bodies;
     const length = bodies.length;
-    const types = bodies.arrays['type'];
-    const teams = bodies.arrays['team'];
-    const xs = bodies.arrays['x'];
-    const ys = bodies.arrays['y'];
-    const healths = bodies.arrays['health'];
-    const radii = bodies.arrays['radius'];
+    const types = bodies.arrays.type;
+    const teams = bodies.arrays.team;
+    const xs = bodies.arrays.x;
+    const ys = bodies.arrays.y;
+    const healths = bodies.arrays.health;
+    const radii = bodies.arrays.radius;
 
     for (let i = 0; i < length; i++) {
       const x = xs[i];
@@ -158,14 +158,14 @@ export default class Renderer {
                                    lerpAmount: number) {
     const bodies = world.bodies;
     const length = bodies.length;
-    const types = bodies.arrays['type'];
-    const teams = bodies.arrays['team'];
-    const xs = bodies.arrays['x'];
-    const ys = bodies.arrays['y'];
-    const nextXs = nextStep.bodies.arrays['x'];
-    const nextYs = nextStep.bodies.arrays['y'];
-    const healths = bodies.arrays['health'];
-    const radii = bodies.arrays['radius'];
+    const types = bodies.arrays.type;
+    const teams = bodies.arrays.team;
+    const xs = bodies.arrays.x;
+    const ys = bodies.arrays.y;
+    const nextXs = nextStep.bodies.arrays.x;
+    const nextYs = nextStep.bodies.arrays.y;
+    const healths = bodies.arrays.health;
+    const radii = bodies.arrays.radius;
 
     for (let i = 0; i < length; i++) {
       const x = xs[i];
@@ -226,11 +226,11 @@ export default class Renderer {
   private renderBullets(world: GameWorld, lerpAmount: number) {
     const bullets = world.bullets;
     const length = bullets.length;
-    const xs = bullets.arrays['x'];
-    const ys = bullets.arrays['y'];
-    const velXs = bullets.arrays['velX'];
-    const velYs = bullets.arrays['velY'];
-    const spawnedTimes = bullets.arrays['spawnedTime'];
+    const xs = bullets.arrays.x;
+    const ys = bullets.arrays.y;
+    const velXs = bullets.arrays.velX;
+    const velYs = bullets.arrays.velY;
+    const spawnedTimes = bullets.arrays.spawnedTime;
 
     for (let i = 0; i < length; i++) {
       const velX = velXs[i];

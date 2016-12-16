@@ -23,7 +23,7 @@
   "homepage": "https://github.com/battlecode/battlecode-client-17#readme",
   "dependencies": {
     "@types/victor": "^0.2.28",
-    "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#6bc0332a146c79a703d14943e649e1a3850f100b",
+    "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#9f3055fafe86c2be70137863a753d78d62ec6d3a",
     "battlecode-schema": "git+ssh://git@github.com/battlecode/battlecode-schema.git#c6e2f68c04059e91f77a87e074e9a3b8e5e27066",
     "victor": "^1.1.0"
   },
@@ -36,7 +36,7 @@
     "tap-dot": "^1.0.5",
     "ts-loader": "^0.8.2",
     "tslint": "^3.15.1",
-    "typescript": "^2.0.3",
+    "typescript": "^2.1.4",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.2",
     "webpack-dev-server": "^1.16.1"

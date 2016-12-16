@@ -1,6 +1,12 @@
 import {StructOfArrays, Metadata, GameWorld} from 'battlecode-playback';
 import {schema, flatbuffers} from 'battlecode-schema';
 
+export type NextStepSchema = {
+  id: Int32Array,
+  x: Float32Array,
+  y: Float32Array
+}
+
 /**
  * For interpolated rendering.
  */
@@ -12,16 +18,16 @@ export default class NextStep {
    *   y: Float32Array
    * }
    */
-  bodies: StructOfArrays;
+  bodies: StructOfArrays<NextStepSchema>;
 
   // Cache fields
   private _vecTableSlot: schema.VecTable;
 
   constructor() {
     this.bodies = new StructOfArrays({
-      id: Int32Array,
-      x: Float32Array,
-      y: Float32Array
+      id: new Int32Array(0),
+      x: new Float32Array(0),
+      y: new Float32Array(0)
     }, 'id');
     this._vecTableSlot = new schema.VecTable();
   }
