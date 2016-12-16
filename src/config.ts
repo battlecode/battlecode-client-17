@@ -24,6 +24,11 @@ export interface Config {
    * (DISTINCT from fps!)
    */
   readonly defaultTPS: number;
+
+  /**
+   * Whether or not to interpolate between frames.
+   */
+  readonly interpolate: boolean;
 }
 
 /**
@@ -37,5 +42,6 @@ export function defaults(supplied?: any): Config {
     width: supplied.width || 600,
     height: supplied.height || 600,
     defaultTPS: supplied.defaultTPS || 20,
+    interpolate: supplied.interpolate || true
   };
 }

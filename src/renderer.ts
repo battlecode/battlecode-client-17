@@ -1,4 +1,6 @@
 import * as config from './config';
+import NextStep from './nextstep';
+
 import {schema, flatbuffers} from 'battlecode-schema';
 import {GameWorld, Metadata} from 'battlecode-playback';
 import {AllImages} from './imageloader';
@@ -16,7 +18,7 @@ export default class Renderer {
   readonly conf: config.Config;
   readonly metadata: Metadata;
 
-  // cached useful values
+  // other cached useful values
   readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
@@ -45,7 +47,7 @@ export default class Renderer {
    * viewMin: min corner of view (in world units)
    * viewSize: width / height of view (in world units)
    */
-  render(world: GameWorld, time: number, viewMin: Victor, viewWidth: number) {
+  render(world: GameWorld, viewMin: Victor, viewWidth: number, nextStep?: NextStep, lerpAmount?: number) {
     // setup correct rendering
     const scale = this.canvas.width / viewWidth;
     
@@ -54,9 +56,15 @@ export default class Renderer {
     this.ctx.translate(-viewMin.x, -viewMin.y);
 
     this.renderBackground(world);
-    this.renderBodies(world);
-    this.renderBullets(world, time);
 
+    if (lerpAmount != null && nextStep != null) {
+      this.renderBullets(world, lerpAmount);
+      this.renderBodiesInterpolated(world, nextStep, lerpAmount);
+    } else {
+      this.renderBullets(world, 0);
+      this.renderBodies(world);
+    }
+    
     // restore default rendering
     this.ctx.restore();
   }
@@ -145,7 +153,77 @@ export default class Renderer {
     }
   }
 
-  private renderBullets(world: GameWorld, time: number) {
+  private renderBodiesInterpolated(world: GameWorld,
+                                   nextStep: NextStep,
+                                   lerpAmount: number) {
+    const bodies = world.bodies;
+    const length = bodies.length;
+    const types = bodies.arrays['type'];
+    const teams = bodies.arrays['team'];
+    const xs = bodies.arrays['x'];
+    const ys = bodies.arrays['y'];
+    const nextXs = nextStep.bodies.arrays['x'];
+    const nextYs = nextStep.bodies.arrays['y'];
+    const healths = bodies.arrays['health'];
+    const radii = bodies.arrays['radius'];
+
+    for (let i = 0; i < length; i++) {
+      const x = xs[i];
+      const y = ys[i];
+      const nextX = nextXs[i];
+      const nextY = nextYs[i];
+
+      const realX = x + (nextX - x) * lerpAmount;
+      const realY = y + (nextY - y) * lerpAmount;
+
+      const radius = radii[i];
+      
+      const team = teams[i];
+
+      let img;
+
+      switch (types[i]) {
+        case TREE_NEUTRAL:
+          if (healths[i] > this.treeMedHealth) {
+            img = this.imgs.tree.fullHealth;
+          } else {
+            img = this.imgs.tree.lowHealth;
+          }
+          break;
+        case TREE_BULLET:
+          img = this.imgs.robot.bulletTree[team];
+          break;
+        case ARCHON:
+          img = this.imgs.robot.archon[team];
+          break;
+        case GARDENER:
+          img = this.imgs.robot.gardener[team];
+          break;
+        case LUMBERJACK:
+          img = this.imgs.robot.lumberjack[team];
+          break;
+        case RECRUIT:
+          img = this.imgs.robot.recruit[team];
+          break;
+        case SOLDIER:
+          img = this.imgs.robot.soldier[team];
+          break;
+        case TANK:
+          img = this.imgs.robot.tank[team];
+          break;
+        case SCOUT:
+          img = this.imgs.robot.scout[team];
+          break;
+        default:
+          img = this.imgs.unknown;
+          break;
+      }
+      this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
+    }
+
+  }
+
+  private renderBullets(world: GameWorld, lerpAmount: number) {
     const bullets = world.bullets;
     const length = bullets.length;
     const xs = bullets.arrays['x'];
@@ -158,7 +236,7 @@ export default class Renderer {
       const velX = velXs[i];
       const velY = velYs[i];
 
-      const dt = spawnedTimes[i] - time;
+      const dt = (world.turn + lerpAmount) - spawnedTimes[i];
 
       const x = xs[i] + velX*dt;
       const y = ys[i] + velY*dt;
