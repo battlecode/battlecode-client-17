@@ -1,8 +1,7 @@
 import * as config from './config';
 import NextStep from './nextstep';
 
-import {schema, flatbuffers} from 'battlecode-schema';
-import {GameWorld, Metadata} from 'battlecode-playback';
+import {GameWorld, Metadata, schema} from 'battlecode-playback';
 import {AllImages} from './imageloader';
 import Victor = require('victor');
 
@@ -19,7 +18,7 @@ export default class Renderer {
   readonly metadata: Metadata;
 
   // other cached useful values
-  readonly treeMedHealth: number;
+  //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
   constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config, metadata: Metadata) {
@@ -38,7 +37,7 @@ export default class Renderer {
     this.ctx['imageSmoothingEnabled'] = false;
 
     this.bgPattern = this.ctx.createPattern(imgs.background, 'repeat');
-    this.treeMedHealth = metadata.types[schema.BodyType.TREE_NEUTRAL].maxHealth / 2;
+    //this.treeMedHealth = metadata.types[schema.BodyType.TREE_NEUTRAL].maxHealth / 2;
   }
 
   /**
@@ -115,11 +114,11 @@ export default class Renderer {
 
       switch (types[i]) {
         case TREE_NEUTRAL:
-          if (healths[i] > this.treeMedHealth) {
+          //if (healths[i] > this.treeMedHealth) {
             img = this.imgs.tree.fullHealth;
-          } else {
-            img = this.imgs.tree.lowHealth;
-          }
+          //} else {
+          //  img = this.imgs.tree.lowHealth;
+          //}
           break;
         case TREE_BULLET:
           img = this.imgs.robot.bulletTree[team];
@@ -184,11 +183,11 @@ export default class Renderer {
 
       switch (types[i]) {
         case TREE_NEUTRAL:
-          if (healths[i] > this.treeMedHealth) {
+          //if (healths[i] > this.treeMedHealth) {
             img = this.imgs.tree.fullHealth;
-          } else {
-            img = this.imgs.tree.lowHealth;
-          }
+          //} else {
+          //  img = this.imgs.tree.lowHealth;
+          //}
           break;
         case TREE_BULLET:
           img = this.imgs.robot.bulletTree[team];

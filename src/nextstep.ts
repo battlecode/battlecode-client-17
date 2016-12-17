@@ -1,5 +1,4 @@
-import {StructOfArrays, Metadata, GameWorld} from 'battlecode-playback';
-import {schema, flatbuffers} from 'battlecode-schema';
+import {StructOfArrays, Metadata, GameWorld, schema} from 'battlecode-playback';
 
 export type NextStepSchema = {
   id: Int32Array,

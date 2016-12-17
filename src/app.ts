@@ -1,5 +1,4 @@
-import {schema, flatbuffers} from 'battlecode-schema';
-import {Game, Match, Metadata} from 'battlecode-playback';
+import {Game, Match, Metadata, schema, flatbuffers} from 'battlecode-playback';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
@@ -23,6 +22,8 @@ import TickCounter from './fps';
 window['battlecode'] = {
   mount: (root: HTMLElement, conf?: any): Client =>
     new Client(root, conf),
+  schema: schema,
+  flatbuffers: flatbuffers
 };
 
 /**
