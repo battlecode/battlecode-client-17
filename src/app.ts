@@ -39,6 +39,8 @@ export default class Client {
   controls: Controls;
   stats: Stats;
 
+  style: HTMLStyleElement;
+  canvasWrapper: HTMLDivElement;
   canvas: HTMLCanvasElement;
 
   currentGame: Game | null;
@@ -50,15 +52,16 @@ export default class Client {
     console.log('Battlecode client loading...');
 
     this.root = root;
+    this.root.id = "root";
     this.conf = config.defaults(conf);
 
-    this.loadRootStyle();
+    this.loadStyles();
 
     this.root.appendChild(this.loadGameArea());
-    this.root.appendChild(this.loadControls());
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
+      this.root.appendChild(this.loadControls());
       this.root.appendChild(this.loadStats());
       this.ready();
     });
@@ -67,18 +70,41 @@ export default class Client {
   /**
    * Sets css of root element and load fonts
    */
-  loadRootStyle() {
-    this.root.style.fontFamily = "tahoma, sans-serif";
-    this.root.style.fontSize = "14px";
-    this.root.style.width = "100%";
-    this.root.style.height = "100%";
-    this.root.style.margin = "0px";
-
-    // Bungee font
+  loadStyles() {
+    // import fonts
     let fonts: HTMLLinkElement = document.createElement("link");
-    fonts.setAttribute("href", "https://fonts.googleapis.com/css?family=Bungee");
+    fonts.setAttribute("href", "https://fonts.googleapis.com/css?family=Graduate");
     fonts.setAttribute("rel", "stylesheet");
     this.root.appendChild(fonts);
+
+    // CSS stylesheet
+    this.style = document.createElement("style");
+    let css = "#root {\
+      font-family: tahoma;\
+      font-size: 14px;\
+      width: 100%;\
+      height: 100%;\
+      margin: 0px;}\
+      \
+      input[type='file'] {display: none;}\
+      \
+      .custom-button {\
+      background-color: #bbb;\
+      border-color: #ddd;\
+      display: inline-block;\
+      vertical-align: middle;\
+      cursor: pointer;\
+      white-space: nowrap;\
+      text-align: center;\
+      line-height: 1.25;\
+      padding: .4rem .8rem;\
+      margin: .1rem;\
+      border: 1px solid transparent;}\
+      \
+      button:hover {background-color: #bbb}\
+      button:active, button:target {background-color: #999;}";
+    this.style.appendChild(document.createTextNode(css));
+    this.root.appendChild(this.style);
   }
 
   /**
@@ -94,22 +120,23 @@ export default class Client {
     gameArea.style.top = "60px";
     gameArea.style.left = "320px";
     // Style
-    gameArea.style.background = "#444"
-    gameArea.style.background = "-webkit-linear-gradient(#ccc, #444)"
-    gameArea.style.background = "-o-linear-gradient(#ccc, #444)"
-    gameArea.style.background = "-moz-linear-gradient(#ccc, #444)"
-    gameArea.style.background = "linear-gradient(#ccc, #444)"
+    gameArea.style.background = "#333"
+    gameArea.style.background = "-webkit-linear-gradient(#bbb, #333)"
+    gameArea.style.background = "-o-linear-gradient(#bbb, #333)"
+    gameArea.style.background = "-moz-linear-gradient(#bbb, #333)"
+    gameArea.style.background = "linear-gradient(#bbb, #333)"
 
     let canvasWrapper: HTMLDivElement = document.createElement("div");
+    canvasWrapper.id = "canvas-wrapper";
     canvasWrapper.style.display = "block";
     canvasWrapper.style.textAlign = "center";
     canvasWrapper.style.paddingRight = "320px";
+    canvasWrapper.style.height = "100%";
+    this.canvasWrapper = canvasWrapper;
 
     let canvas: HTMLCanvasElement = document.createElement('canvas');
+    canvas.id = "canvas";
     canvas.setAttribute("id", "battlecode-canvas");
-    canvas.setAttribute("style", "border: 1px solid black");
-    canvas.setAttribute("width", `${this.conf.width}`);
-    canvas.setAttribute("height", `${this.conf.height}`);
     this.canvas = canvas;
 
     gameArea.appendChild(canvasWrapper);
@@ -121,7 +148,7 @@ export default class Client {
    * Loads control bar and timeline
    */
   loadControls() {
-    this.controls = new Controls();
+    this.controls = new Controls(this.imgs);
     return this.controls.div;
   }
 
@@ -136,9 +163,32 @@ export default class Client {
   }
 
   /**
+   * Sets canvas size to maximum dimensions while maintaining the aspect ratio
+   */
+  setCanvasDimensions() {
+    let leftBuffer: number = 320; // width of stats bar
+    let topBuffer: number = 50; // height of control bar
+    let aspectRatio: number = this.conf.width / this.conf.height;
+    let wrapper = {
+      width: this.canvasWrapper.clientWidth - leftBuffer,
+      height: this.canvasWrapper.clientHeight - topBuffer
+    };
+
+    if (wrapper.width / wrapper.height < aspectRatio) {
+      wrapper.height = wrapper.width / aspectRatio;
+    } else {
+      wrapper.width = wrapper.height * aspectRatio;
+    }
+
+    this.canvas.setAttribute("width", String(wrapper.width));
+    this.canvas.setAttribute("height", String(wrapper.height));
+  }
+
+  /**
    * Marks the client as fully loaded.
    */
   ready() {
+    this.setCanvasDimensions();
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
       const wrapper = schema.GameWrapper.getRootAsGameWrapper(
         new flatbuffers.ByteBuffer(new Uint8Array(data))
@@ -221,7 +271,7 @@ export default class Client {
       // update fps
       rendersPerSecond.update(curTime, 1);
       updatesPerSecond.update(curTime, delta);
-      
+
       this.controls.setTime(match.current.turn,
                             match['_farthest'].turn,
                             updatesPerSecond.tps,
@@ -248,7 +298,7 @@ export default class Client {
 
         let lerp = Math.min(interpGameTime - match.current.turn, 1);
 
-        renderer.render(match.current, 
+        renderer.render(match.current,
                         match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
                         nextStep, lerp);
       } else {

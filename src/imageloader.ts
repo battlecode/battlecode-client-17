@@ -25,11 +25,18 @@ export type AllImages = {
     tank: Array<Image>,
     bulletTree: Array<Image>
   },
+  controls: {
+    pause: Image,
+    start: Image,
+    forward: Image,
+    backward: Image,
+    upload: Image
+  }
 };
 
 export function loadAll(config: Config, finished: (AllImages) => void) {
   let expected = 0, loaded = 0;
-  let result: any = {tree: {}, bullet: {}, robot: {archon: [], gardener: [], lumberjack: [], recruit: [], scout: [], soldier: [], tank: [], bulletTree: []}};
+  let result: any = {tree: {}, bullet: {}, robot: {archon: [], gardener: [], lumberjack: [], recruit: [], scout: [], soldier: [], tank: [], bulletTree: []}, controls: {}};
 
   // write loaded image to obj[slot]
   function img(obj, slot, url: string) {
@@ -95,6 +102,12 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.robot.tank, 0, require('./img/sprites/tank_red.png'));
   img(result.robot.tank, 1, require('./img/sprites/tank_blue.png'));
   img(result.robot.tank, 2, require('./img/sprites/tank_neutral.png'));
+
+  img(result.controls, 'pause', require('./img/controls/playback-pause.png'));
+  img(result.controls, 'start', require('./img/controls/playback-start.png'));
+  img(result.controls, 'forward', require('./img/controls/seek-forward.png'));
+  img(result.controls, 'backward', require('./img/controls/seek-backward.png'));
+  img(result.controls, 'upload', require('./img/controls/upload.png'));
 }
 
 

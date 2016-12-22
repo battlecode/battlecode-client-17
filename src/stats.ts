@@ -12,7 +12,7 @@ export default class Stats {
   images: imageloader.AllImages;
 
   readonly stats: string[] = ["Bullets", "Victory Points"];
-  readonly colors: string[] = ["red", "blue"];
+  readonly colors: string[] = ["#a62014", "#0636ac"];
   readonly robots: string[] = ["archon", "gardener", "lumberjack", "recruit",
                                "scout", "soldier", "tank"];
 
@@ -67,11 +67,11 @@ export default class Stats {
     div.style.overflowX = "hidden";
 
     // Inner style
-    div.style.backgroundColor = "#000";
+    div.style.backgroundColor = "#151515";
     div.style.color = "white";
     div.style.textAlign = "center";
     div.style.fontSize = "16px";
-    div.style.fontFamily = "Bungee";
+    div.style.fontFamily = "Graduate";
 
     // Inner formatting
     div.style.padding = "10px";
@@ -87,7 +87,7 @@ export default class Stats {
     logo.style.fontWeight = "bold";
     logo.style.fontSize = "40px";
     logo.style.textAlign = "center";
-    logo.style.fontFamily = "Bungee";
+    logo.style.fontFamily = "Graduate";
 
     logo.style.paddingTop = "15px";
     logo.style.paddingBottom = "15px";
@@ -155,7 +155,6 @@ export default class Stats {
 
       let tdLabel: HTMLTableCellElement = document.createElement("td");
       tdLabel.appendChild(document.createTextNode(stat));
-      tdLabel.style.fontFamily = "Bungee";
       tdLabel.style.color = this.colors[teamID];
       tdLabel.style.textAlign = "right";
       tdLabel.style.padding = "5px";
