@@ -72,7 +72,7 @@ export default class Controls {
    * @param function to call on click
    * @return a button with the given attributes
    */
-  private createButton(content, onclick, hiddenContent=null) {
+  private createButton(content, onclick, hiddenContent?: HTMLImageElement) {
     let button = document.createElement("button");
     button.setAttribute("class", "custom-button");
     button.setAttribute("type", "button");
