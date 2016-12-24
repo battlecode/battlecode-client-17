@@ -21,6 +21,8 @@ export default class Controls {
 
   // buttons
   img: imageloader.AllImages;
+  togglePauseButton: HTMLButtonElement;
+  toggleForwardButton: HTMLButtonElement;
 
   constructor(images: imageloader.AllImages) {
     this.div = this.baseDiv();
@@ -29,7 +31,7 @@ export default class Controls {
     let uploadLabel = document.createElement("label");
     uploadLabel.setAttribute("for", "file-upload");
     uploadLabel.setAttribute("class", "custom-button");
-    uploadLabel.appendChild(this.img.controls.start);
+    uploadLabel.appendChild(this.img.controls.upload);
 
     let upload = document.createElement('input');
     upload.id = "file-upload";
@@ -48,9 +50,14 @@ export default class Controls {
 
     // create the button controls
     let buttons = document.createElement("td");
-    buttons.appendChild(this.createButton(this.img.controls.pause, () => this.pause()));
-    buttons.appendChild(this.createButton(this.img.controls.backward, () => this.restart()));
-    buttons.appendChild(this.createButton(this.img.controls.forward, () => this.forward()));
+    this.togglePauseButton = this.createButton(this.img.controls.playbackPause,
+      () => this.pause(), this.img.controls.playbackStart)
+    this.toggleForwardButton = this.createButton(this.img.controls.skipForward,
+      () => this.forward(), this.img.controls.seekForward);
+    buttons.appendChild(this.togglePauseButton);
+    buttons.appendChild(this.createButton(this.img.controls.playbackStop,
+      () => this.restart()));
+    buttons.appendChild(this.toggleForwardButton);
     buttons.appendChild(uploadLabel);
     buttons.appendChild(this.speedReadout);
 
@@ -65,11 +72,15 @@ export default class Controls {
    * @param function to call on click
    * @return a button with the given attributes
    */
-  private createButton(content, onclick) {
+  private createButton(content, onclick, hiddenContent=null) {
     let button = document.createElement("button");
     button.setAttribute("class", "custom-button");
     button.setAttribute("type", "button");
     button.appendChild(content);
+    if (hiddenContent != null) {
+      hiddenContent.style.display = "none";
+      button.appendChild(hiddenContent);
+    }
     button.onclick = onclick;
 
     return button;
@@ -112,8 +123,8 @@ export default class Controls {
       // TODO: update the progress bar and jump to this time in the game
       // let offsetLeft = 330;
       // let width = event.x - offsetLeft;
-      // let frame = width * 3000 / this.width;
-      // onSeek(width);
+      // let targetFrame = 4096 * width / this.width;
+      // this.onSeek(targetFrame);
     }, false);
 
     this.canvas = canvas;
@@ -144,6 +155,13 @@ export default class Controls {
    */
   pause() {
     this.onTogglePause();
+    for (let child of this.togglePauseButton.childNodes) {
+      if (child.style.display == "none") {
+        child.style.display = "unset";
+      } else {
+        child.style.display = "none";
+      }
+    }
     console.log('PAUSE');
   }
 
@@ -153,6 +171,13 @@ export default class Controls {
   forward() {
     console.log('FORWARD');
     this.onToggleForward();
+    for (let child of this.toggleForwardButton.childNodes) {
+      if (child.style.display == "none") {
+        child.style.display = "unset";
+      } else {
+        child.style.display = "none";
+      }
+    }
   }
 
   /**

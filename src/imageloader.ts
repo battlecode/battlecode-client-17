@@ -26,10 +26,15 @@ export type AllImages = {
     bulletTree: Array<Image>
   },
   controls: {
-    pause: Image,
-    start: Image,
-    forward: Image,
-    backward: Image,
+    goNext: Image,
+    goPrevious: Image,
+    playbackPause: Image,
+    playbackStart: Image,
+    playbackStop: Image,
+    seekBackward: Image,
+    seekForward: Image,
+    skipBackward: Image,
+    skipForward: Image,
     upload: Image
   }
 };
@@ -103,10 +108,15 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.robot.tank, 1, require('./img/sprites/tank_blue.png'));
   img(result.robot.tank, 2, require('./img/sprites/tank_neutral.png'));
 
-  img(result.controls, 'pause', require('./img/controls/playback-pause.png'));
-  img(result.controls, 'start', require('./img/controls/playback-start.png'));
-  img(result.controls, 'forward', require('./img/controls/seek-forward.png'));
-  img(result.controls, 'backward', require('./img/controls/seek-backward.png'));
+  img(result.controls, 'goNext', require('./img/controls/go-next.png'));
+  img(result.controls, 'goPrevious', require('./img/controls/go-previous.png'));
+  img(result.controls, 'playbackPause', require('./img/controls/playback-pause.png'));
+  img(result.controls, 'playbackStart', require('./img/controls/playback-start.png'));
+  img(result.controls, 'playbackStop', require('./img/controls/playback-stop.png'));
+  img(result.controls, 'seekBackward', require('./img/controls/seek-backward.png'));
+  img(result.controls, 'seekForward', require('./img/controls/seek-forward.png'));
+  img(result.controls, 'skipBackward', require('./img/controls/skip-backward.png'));
+  img(result.controls, 'skipForward', require('./img/controls/skip-forward.png'));
   img(result.controls, 'upload', require('./img/controls/upload.png'));
 }
 
