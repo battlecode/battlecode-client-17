@@ -248,6 +248,16 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     };
+    this.controls.canvas.addEventListener("mousedown", function(event) {
+      // jump to a frame when clicking the controls timeline
+      const offsetLeft = 330;
+      let width = event.x - offsetLeft;
+      let maxWidth = (<HTMLCanvasElement>this).width;
+      let turn = Math.floor(match['_farthest'].turn * width / maxWidth);
+      externalSeek = true;
+      match.seek(turn);
+      interpGameTime = turn;
+    }, false);
 
     // The main update loop
     const loop = (curTime) => {

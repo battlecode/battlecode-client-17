@@ -17,6 +17,7 @@ export default class Controls {
 
   // qualities of progress bar
   canvas: HTMLCanvasElement;
+  maxFrame: number;
   ctx;
 
   // buttons
@@ -135,17 +136,10 @@ export default class Controls {
     canvas.height = 32;
     canvas.style.backgroundColor = "#222";
     canvas.style.display = "inline-block";
+    canvas.style.width = "400";
+    canvas.style.height = "32";
     this.ctx = canvas.getContext("2d");
     this.ctx.fillStyle = "white";
-
-    canvas.addEventListener("mousedown", function(event) {
-      // TODO: update the progress bar and jump to this time in the game
-      // let offsetLeft = 330;
-      // let width = event.x - offsetLeft;
-      // let targetFrame = 4096 * width / this.width;
-      // this.onSeek(targetFrame);
-    }, false);
-
     this.canvas = canvas;
     return canvas;
   }
