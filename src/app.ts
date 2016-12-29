@@ -242,9 +242,11 @@ export default class Client {
 
     this.controls.onTogglePause = () => {
       goalUPS = goalUPS === 0? 10 : 0;
+      rewinding = false;
     };
     this.controls.onToggleForward = () => {
       goalUPS = goalUPS === 300 ? 10 : 300;
+      rewinding = false;
     };
     this.controls.onToggleRewind = () => {
       goalUPS = goalUPS === -100 ? 10 : -100;
@@ -277,7 +279,8 @@ export default class Client {
           externalSeek = false;
         }
       } else if (rewinding && match.current.turn <= 10) {
-        this.controls.onToggleRewind();
+        this.controls.rewind();
+        this.controls.pause();
       } else if (Math.abs(interpGameTime - match.current.turn) < 10) {
         // only update time if we're not seeking
         delta = goalUPS * (curTime - lastTime) / 1000;
