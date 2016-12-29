@@ -187,7 +187,7 @@ export default class Client {
 
     // looks weird if the window is tall and skinny instead of short and fat
     this.canvas.style.width = "${100 * aspectRatio}%";
-    this.canvas.style.height = "100%";
+    this.canvas.style.height = "calc(100vh - 60px)";
   }
 
   /**
