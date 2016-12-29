@@ -4,6 +4,7 @@
   "description": "Battlecode 2017 Client",
   "private": "true",
   "scripts": {
+    "test": "true",
     "clean": "rm -rf out outtest bc17",
     "lint": "tslint \"**/*.ts\" -e \"out/**\"",
     "build": "webpack",
