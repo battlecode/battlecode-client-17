@@ -83,30 +83,30 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   // battlecode-server
   // TODO(jhgilles):
   // we'll need to update them if team configuration becomes more dynamic
-  img(result.robot.archon, 0, require('./img/sprites/archon_red.png'));
-  img(result.robot.archon, 1, require('./img/sprites/archon_blue.png'));
-  img(result.robot.archon, 2, require('./img/sprites/archon_neutral.png'));
-  img(result.robot.bulletTree, 0, require('./img/sprites/bullet_tree_blue.png'));
+  img(result.robot.archon, 0, require('./img/sprites/archon_neutral.png'));
+  img(result.robot.archon, 1, require('./img/sprites/archon_red.png'));
+  img(result.robot.archon, 2, require('./img/sprites/archon_blue.png'));
+  img(result.robot.bulletTree, 0, require('./img/sprites/bullet_tree_neutral.png'));
   img(result.robot.bulletTree, 1, require('./img/sprites/bullet_tree_red.png'));
-  img(result.robot.bulletTree, 2, require('./img/sprites/bullet_tree_neutral.png'));
-  img(result.robot.gardener, 0, require('./img/sprites/gardener_red.png'));
-  img(result.robot.gardener, 1, require('./img/sprites/gardener_blue.png'));
-  img(result.robot.gardener, 2, require('./img/sprites/gardener_neutral.png'));
-  img(result.robot.lumberjack, 0, require('./img/sprites/lumberjack_red.png'));
-  img(result.robot.lumberjack, 1, require('./img/sprites/lumberjack_blue.png'));
-  img(result.robot.lumberjack, 2, require('./img/sprites/lumberjack_neutral.png'));
-  img(result.robot.recruit, 0, require('./img/sprites/recruit_red.png'));
-  img(result.robot.recruit, 1, require('./img/sprites/recruit_blue.png'));
-  img(result.robot.recruit, 2, require('./img/sprites/recruit_neutral.png'));
-  img(result.robot.scout, 0, require('./img/sprites/scout_red.png'));
-  img(result.robot.scout, 1, require('./img/sprites/scout_blue.png'));
-  img(result.robot.scout, 2, require('./img/sprites/scout_neutral.png'));
-  img(result.robot.soldier, 0, require('./img/sprites/soldier_red.png'));
-  img(result.robot.soldier, 1, require('./img/sprites/soldier_blue.png'));
-  img(result.robot.soldier, 2, require('./img/sprites/soldier_neutral.png'));
-  img(result.robot.tank, 0, require('./img/sprites/tank_red.png'));
-  img(result.robot.tank, 1, require('./img/sprites/tank_blue.png'));
-  img(result.robot.tank, 2, require('./img/sprites/tank_neutral.png'));
+  img(result.robot.bulletTree, 2, require('./img/sprites/bullet_tree_blue.png'));
+  img(result.robot.gardener, 0, require('./img/sprites/gardener_neutral.png'));
+  img(result.robot.gardener, 1, require('./img/sprites/gardener_red.png'));
+  img(result.robot.gardener, 2, require('./img/sprites/gardener_blue.png'));
+  img(result.robot.lumberjack, 0, require('./img/sprites/lumberjack_neutral.png'));
+  img(result.robot.lumberjack, 1, require('./img/sprites/lumberjack_red.png'));
+  img(result.robot.lumberjack, 2, require('./img/sprites/lumberjack_blue.png'));
+  img(result.robot.recruit, 0, require('./img/sprites/recruit_neutral.png'));
+  img(result.robot.recruit, 1, require('./img/sprites/recruit_red.png'));
+  img(result.robot.recruit, 2, require('./img/sprites/recruit_blue.png'));
+  img(result.robot.scout, 0, require('./img/sprites/scout_neutral.png'));
+  img(result.robot.scout, 1, require('./img/sprites/scout_red.png'));
+  img(result.robot.scout, 2, require('./img/sprites/scout_blue.png'));
+  img(result.robot.soldier, 0, require('./img/sprites/soldier_neutral.png'));
+  img(result.robot.soldier, 1, require('./img/sprites/soldier_red.png'));
+  img(result.robot.soldier, 2, require('./img/sprites/soldier_blue.png'));
+  img(result.robot.tank, 0, require('./img/sprites/tank_neutral.png'));
+  img(result.robot.tank, 1, require('./img/sprites/tank_red.png'));
+  img(result.robot.tank, 2, require('./img/sprites/tank_blue.png'));
 
   img(result.controls, 'goNext', require('./img/controls/go-next.png'));
   img(result.controls, 'goPrevious', require('./img/controls/go-previous.png'));
