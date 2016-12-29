@@ -243,6 +243,9 @@ export default class Client {
     this.controls.onToggleForward = () => {
       goalUPS = goalUPS === 300 ? 10 : 300;
     };
+    this.controls.onToggleRewind = () => {
+      goalUPS = goalUPS === -100 ? 10 : -100;
+    }
     this.controls.onSeek = (turn: number) => {
       externalSeek = true;
       match.seek(turn);

@@ -13,6 +13,7 @@ export default class Controls {
   onGameLoaded: (data: ArrayBuffer) => void;
   onTogglePause: () => void;
   onToggleForward: () => void;
+  onToggleRewind: () => void;
   onSeek: (frame: number) => void;
 
   // qualities of progress bar
@@ -27,6 +28,8 @@ export default class Controls {
     playbackStop: HTMLImageElement,
     seekForward: HTMLImageElement,
     skipForward: HTMLImageElement,
+    seekBackward: HTMLImageElement,
+    skipBackward: HTMLImageElement,
     upload: HTMLImageElement
   };
 
@@ -41,6 +44,8 @@ export default class Controls {
       playbackStop: images.controls.playbackStop,
       seekForward: images.controls.seekForward,
       skipForward: images.controls.skipForward,
+      seekBackward: images.controls.seekBackward,
+      skipBackward: images.controls.skipBackward,
       upload: images.controls.upload
     }
 
@@ -55,6 +60,7 @@ export default class Controls {
     let buttons = document.createElement("td");
     buttons.appendChild(this.createButton("playbackPause", () => this.pause(), "playbackStart"));
     buttons.appendChild(this.createButton("playbackStop", () => this.restart()));
+    buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
     buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
     buttons.appendChild(this.uploadFileButton());
     buttons.appendChild(this.speedReadout);
@@ -175,9 +181,12 @@ export default class Controls {
       this.imgs["playbackStart"].style.display = "unset";
       this.imgs["playbackPause"].style.display = "none";
 
-      // if pausing the simulation, reset the fast forward button
+      // if pausing the simulation, reset the fast forward / rewind button
+      // TODO: These methods should be separate because they are clunky and used many times
       this.imgs["seekForward"].style.display = "none";
       this.imgs["skipForward"].style.display = "unset";
+      this.imgs["seekBackward"].style.display = "none";
+      this.imgs["skipBackward"].style.display = "unset";
     } else {
       this.imgs["playbackStart"].style.display = "none";
       this.imgs["playbackPause"].style.display = "unset";
@@ -200,6 +209,33 @@ export default class Controls {
     }
 
     // toggle the pause button to play if the simulation is paused
+    // Reset the rewind button
+    this.imgs["seekBackward"].style.display = "none";
+    this.imgs["skipBackward"].style.display = "unset";
+    if (this.imgs["playbackPause"].style.display == "none") {
+      this.imgs["playbackStart"].style.display = "none";
+      this.imgs["playbackPause"].style.display = "unset";
+    }
+  }
+  
+  /**
+   * Continuous rewind of the simulation
+   */
+  rewind() {
+    this.onToggleRewind();
+    console.log("REWIND");
+    if (this.imgs["seekBackward"].style.display == "none") {
+      this.imgs["seekBackward"].style.display = "unset";
+      this.imgs["skipBackward"].style.display = "none";
+    } else {
+      this.imgs["seekBackward"].style.display = "none";
+      this.imgs["skipBackward"].style.display = "unset";
+    }
+
+    // toggle the pause button to play if the simulation is paused
+    // Reset the forward button
+    this.imgs["seekForward"].style.display = "none";
+    this.imgs["skipForward"].style.display = "unset";
     if (this.imgs["playbackPause"].style.display == "none") {
       this.imgs["playbackStart"].style.display = "none";
       this.imgs["playbackPause"].style.display = "unset";
