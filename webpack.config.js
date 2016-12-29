@@ -75,7 +75,13 @@ module.exports = function(env) {
         new webpack.DefinePlugin({
           'process.env.ELECTRON': false
         })
-      ]
+      ],
+      externals: {
+        'electron': 'electron',
+        'os': 'os',
+        'fs': 'fs',
+        'child_process': 'child_process'
+      }
     });
   }
 
