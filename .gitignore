@@ -52,5 +52,8 @@ outtest/
 # webpack bundle folder
 bc17/
 
+# generated apps
+dist/
+
 # who even uses macs i mean god
 **/.DS_Store
