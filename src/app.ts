@@ -156,9 +156,11 @@ export default class Client {
    * Loads stats bar with team information
    */
   loadStats() {
+    // TODO: currently a placeholder, load real data from world.meta
     let teamNames: string[] = ["Chicken Pad Thai", "Vegetable Fried Rice"];
-    this.stats = new Stats(teamNames, this.imgs);
-    this.stats.setRobotCount(0, "archon", 25);
+    let teamIDs: number[] = [10, 20];
+    this.stats = new Stats(teamNames, teamIDs, this.imgs);
+    this.stats.setRobotCount(10, schema.BodyType.ARCHON, 25);
     return this.stats.div;
   }
 
