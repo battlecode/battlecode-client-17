@@ -1,32 +1,65 @@
 import * as imageloader from './imageloader';
 
+import {GameWorld, Metadata, schema} from 'battlecode-playback';
+
+const ARCHON = schema.BodyType.ARCHON;
+const GARDENER = schema.BodyType.GARDENER;
+const LUMBERJACK = schema.BodyType.LUMBERJACK;
+const RECRUIT = schema.BodyType.RECRUIT;
+const SOLDIER = schema.BodyType.SOLDIER;
+const TANK = schema.BodyType.TANK;
+const SCOUT = schema.BodyType.SCOUT;
+const TREE_BULLET = schema.BodyType.TREE_BULLET;
+const TREE_NEUTRAL = schema.BodyType.TREE_NEUTRAL;
+
+const hex: Object = {
+  1: "#a62014",
+  2: "#0636ac"
+};
+
 /**
 * Loads game stats: team name, victory points, bullets, robot count
+* We make the distinction between:
+*    1) Team names - a global string identifier i.e. "Teh Devs"
+*    2) Team IDs - each Battlecode team has a unique numeric team ID i.e. 0
+*    3) In-game ID - used to distinguish teams in the current match only;
+*       team 1 is red, team 2 is blue
 */
 export default class Stats {
 
   div: HTMLDivElement;
-
-  robotTds: Object[] = [Object, Object];
-  statTds: Object[] = [Object, Object];
   images: imageloader.AllImages;
 
-  readonly stats: string[] = ["Bullets", "Victory Points"];
-  readonly colors: string[] = ["#a62014", "#0636ac"];
-  readonly robots: string[] = ["archon", "gardener", "lumberjack", "recruit",
-                               "scout", "soldier", "tank"];
+  // Key is the team ID, folllowed by the robot/stat type
+  robotTds: Object = {};
+  statTds: Object = {};
 
-  constructor(teamNames: string[], images: imageloader.AllImages) {
+  // Note: robot types and number of teams are currently fixed regardless of
+  // match info. Keep in mind if we ever change these, or implement this less
+  // statically.
+  readonly stats: string[] = ["Bullets", "Victory Points"];
+  readonly robots: schema.BodyType[] = [
+    ARCHON, GARDENER, LUMBERJACK, RECRUIT, SOLDIER, TANK, SCOUT
+  ];
+
+  constructor(teamNames: string[], teamIDs: number[], images: imageloader.AllImages) {
     this.images = images;
     this.div = this.baseDiv();
     this.div.appendChild(this.battlecodeLogo());
 
-    for (var teamID = 0; teamID < teamNames.length; teamID++) {
-      // Add the team name banner
-      this.div.appendChild(this.teamHeaderNode(teamNames[teamID], this.colors[teamID]));
+    if (teamNames.length != teamIDs.length) {
+      throw new Error("different number of team names and team IDs");
+    }
+
+    // Add a section to the stats bar for each team in the match
+    for (var index = 0; index < teamIDs.length; index++) {
+      // Collect identifying information
+      let teamID = teamIDs[index];
+      let teamName = teamNames[index];
+      let inGameID = index + 1; // teams start at index 1
 
       // Create td elements for the robot counts and store them in robotTds
-      // so we can update these robot counts later
+      // so we can update these robot counts later; maps robot type to count
       let initialRobotCount: Object = {};
       for (let robot of this.robots) {
         let td: HTMLTableCellElement = document.createElement("td");
@@ -35,7 +68,8 @@ export default class Stats {
       }
       this.robotTds[teamID] = initialRobotCount;
 
-      // Similarly create td elements for the VPs, bullet count, and tree count
+      // Similarly create td elements for the VPs, bullet count, and tree count;
+      // maps stat type to count
       let initialStats: Object = {};
       for (let stat of this.stats) {
         initialStats[stat] = document.createElement("td");
@@ -43,8 +77,10 @@ export default class Stats {
       }
       this.statTds[teamID] = initialStats;
 
-      this.div.appendChild(this.robotTable(teamID));
-      this.div.appendChild(this.overallStatsTable(teamID));
+      // Add the team name banner, the robot count table, and the stats table
+      this.div.appendChild(this.teamHeaderNode(teamName, inGameID));
+      this.div.appendChild(this.robotTable(teamID, inGameID));
+      this.div.appendChild(this.overallStatsTable(teamID, inGameID));
 
       this.div.appendChild(document.createElement("br"));
       this.div.appendChild(document.createElement("br"));
@@ -54,7 +90,7 @@ export default class Stats {
   /**
    * Initializes the styles for the stats div
    */
-  baseDiv() {
+  private baseDiv() {
     let div = document.createElement("div");
 
     // Positioning
@@ -82,7 +118,7 @@ export default class Stats {
   /**
    * Battlecode logo or title, at the top of the stats bar
    */
-  battlecodeLogo() {
+  private battlecodeLogo() {
     let logo: HTMLDivElement = document.createElement("div");
     logo.style.fontWeight = "bold";
     logo.style.fontSize = "40px";
@@ -100,7 +136,7 @@ export default class Stats {
   /**
    * Colored banner labeled with the given teamName
    */
-  teamHeaderNode(teamName: string, color: string) {
+  private teamHeaderNode(teamName: string, inGameID: number) {
     let teamHeader: HTMLDivElement = document.createElement("div");
     teamHeader.style.padding = "14px";
     teamHeader.style.fontSize = "20px";
@@ -108,7 +144,7 @@ export default class Stats {
     teamHeader.style.marginBottom = "10px";
 
     let teamNameNode = document.createTextNode(teamName);
-    teamHeader.style.backgroundColor = color;
+    teamHeader.style.backgroundColor = hex[inGameID];
     teamHeader.appendChild(teamNameNode);
     return teamHeader;
   }
@@ -117,16 +153,16 @@ export default class Stats {
    * Create the table that displays the robot images along with their counts.
    * Uses the teamID to decide which color image to display.
    */
-  robotTable(teamID: number) {
-    let teamColor: string = this.colors[teamID];
+  private robotTable(teamID: number, inGameID: number) {
     let table: HTMLTableElement = document.createElement("table");
     table.setAttribute("align", "center");
 
     // Create the table row with the robot images
     let robotImages: HTMLTableRowElement = document.createElement("tr");
     for (let robot of this.robots) {
+      let robotName: string = this.bodyTypeToString(robot);
       let td: HTMLTableCellElement = document.createElement("td");
-      td.appendChild(this.images.robot[robot][teamID]);
+      td.appendChild(this.images.robot[robotName][inGameID]);
       robotImages.appendChild(td);
     }
     table.appendChild(robotImages);
@@ -143,8 +179,7 @@ export default class Stats {
   }
 
 
-  overallStatsTable(teamID: number) {
-    let teamColor: string = this.colors[teamID];
+  private overallStatsTable(teamID: number, inGameID: number) {
     let table: HTMLTableElement = document.createElement("table");
     table.setAttribute("align", "center");
     table.style.marginTop = "10px";
@@ -155,7 +190,8 @@ export default class Stats {
 
       let tdLabel: HTMLTableCellElement = document.createElement("td");
       tdLabel.appendChild(document.createTextNode(stat));
-      tdLabel.style.color = this.colors[teamID];
+      tdLabel.style.fontFamily = "Graduate";
+      tdLabel.style.color = hex[inGameID];
       tdLabel.style.textAlign = "right";
       tdLabel.style.padding = "5px";
       tr.appendChild(tdLabel);
@@ -171,10 +207,24 @@ export default class Stats {
     return table;
   }
 
+  private bodyTypeToString(bodyType: schema.BodyType) {
+    switch(bodyType) {
+      case ARCHON: return "archon";
+      case GARDENER: return "gardener";
+      case LUMBERJACK: return "lumberjack";
+      case RECRUIT: return "recruit";
+      case SOLDIER: return "soldier";
+      case TANK: return "tank";
+      case SCOUT: return "scout";
+      default:
+        throw new Error("invalid body type");
+    }
+  }
+
   /**
    * Change the robot count on the stats bar
    */
-  setRobotCount(teamID: number, robotType: string, count: number) {
+  setRobotCount(teamID: number, robotType: schema.BodyType, count: number) {
     let td: HTMLTableCellElement = this.robotTds[teamID][robotType];
     td.innerHTML = String(count);
   }
