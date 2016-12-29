@@ -225,6 +225,9 @@ export default class Client {
 
     // How fast the simulation should progress
     let goalUPS = 10;
+    
+    // Keep track of rewinding for <= 0 turn case
+    let rewinding = false;
 
     // A variety of stuff to track how fast the simulation is going
     let rendersPerSecond = new TickCounter(.5, 100);
@@ -245,6 +248,7 @@ export default class Client {
     };
     this.controls.onToggleRewind = () => {
       goalUPS = goalUPS === -100 ? 10 : -100;
+      rewinding = !rewinding;
     }
     this.controls.onSeek = (turn: number) => {
       externalSeek = true;
@@ -272,6 +276,8 @@ export default class Client {
         if (match.current.turn === match.seekTo) {
           externalSeek = false;
         }
+      } else if (rewinding && match.current.turn <= 10) {
+        this.controls.onToggleRewind();
       } else if (Math.abs(interpGameTime - match.current.turn) < 10) {
         // only update time if we're not seeking
         delta = goalUPS * (curTime - lastTime) / 1000;
