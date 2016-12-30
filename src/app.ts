@@ -156,11 +156,7 @@ export default class Client {
    * Loads stats bar with team information
    */
   loadStats() {
-    // TODO: currently a placeholder, load real data from world.meta
-    let teamNames: string[] = ["Chicken Pad Thai", "Vegetable Fried Rice"];
-    let teamIDs: number[] = [10, 20];
-    this.stats = new Stats(teamNames, teamIDs, this.imgs);
-    this.stats.setRobotCount(10, schema.BodyType.ARCHON, 25);
+    this.stats = new Stats(this.imgs);
     return this.stats.div;
   }
 
@@ -221,6 +217,15 @@ export default class Client {
     const game = this.currentGame as Game;
     const meta = game.meta as Metadata;
     const match = game.getMatch(0) as Match;
+
+    // Reset the stats bar
+    let teamNames = new Array();
+    let teamIDs = new Array();
+    for (let team in meta.teams) {
+      teamNames.push(meta.teams[team].name);
+      teamIDs.push(meta.teams[team].teamID);
+    }
+    this.stats.initializeGame(teamNames, teamIDs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
