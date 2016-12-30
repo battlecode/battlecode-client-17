@@ -184,6 +184,10 @@ export default class Client {
 
     this.canvas.setAttribute("width", String(wrapper.width));
     this.canvas.setAttribute("height", String(wrapper.height));
+
+    // looks weird if the window is tall and skinny instead of short and fat
+    this.canvas.style.width = "${100 * aspectRatio}%";
+    this.canvas.style.height = "calc(100vh - 60px)";
   }
 
   /**
@@ -227,7 +231,7 @@ export default class Client {
 
     // How fast the simulation should progress
     let goalUPS = 10;
-    
+
     // Keep track of rewinding for <= 0 turn case
     let rewinding = false;
 
