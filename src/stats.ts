@@ -253,11 +253,18 @@ export default class Stats {
   }
 
   /**
-   * Change the count on the stats bar
-   * @param stat "Victory Points" or "Bullets"
+   * Change the victory points of the given team
    */
-  setTeamStat(teamID: number, stat: string, count: number) {
-    let td: HTMLTableCellElement = this.statTds[teamID][stat];
+  setVPs(teamID: number, count: number) {
+    let td: HTMLTableCellElement = this.statTds[teamID]["Victory Points"];
+    td.innerHTML = String(count);
+  }
+
+  /**
+   * Change the bullets of the given team
+   */
+  setBullets(teamID: number, count: number) {
+    let td: HTMLTableCellElement = this.statTds[teamID]["Bullets"];
     td.innerHTML = String(count);
   }
 }
