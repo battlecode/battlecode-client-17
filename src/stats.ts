@@ -1,6 +1,6 @@
 import * as imageloader from './imageloader';
 
-import {GameWorld, Metadata, schema} from 'battlecode-playback';
+import {schema} from 'battlecode-playback';
 
 const ARCHON = schema.BodyType.ARCHON;
 const GARDENER = schema.BodyType.GARDENER;
@@ -11,6 +11,8 @@ const TANK = schema.BodyType.TANK;
 const SCOUT = schema.BodyType.SCOUT;
 const TREE_BULLET = schema.BodyType.TREE_BULLET;
 const TREE_NEUTRAL = schema.BodyType.TREE_NEUTRAL;
+
+const NUMBER_OF_TEAMS = 2;
 
 const hex: Object = {
   1: "#a62014",
@@ -28,6 +30,7 @@ const hex: Object = {
 export default class Stats {
 
   div: HTMLDivElement;
+  teamDivs: Array<HTMLDivElement> = new Array();
   images: imageloader.AllImages;
 
   // Key is the team ID, folllowed by the robot/stat type
@@ -42,49 +45,15 @@ export default class Stats {
     ARCHON, GARDENER, LUMBERJACK, RECRUIT, SOLDIER, TANK, SCOUT
   ];
 
-  constructor(teamNames: string[], teamIDs: number[], images: imageloader.AllImages) {
+  constructor(images: imageloader.AllImages) {
     this.images = images;
     this.div = this.baseDiv();
     this.div.appendChild(this.battlecodeLogo());
 
-    if (teamNames.length != teamIDs.length) {
-      throw new Error("different number of team names and team IDs");
-    }
+    let teamNames: Array<string> = ["?????", "?????"];
+    let teamIDs: Array<number> = [1, 2];
 
-    // Add a section to the stats bar for each team in the match
-    for (var index = 0; index < teamIDs.length; index++) {
-      // Collect identifying information
-      let teamID = teamIDs[index];
-      let teamName = teamNames[index];
-      let inGameID = index + 1; // teams start at index 1
-
-      // Create td elements for the robot counts and store them in robotTds
-      // so we can update these robot counts later; maps robot type to count
-      let initialRobotCount: Object = {};
-      for (let robot of this.robots) {
-        let td: HTMLTableCellElement = document.createElement("td");
-        td.innerHTML = "0";
-        initialRobotCount[robot] = td;
-      }
-      this.robotTds[teamID] = initialRobotCount;
-
-      // Similarly create td elements for the VPs, bullet count, and tree count;
-      // maps stat type to count
-      let initialStats: Object = {};
-      for (let stat of this.stats) {
-        initialStats[stat] = document.createElement("td");
-        initialStats[stat].innerHTML = 0;
-      }
-      this.statTds[teamID] = initialStats;
-
-      // Add the team name banner, the robot count table, and the stats table
-      this.div.appendChild(this.teamHeaderNode(teamName, inGameID));
-      this.div.appendChild(this.robotTable(teamID, inGameID));
-      this.div.appendChild(this.overallStatsTable(teamID, inGameID));
-
-      this.div.appendChild(document.createElement("br"));
-      this.div.appendChild(document.createElement("br"));
-    }
+    this.initializeGame(teamNames, teamIDs);
   }
 
   /**
@@ -218,6 +187,60 @@ export default class Stats {
       case SCOUT: return "scout";
       default:
         throw new Error("invalid body type");
+    }
+  }
+
+  /**
+   * Clear the current stats bar and reinitialize it with the given teams.
+   */
+  initializeGame(teamNames: Array<string>, teamIDs: Array<number>){
+    // Remove the previous match info
+    for (let node of this.teamDivs) {
+      this.div.removeChild(node);
+    }
+    this.teamDivs = new Array();
+    this.robotTds = {};
+    this.statTds = {};
+
+    // Populate with new info
+    // Add a section to the stats bar for each team in the match
+    for (var index = 0; index < teamIDs.length; index++) {
+      // Collect identifying information
+      let teamID = teamIDs[index];
+      let teamName = teamNames[index];
+      let inGameID = index + 1; // teams start at index 1
+
+      // A div element containing all stats information about this team
+      let teamDiv = document.createElement("div");
+      this.teamDivs.push(teamDiv);
+
+      // Create td elements for the robot counts and store them in robotTds
+      // so we can update these robot counts later; maps robot type to count
+      let initialRobotCount: Object = {};
+      for (let robot of this.robots) {
+        let td: HTMLTableCellElement = document.createElement("td");
+        td.innerHTML = "0";
+        initialRobotCount[robot] = td;
+      }
+      this.robotTds[teamID] = initialRobotCount;
+
+      // Similarly create td elements for the VPs, bullet count, and tree count;
+      // maps stat type to count
+      let initialStats: Object = {};
+      for (let stat of this.stats) {
+        initialStats[stat] = document.createElement("td");
+        initialStats[stat].innerHTML = 0;
+      }
+      this.statTds[teamID] = initialStats;
+
+      // Add the team name banner, the robot count table, and the stats table
+      teamDiv.appendChild(this.teamHeaderNode(teamName, inGameID));
+      teamDiv.appendChild(this.robotTable(teamID, inGameID));
+      teamDiv.appendChild(this.overallStatsTable(teamID, inGameID));
+      teamDiv.appendChild(document.createElement("br"));
+      teamDiv.appendChild(document.createElement("br"));
+
+      this.div.appendChild(teamDiv);
     }
   }
 
