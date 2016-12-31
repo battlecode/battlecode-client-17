@@ -164,28 +164,16 @@ export default class Client {
    * Sets canvas size to maximum dimensions while maintaining the aspect ratio
    */
   setCanvasDimensions(world: GameWorld) {
-    let leftBuffer: number = 320; // width of stats bar
-    let topBuffer: number = 50; // height of control bar
-    let aspectRatio: number = world.minCorner.absDistanceX(world.maxCorner) /
-                              world.minCorner.absDistanceY(world.maxCorner);
-    console.log(aspectRatio);
-    let wrapper = {
-      width: this.canvasWrapper.clientWidth - leftBuffer,
-      height: this.canvasWrapper.clientHeight - topBuffer
-    };
+    let topBuffer: number = "60px"; // height of control bar
+    let width: number = world.minCorner.absDistanceX(world.maxCorner);
+    let height: number = world.minCorner.absDistanceY(world.maxCorner);
 
-    if (wrapper.width / wrapper.height < aspectRatio) {
-      wrapper.height = wrapper.width / aspectRatio;
-    } else {
-      wrapper.width = wrapper.height * aspectRatio;
-    }
-
-    this.canvas.setAttribute("width", String(wrapper.width));
-    this.canvas.setAttribute("height", String(wrapper.height));
+    this.canvas.setAttribute("width", String(width));
+    this.canvas.setAttribute("height", String(height));
 
     // looks weird if the window is tall and skinny instead of short and fat
-    this.canvas.style.width = "${100 * aspectRatio}%";
-    this.canvas.style.height = "calc(100vh - 60px)";
+    this.canvas.style.width = "${100 * width / height}%";
+    this.canvas.style.height = "calc(100vh - ${topBuffer})";
   }
 
   /**
