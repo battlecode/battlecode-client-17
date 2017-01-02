@@ -167,6 +167,14 @@ export default class Controls {
       this.onGameLoaded(reader.result);
     };
     reader.readAsArrayBuffer(file);
+
+    // Reset buttons
+    this.imgs["playbackStart"].style.display = "none";
+    this.imgs["playbackPause"].style.display = "unset";
+    this.imgs["seekBackward"].style.display = "none";
+    this.imgs["skipBackward"].style.display = "unset";
+    this.imgs["seekForward"].style.display = "none";
+    this.imgs["skipForward"].style.display = "unset";
   }
 
   /**
@@ -217,7 +225,7 @@ export default class Controls {
       this.imgs["playbackPause"].style.display = "unset";
     }
   }
-  
+
   /**
    * Continuous rewind of the simulation
    */
