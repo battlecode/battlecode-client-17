@@ -232,7 +232,7 @@ export default class Client {
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
-    const renderer = new Renderer(this.canvas, this.imgs, this.conf, game.meta as Metadata);
+    const renderer = new Renderer(this.canvas, this.controls, this.imgs, this.conf, game.meta as Metadata);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -270,14 +270,36 @@ export default class Client {
     };
     this.controls.canvas.addEventListener("mousedown", function(event) {
       // jump to a frame when clicking the controls timeline
-      const offsetLeft = 330;
-      let width = event.x - offsetLeft;
+      let width = event.offsetX;
       let maxWidth = (<HTMLCanvasElement>this).width;
       let turn = Math.floor(match['_farthest'].turn * width / maxWidth);
       externalSeek = true;
       match.seek(turn);
       interpGameTime = turn;
     }, false);
+
+    // set key options
+    const controls = this.controls;
+    document.onkeydown = function(event) {
+      console.log(event.keyCode);
+      switch (event.keyCode) {
+        case 80: // "p" - Pause/Unpause
+          controls.pause();
+          break;
+        case 79: // "o" - Stop
+          controls.restart();
+          break;
+        case 37: // "LEFT" - Skip/Seek Backward
+          controls.rewind();
+          break;
+        case 39: // "RIGHT" - Skip/Seek Forward
+          controls.forward();
+          break;
+        case 72: // "h" - Toggle Health Bars
+          renderer.toggleHealthBars();
+          break;
+      }
+    };
 
     // The main update loop
     const loop = (curTime) => {

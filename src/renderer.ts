@@ -3,6 +3,7 @@ import NextStep from './nextstep';
 
 import {GameWorld, Metadata, schema} from 'battlecode-playback';
 import {AllImages} from './imageloader';
+import Controls from './controls';
 import Victor = require('victor');
 
 /**
@@ -13,6 +14,7 @@ import Victor = require('victor');
 export default class Renderer {
   readonly canvas: HTMLCanvasElement;
   readonly ctx: CanvasRenderingContext2D;
+  readonly controls: Controls;
   readonly imgs: AllImages;
   readonly conf: config.Config;
   readonly metadata: Metadata;
@@ -21,8 +23,15 @@ export default class Renderer {
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
-  constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config, metadata: Metadata) {
+  // indicator string information
+  private lastSelectedRobotID: number;
+
+  // options
+  private healthBars: boolean = true;
+
+  constructor(canvas: HTMLCanvasElement, controls: Controls, imgs: AllImages, conf: config.Config, metadata: Metadata) {
     this.canvas = canvas;
+    this.controls = controls;
     this.conf = conf;
     this.imgs = imgs;
     this.metadata = metadata;
@@ -38,6 +47,15 @@ export default class Renderer {
 
     this.bgPattern = this.ctx.createPattern(imgs.background, 'repeat');
     //this.treeMedHealth = metadata.types[schema.BodyType.TREE_NEUTRAL].maxHealth / 2;
+
+    // indicator strings
+    let counter = 0;
+    this.canvas.addEventListener("mousedown", function(event) {
+      console.log(event);
+      console.log(`(${event.offsetX}, ${event.offsetY})`);
+      controls.setIndicatorString(0, String(counter));
+      counter = counter + 1;
+    }, false);
   }
 
   /**
@@ -75,6 +93,13 @@ export default class Renderer {
    */
   release() {
     // nothing to do yet?
+  }
+
+  /**
+   * Toggle health bars
+   */
+  toggleHealthBars() {
+    this.healthBars = !this.healthBars;
   }
 
   private renderBackground(world: GameWorld) {
@@ -227,10 +252,11 @@ export default class Renderer {
   }
 
   private drawHealthBar(x: number, y: number, health: number, type: number) {
+    if (!this.healthBars) return; // skip if the option is turned off
+
     const bodyType = this.metadata.types[type];
     if (bodyType == undefined) return;
-    // this.ctx.fillStyle = "white"; // max health
-    // this.ctx.fillRect(x, y, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+
     this.ctx.fillStyle = "green"; // current health
     this.ctx.fillRect(x, y, HEALTH_BAR_WIDTH * health / bodyType.maxHealth,
       HEALTH_BAR_HEIGHT);
