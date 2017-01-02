@@ -55,19 +55,27 @@ export default class Controls {
     // create the timeline
     let timeline = document.createElement("td");
     timeline.appendChild(this.timeline());
+    timeline.appendChild(document.createElement("br"));
+    timeline.appendChild(this.speedReadout);
 
     // create the button controls
     let buttons = document.createElement("td");
+    buttons.vAlign = "top";
     buttons.appendChild(this.createButton("playbackPause", () => this.pause(), "playbackStart"));
     buttons.appendChild(this.createButton("playbackStop", () => this.restart()));
     buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
     buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
     buttons.appendChild(this.uploadFileButton());
-    buttons.appendChild(this.speedReadout);
+
+    // create the indicator string display
+    let indicators = document.createElement("td");
+    indicators.vAlign = "top";
 
     table.appendChild(tr);
     tr.appendChild(timeline);
     tr.appendChild(buttons);
+    tr.appendChild(indicators);
+
     this.div.appendChild(table);
   }
 
@@ -120,7 +128,7 @@ export default class Controls {
 
     // Positioning
     div.style.width = "100%";
-    div.style.height = "40px";
+    div.style.height = "55px";
     div.style.marginLeft = "310px";
     div.style.position = "fixed";
     div.style.zIndex = "0.5";

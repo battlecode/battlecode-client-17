@@ -117,7 +117,7 @@ export default class Client {
     gameArea.style.height = "100%";
     gameArea.style.zIndex = "0.1";
     gameArea.style.position = "fixed";
-    gameArea.style.top = "60px";
+    gameArea.style.top = "75px";
     gameArea.style.left = "320px";
     // Style
     gameArea.style.background = "#333"
@@ -165,7 +165,7 @@ export default class Client {
    */
   setCanvasDimensions() {
     let leftBuffer: number = 320; // width of stats bar
-    let topBuffer: number = 50; // height of control bar
+    let topBuffer: number = 75; // height of control bar
     let aspectRatio: number = this.conf.width / this.conf.height;
     let wrapper = {
       width: this.canvasWrapper.clientWidth - leftBuffer,
@@ -183,7 +183,7 @@ export default class Client {
 
     // looks weird if the window is tall and skinny instead of short and fat
     this.canvas.style.width = "${100 * aspectRatio}%";
-    this.canvas.style.height = "calc(100vh - 60px)";
+    this.canvas.style.height = "calc(100vh - 75px)";
   }
 
   /**
