@@ -1,5 +1,7 @@
 import * as imageloader from './imageloader';
 
+const NUMBER_OF_INDICATOR_STRINGS = 3;
+
 /**
  * Game controls: pause/unpause, fast forward, rewind
  */
@@ -7,6 +9,7 @@ export default class Controls {
   div: HTMLDivElement;
 
   readonly speedReadout: Text;
+  readonly indicatorStrings: Array<Text>;
 
   // Callbacks initialized from outside Controls
   // Yeah, it's pretty gross :/
@@ -70,6 +73,13 @@ export default class Controls {
     // create the indicator string display
     let indicators = document.createElement("td");
     indicators.vAlign = "top";
+    this.indicatorStrings = new Array();
+    for (let i = 0; i < NUMBER_OF_INDICATOR_STRINGS; i++) {
+      let textNode = document.createTextNode("");
+      this.indicatorStrings.push(textNode);
+      indicators.appendChild(textNode);
+      indicators.appendChild(document.createElement("br"));
+    }
 
     table.appendChild(tr);
     tr.appendChild(timeline);
@@ -271,6 +281,11 @@ export default class Controls {
     this.speedReadout.textContent =
       ` TIME: ${time}/${loadedTime} UPS: ${ups | 0} FPS: ${fps | 0}`;
 
+  }
+
+  setIndicatorString(index: number, value: string) {
+    this.indicatorStrings[index].textContent =
+      `${index}, ${value}`;
   }
 
   /**
