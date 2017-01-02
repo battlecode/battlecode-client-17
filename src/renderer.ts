@@ -151,6 +151,7 @@ export default class Renderer {
           break;
       }
       this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
+      this.drawHealthBar(x-HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
     }
   }
 
@@ -220,8 +221,22 @@ export default class Renderer {
           break;
       }
       this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
+      this.drawHealthBar(realX-HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
     }
 
+  }
+
+  private drawHealthBar(x: number, y: number, health: number, type: number) {
+    const bodyType = this.metadata.types[type];
+    if (bodyType == undefined) return;
+    // this.ctx.fillStyle = "white"; // max health
+    // this.ctx.fillRect(x, y, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+    this.ctx.fillStyle = "green"; // current health
+    this.ctx.fillRect(x, y, HEALTH_BAR_WIDTH * health / bodyType.maxHealth,
+      HEALTH_BAR_HEIGHT);
+    this.ctx.strokeStyle = "black"; // outline
+    this.ctx.lineWidth = .1;
+    this.ctx.strokeRect(x, y, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
   }
 
   private renderBullets(world: GameWorld, lerpAmount: number) {
@@ -260,8 +275,31 @@ export default class Renderer {
   }
 
   private renderIndicatorStrings(world: GameWorld) {
-    const dots = world.indicatorDots;
-    const lines = world.indicatorLines;
+    // const dots = world.indicatorDots;
+    // const lines = world.indicatorLines;
+    const dots = {
+      length: 0,
+      arrays: {
+        x: [],
+        y: [],
+        red: [],
+        green: [],
+        blue: []
+      }
+    };
+
+    const lines = {
+      length: 0,
+      arrays: {
+        startX: [],
+        startY: [],
+        endX: [],
+        endY: [],
+        red: [],
+        green: [],
+        blue: []
+      }
+    };
 
     // Render the indicator dots
     const dotsX = dots.arrays.x;
@@ -307,7 +345,10 @@ export default class Renderer {
 const BULLET_SIZE= .25;
 const BULLET_SIZE_HALF = BULLET_SIZE / 2;
 const INDICATOR_DOT_SIZE = .25;
-const INDICATOR_LINE_WIDTH = .5;
+const INDICATOR_LINE_WIDTH = .1;
+const HEALTH_BAR_HEIGHT = .3;
+const HEALTH_BAR_WIDTH = 2;
+const HEALTH_BAR_WIDTH_HALF = HEALTH_BAR_WIDTH / 2;
 
 // we check if speed^2 is >= these
 const HIGH_SPEED_THRESH = (2*2) - .00001;
