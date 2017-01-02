@@ -49,7 +49,7 @@ export default class Renderer {
   render(world: GameWorld, viewMin: Victor, viewWidth: number, nextStep?: NextStep, lerpAmount?: number) {
     // setup correct rendering
     const scale = this.canvas.width / viewWidth;
-    
+
     this.ctx.save();
     this.ctx.scale(scale, scale);
     this.ctx.translate(-viewMin.x, -viewMin.y);
@@ -63,7 +63,9 @@ export default class Renderer {
       this.renderBullets(world, 0);
       this.renderBodies(world);
     }
-    
+
+    this.renderIndicatorStrings(world);
+
     // restore default rendering
     this.ctx.restore();
   }
@@ -78,7 +80,7 @@ export default class Renderer {
   private renderBackground(world: GameWorld) {
     this.ctx.save();
     this.ctx.fillStyle = this.bgPattern;
-    
+
     const minX = world.minCorner.x;
     const minY = world.minCorner.y;
     const width = world.maxCorner.x - world.minCorner.x;
@@ -107,7 +109,7 @@ export default class Renderer {
       const x = xs[i];
       const y = ys[i];
       const radius = radii[i];
-      
+
       const team = teams[i];
 
       let img;
@@ -176,7 +178,7 @@ export default class Renderer {
       const realY = y + (nextY - y) * lerpAmount;
 
       const radius = radii[i];
-      
+
       const team = teams[i];
 
       let img;
@@ -256,11 +258,56 @@ export default class Renderer {
                          BULLET_SIZE, BULLET_SIZE);
     }
   }
+
+  private renderIndicatorStrings(world: GameWorld) {
+    const dots = world.indicatorDots;
+    const lines = world.indicatorLines;
+
+    // Render the indicator dots
+    const dotsX = dots.arrays.x;
+    const dotsY = dots.arrays.y;
+    const dotsRed = dots.arrays.red;
+    const dotsGreen = dots.arrays.green;
+    const dotsBlue = dots.arrays.blue;
+
+    for (let i = 0; i < dots.length; i++) {
+      const red = dotsRed[i];
+      const green = dotsGreen[i];
+      const blue = dotsBlue[i];
+
+      this.ctx.beginPath();
+      this.ctx.arc(dotsX[i], dotsY[i], INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
+      this.ctx.fillStyle = 'rgb(${red}, ${green}, ${blue})'
+    }
+
+    // Render the indicator lines
+    const linesStartX = lines.arrays.startX;
+    const linesStartY = lines.arrays.startY;
+    const linesEndX = lines.arrays.endX;
+    const linesEndY = lines.arrays.endY;
+    const linesRed = lines.arrays.red;
+    const linesGreen = lines.arrays.green;
+    const linesBlue = lines.arrays.blue;
+    this.ctx.lineWidth = INDICATOR_LINE_WIDTH;
+
+    for (let i = 0; i < lines.length; i++) {
+      const red = linesRed[i];
+      const green = linesGreen[i];
+      const blue = linesBlue[i];
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(linesStartX[i], linesStartY[i]);
+      this.ctx.lineTo(linesEndX[i], linesEndY[i]);
+      this.ctx.fillStyle = 'rgb(${red}, ${green}, ${blue})'
+    }
+  }
 }
 
 // Constants
 const BULLET_SIZE= .25;
 const BULLET_SIZE_HALF = BULLET_SIZE / 2;
+const INDICATOR_DOT_SIZE = .25;
+const INDICATOR_LINE_WIDTH = .5;
 
 // we check if speed^2 is >= these
 const HIGH_SPEED_THRESH = (2*2) - .00001;
