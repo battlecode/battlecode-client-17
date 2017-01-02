@@ -28,6 +28,7 @@ export default class Renderer {
 
   // options
   private healthBars: boolean = true;
+  private circleBots: boolean = false;
 
   constructor(canvas: HTMLCanvasElement, controls: Controls, imgs: AllImages, conf: config.Config, metadata: Metadata) {
     this.canvas = canvas;
@@ -120,6 +121,14 @@ export default class Renderer {
     this.ctx.restore();
   }
 
+  /**
+   * Turn the robots and trees into circles
+   */
+  toggleCircleBots() {
+    this.circleBots = !this.circleBots;
+    console.log(this.circleBots);
+  }
+
   private renderBodies(world: GameWorld) {
     const bodies = world.bodies;
     const length = bodies.length;
@@ -175,7 +184,13 @@ export default class Renderer {
           img = this.imgs.unknown;
           break;
       }
-      this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
+      if (this.circleBots) {
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#ddd";
+        this.ctx.arc(x-radius, y-radius, radius, 0, 2 * Math.PI, false);
+        this.ctx.fill();
+      }
+      this.ctx.drawImage(img, x, y, radius*2, radius*2);
       this.drawHealthBar(x-HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
     }
   }
@@ -244,6 +259,12 @@ export default class Renderer {
         default:
           img = this.imgs.unknown;
           break;
+      }
+      if (this.circleBots) {
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#ddd";
+        this.ctx.arc(realX, realY, radius, 0, 2 * Math.PI, false);
+        this.ctx.fill();
       }
       this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
       this.drawHealthBar(realX-HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
@@ -341,6 +362,7 @@ export default class Renderer {
 
       this.ctx.beginPath();
       this.ctx.arc(dotsX[i], dotsY[i], INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
+      this.ctx.fill();
       this.ctx.fillStyle = 'rgb(${red}, ${green}, ${blue})'
     }
 

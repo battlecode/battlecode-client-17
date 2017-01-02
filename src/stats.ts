@@ -242,6 +242,24 @@ export default class Stats {
 
       this.div.appendChild(teamDiv);
     }
+
+    let options = document.createElement("div");
+    options.style.textAlign = "left";
+    options.style.fontFamily = "Tahoma, sans serif";
+    options.appendChild(document.createTextNode("KEYBOARD OPTIONS"));
+    options.appendChild(document.createElement("br"));
+    options.appendChild(document.createTextNode("LEFT - Skip/Seek Backward"));
+    options.appendChild(document.createElement("br"));
+    options.appendChild(document.createTextNode("RIGHT - Skip/Seek Forward"));
+    options.appendChild(document.createElement("br"));
+    options.appendChild(document.createTextNode("p - Pause/Unpause"));
+    options.appendChild(document.createElement("br"));
+    options.appendChild(document.createTextNode("o - Stop"));
+    options.appendChild(document.createElement("br"));
+    options.appendChild(document.createTextNode("h - Toggle Health Bars"));
+    options.appendChild(document.createElement("br"));
+    options.appendChild(document.createTextNode("c - Toggle Circle Bots"));
+    this.div.appendChild(options);
   }
 
   /**

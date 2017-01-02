@@ -298,6 +298,9 @@ export default class Client {
         case 72: // "h" - Toggle Health Bars
           renderer.toggleHealthBars();
           break;
+        case 67: // "c" - Toggle Circle Bots
+          renderer.toggleCircleBots();
+          break;
       }
     };
 
