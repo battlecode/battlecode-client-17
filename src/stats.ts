@@ -30,12 +30,15 @@ const hex: Object = {
 export default class Stats {
 
   div: HTMLDivElement;
-  teamDivs: Array<HTMLDivElement> = new Array();
-  images: imageloader.AllImages;
+  private teamDivs: Array<HTMLDivElement> = new Array();
+  private images: imageloader.AllImages;
+
+  // Keyboard options
+  private options: HTMLDivElement;
 
   // Key is the team ID, folllowed by the robot/stat type
-  robotTds: Object = {};
-  statTds: Object = {};
+  private robotTds: Object = {};
+  private statTds: Object = {};
 
   // Note: robot types and number of teams are currently fixed regardless of
   // match info. Keep in mind if we ever change these, or implement this less
@@ -53,6 +56,7 @@ export default class Stats {
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
 
+    this.initializeOptions();
     this.initializeGame(teamNames, teamIDs);
   }
 
@@ -190,6 +194,35 @@ export default class Stats {
     }
   }
 
+  private initializeOptions() {
+    let options = [
+      "LEFT - Skip/Seek Backward",
+      "RIGHT - Skip/Seek Forward",
+      "p - Pause/Unpause",
+      "o - Stop",
+      "h - Toggle Health Bars",
+      "c - Toggle Circle Bots"
+    ];
+
+    this.options = document.createElement("div");
+    this.options.style.textAlign = "left";
+    this.options.style.fontFamily = "Tahoma, sans serif";
+    this.options.style.fontSize = "12px";
+    this.options.style.border = "1px solid #ddd";
+    this.options.style.padding = "10px";
+
+    let title = document.createElement("b");
+    title.appendChild(document.createTextNode("Keyboard Options"));
+    this.options.appendChild(title);
+
+    for (let option of options) {
+      this.options.appendChild(document.createElement("br"));
+      this.options.appendChild(document.createTextNode(option));
+    }
+
+    this.div.appendChild(this.options);
+  }
+
   /**
    * Clear the current stats bar and reinitialize it with the given teams.
    */
@@ -243,23 +276,8 @@ export default class Stats {
       this.div.appendChild(teamDiv);
     }
 
-    let options = document.createElement("div");
-    options.style.textAlign = "left";
-    options.style.fontFamily = "Tahoma, sans serif";
-    options.appendChild(document.createTextNode("KEYBOARD OPTIONS"));
-    options.appendChild(document.createElement("br"));
-    options.appendChild(document.createTextNode("LEFT - Skip/Seek Backward"));
-    options.appendChild(document.createElement("br"));
-    options.appendChild(document.createTextNode("RIGHT - Skip/Seek Forward"));
-    options.appendChild(document.createElement("br"));
-    options.appendChild(document.createTextNode("p - Pause/Unpause"));
-    options.appendChild(document.createElement("br"));
-    options.appendChild(document.createTextNode("o - Stop"));
-    options.appendChild(document.createElement("br"));
-    options.appendChild(document.createTextNode("h - Toggle Health Bars"));
-    options.appendChild(document.createElement("br"));
-    options.appendChild(document.createTextNode("c - Toggle Circle Bots"));
-    this.div.appendChild(options);
+    this.div.removeChild(this.options);
+    this.div.appendChild(this.options);
   }
 
   /**
