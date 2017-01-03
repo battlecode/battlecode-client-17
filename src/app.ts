@@ -1,4 +1,4 @@
-import {Game, Match, Metadata, schema, flatbuffers} from 'battlecode-playback';
+import {Game, GameWorld, Match, Metadata, schema, flatbuffers} from 'battlecode-playback';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
@@ -163,26 +163,13 @@ export default class Client {
   /**
    * Sets canvas size to maximum dimensions while maintaining the aspect ratio
    */
-  setCanvasDimensions() {
-    let leftBuffer: number = 320; // width of stats bar
-    let topBuffer: number = 75; // height of control bar
-    let aspectRatio: number = this.conf.width / this.conf.height;
-    let wrapper = {
-      width: this.canvasWrapper.clientWidth - leftBuffer,
-      height: this.canvasWrapper.clientHeight - topBuffer
-    };
+  setCanvasDimensions(world: GameWorld) {
+    const scale: number = 30; // arbitrary scaling factor
 
-    if (wrapper.width / wrapper.height < aspectRatio) {
-      wrapper.height = wrapper.width / aspectRatio;
-    } else {
-      wrapper.width = wrapper.height * aspectRatio;
-    }
-
-    this.canvas.setAttribute("width", String(wrapper.width));
-    this.canvas.setAttribute("height", String(wrapper.height));
+    this.canvas.width = world.minCorner.absDistanceX(world.maxCorner) * scale;
+    this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
 
     // looks weird if the window is tall and skinny instead of short and fat
-    this.canvas.style.width = "${100 * aspectRatio}%";
     this.canvas.style.height = "calc(100vh - 75px)";
   }
 
@@ -190,7 +177,6 @@ export default class Client {
    * Marks the client as fully loaded.
    */
   ready() {
-    this.setCanvasDimensions();
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
       const wrapper = schema.GameWrapper.getRootAsGameWrapper(
         new flatbuffers.ByteBuffer(new Uint8Array(data))
@@ -198,11 +184,28 @@ export default class Client {
       this.currentGame = new Game();
       this.currentGame.loadFullGame(wrapper);
 
-      this.runMatch();
+      // For convenience
+      const meta = this.currentGame.meta as Metadata;
+      const match = this.currentGame.getMatch(0) as Match;
+
+      // Reset the canvas
+      this.setCanvasDimensions(match.current);
+
+      // Reset the stats bar
+      let teamNames = new Array();
+      let teamIDs = new Array();
+      for (let team in meta.teams) {
+        teamNames.push(meta.teams[team].name);
+        teamIDs.push(meta.teams[team].teamID);
+      }
+      this.stats.initializeGame(teamNames, teamIDs);
+
+      // Start the first match
+      this.runMatch(match, meta);
     }
   }
 
-  private runMatch() {
+  private runMatch(match: Match, meta: Metadata) {
     // TODO(jhgilles): this is a mess
 
     console.log('Running match.');
@@ -213,26 +216,12 @@ export default class Client {
       this.loopID = null;
     }
 
-    // For convenience
-    const game = this.currentGame as Game;
-    const meta = game.meta as Metadata;
-    const match = game.getMatch(0) as Match;
-
-    // Reset the stats bar
-    let teamNames = new Array();
-    let teamIDs = new Array();
-    for (let team in meta.teams) {
-      teamNames.push(meta.teams[team].name);
-      teamIDs.push(meta.teams[team].teamID);
-    }
-    this.stats.initializeGame(teamNames, teamIDs);
-
     // keep around to avoid reallocating
     const nextStep = new NextStep();
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
-    const renderer = new Renderer(this.canvas, this.controls, this.imgs, this.conf, game.meta as Metadata);
+    const renderer = new Renderer(this.canvas, this.controls, this.imgs, this.conf, meta as Metadata);
 
     // How fast the simulation should progress
     let goalUPS = 10;
