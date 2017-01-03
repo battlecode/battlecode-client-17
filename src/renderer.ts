@@ -23,9 +23,6 @@ export default class Renderer {
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
-  // indicator string information
-  private lastSelectedRobotID: number;
-
   // options
   private healthBars: boolean = true;
   private circleBots: boolean = false;
@@ -48,15 +45,6 @@ export default class Renderer {
 
     this.bgPattern = this.ctx.createPattern(imgs.background, 'repeat');
     //this.treeMedHealth = metadata.types[schema.BodyType.TREE_NEUTRAL].maxHealth / 2;
-
-    // indicator strings
-    let counter = 0;
-    this.canvas.addEventListener("mousedown", function(event) {
-      console.log(event);
-      console.log(`(${event.offsetX}, ${event.offsetY})`);
-      controls.setIndicatorString(0, String(counter));
-      counter = counter + 1;
-    }, false);
   }
 
   /**
@@ -87,6 +75,43 @@ export default class Renderer {
 
     // restore default rendering
     this.ctx.restore();
+
+    // indicator strings
+    const width = world.maxCorner.x - world.minCorner.x;
+    const height = world.maxCorner.y - world.minCorner.y;
+    const ids = world.bodies.arrays.id;
+    const radii = world.bodies.arrays.radius;
+    const xs = world.bodies.arrays.x;
+    const ys = world.bodies.arrays.y;
+    const controls = this.controls;
+
+    this.canvas.onmousedown = function(event) {
+      const x = width * event.offsetX / this.offsetWidth;
+      const y = height * event.offsetY / this.offsetHeight;
+
+      // Get the ID of the selected robot
+      let selectedRobotID;
+      for (let i in ids) {
+        let radius = radii[i];
+        let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
+        let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
+        if (inXRange && inYRange) {
+          selectedRobotID = ids[i];
+          break;
+        }
+      }
+
+      // A robot was not selected, return
+      if (selectedRobotID == undefined) {
+        return;
+      }
+
+      // Get the indicator strings of the robot with that ID
+      // TODO
+
+      // Set the indicator strings
+      controls.setIndicatorString(0, `(${selectedRobotID}, ${x}, ${y})`);
+    };
   }
 
   /**
@@ -101,6 +126,13 @@ export default class Renderer {
    */
   toggleHealthBars() {
     this.healthBars = !this.healthBars;
+  }
+
+  /**
+   * Turn the robots and trees into circles
+   */
+  toggleCircleBots() {
+    this.circleBots = !this.circleBots;
   }
 
   private renderBackground(world: GameWorld) {
@@ -119,14 +151,6 @@ export default class Renderer {
     // scale the background pattern
     this.ctx.fillRect(minX*scale, minY*scale, width*scale, height*scale);
     this.ctx.restore();
-  }
-
-  /**
-   * Turn the robots and trees into circles
-   */
-  toggleCircleBots() {
-    this.circleBots = !this.circleBots;
-    console.log(this.circleBots);
   }
 
   private renderBodies(world: GameWorld) {
