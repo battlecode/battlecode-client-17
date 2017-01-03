@@ -270,7 +270,6 @@ export default class Client {
     // set key options
     const controls = this.controls;
     document.onkeydown = function(event) {
-      console.log(event.keyCode);
       switch (event.keyCode) {
         case 80: // "p" - Pause/Unpause
           controls.pause();

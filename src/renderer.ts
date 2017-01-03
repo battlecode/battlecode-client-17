@@ -75,43 +75,6 @@ export default class Renderer {
 
     // restore default rendering
     this.ctx.restore();
-
-    // indicator strings
-    const width = world.maxCorner.x - world.minCorner.x;
-    const height = world.maxCorner.y - world.minCorner.y;
-    const ids = world.bodies.arrays.id;
-    const radii = world.bodies.arrays.radius;
-    const xs = world.bodies.arrays.x;
-    const ys = world.bodies.arrays.y;
-    const controls = this.controls;
-
-    this.canvas.onmousedown = function(event) {
-      const x = width * event.offsetX / this.offsetWidth;
-      const y = height * event.offsetY / this.offsetHeight;
-
-      // Get the ID of the selected robot
-      let selectedRobotID;
-      for (let i in ids) {
-        let radius = radii[i];
-        let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
-        let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
-        if (inXRange && inYRange) {
-          selectedRobotID = ids[i];
-          break;
-        }
-      }
-
-      // A robot was not selected, return
-      if (selectedRobotID == undefined) {
-        return;
-      }
-
-      // Get the indicator strings of the robot with that ID
-      // TODO
-
-      // Set the indicator strings
-      controls.setIndicatorString(0, `(${selectedRobotID}, ${x}, ${y})`);
-    };
   }
 
   /**
@@ -217,6 +180,8 @@ export default class Renderer {
       this.ctx.drawImage(img, x, y, radius*2, radius*2);
       this.drawHealthBar(x-HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
     }
+
+    this.setIndicatorStringEventListener(world, xs, ys);
   }
 
   private renderBodiesInterpolated(world: GameWorld,
@@ -232,6 +197,8 @@ export default class Renderer {
     const nextYs = nextStep.bodies.arrays.y;
     const healths = bodies.arrays.health;
     const radii = bodies.arrays.radius;
+    let realXs: Float32Array = new Float32Array(length);
+    let realYs: Float32Array = new Float32Array(length);
 
     for (let i = 0; i < length; i++) {
       const x = xs[i];
@@ -241,6 +208,8 @@ export default class Renderer {
 
       const realX = x + (nextX - x) * lerpAmount;
       const realY = y + (nextY - y) * lerpAmount;
+      realXs[i] = realX;
+      realYs[i] = realY;
 
       const radius = radii[i];
 
@@ -294,6 +263,7 @@ export default class Renderer {
       this.drawHealthBar(realX-HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
     }
 
+    this.setIndicatorStringEventListener(world, realXs, realYs);
   }
 
   private drawHealthBar(x: number, y: number, health: number, type: number) {
@@ -308,6 +278,44 @@ export default class Renderer {
     this.ctx.strokeStyle = "black"; // outline
     this.ctx.lineWidth = .1;
     this.ctx.strokeRect(x, y, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+  }
+
+  private setIndicatorStringEventListener(world: GameWorld,
+    xs: Float32Array, ys: Float32Array) {
+    // indicator strings
+    const width = world.maxCorner.x - world.minCorner.x;
+    const height = world.maxCorner.y - world.minCorner.y;
+    const ids = world.bodies.arrays.id;
+    const radii = world.bodies.arrays.radius;
+    const controls = this.controls;
+
+    this.canvas.onmousedown = function(event) {
+      const x = width * event.offsetX / this.offsetWidth;
+      const y = height * event.offsetY / this.offsetHeight;
+
+      // Get the ID of the selected robot
+      let selectedRobotID;
+      for (let i in ids) {
+        let radius = radii[i];
+        let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
+        let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
+        if (inXRange && inYRange) {
+          selectedRobotID = ids[i];
+          break;
+        }
+      }
+
+      // A robot was not selected, return
+      if (selectedRobotID == undefined) {
+        return;
+      }
+
+      // Get the indicator strings of the robot with that ID
+      // TODO
+
+      // Set the indicator strings
+      controls.setIndicatorString(0, `Robot ID is ${selectedRobotID}`);
+    };
   }
 
   private renderBullets(world: GameWorld, lerpAmount: number) {
