@@ -10,6 +10,7 @@ export default class Controls {
 
   readonly speedReadout: Text;
   readonly indicatorStrings: Array<Text>;
+  indicatorStringIDNode: Text;
 
   // Callbacks initialized from outside Controls
   // Yeah, it's pretty gross :/
@@ -73,6 +74,12 @@ export default class Controls {
     // create the indicator string display
     let indicators = document.createElement("td");
     indicators.vAlign = "top";
+    indicators.style.fontSize = "11px";
+
+    this.indicatorStringIDNode = document.createTextNode("");
+    indicators.appendChild(this.indicatorStringIDNode);
+    indicators.appendChild(document.createElement("br"));
+
     this.indicatorStrings = new Array();
     for (let i = 0; i < NUMBER_OF_INDICATOR_STRINGS; i++) {
       let textNode = document.createTextNode("");
@@ -281,6 +288,10 @@ export default class Controls {
     this.speedReadout.textContent =
       ` TIME: ${time}/${loadedTime} UPS: ${ups | 0} FPS: ${fps | 0}`;
 
+  }
+
+  setIndicatorID(id: number) {
+    this.indicatorStringIDNode.textContent = `Robot ID is ${id}`;
   }
 
   setIndicatorString(index: number, value: string) {

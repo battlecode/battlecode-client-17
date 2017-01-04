@@ -318,6 +318,7 @@ export default class Renderer {
       let robotStrings = strings.get(selectedRobotID);
 
       // Set the indicator strings
+      controls.setIndicatorID(selectedRobotID);
       controls.setIndicatorString(0, `${robotStrings[0]}`);
       controls.setIndicatorString(1, `${robotStrings[1]}`);
       controls.setIndicatorString(2, `${robotStrings[2]}`);
