@@ -30,10 +30,10 @@ const hex: Object = {
 export default class Stats {
 
   div: HTMLDivElement;
-  private teamDivs: Array<HTMLDivElement> = new Array();
   private images: imageloader.AllImages;
 
   // Keyboard options
+  private logo: HTMLDivElement;
   private options: HTMLDivElement;
 
   // Key is the team ID, folllowed by the robot/stat type
@@ -51,12 +51,11 @@ export default class Stats {
   constructor(images: imageloader.AllImages) {
     this.images = images;
     this.div = this.baseDiv();
-    this.div.appendChild(this.battlecodeLogo());
+    this.logo = this.battlecodeLogo();
+    this.options = this.optionsDiv();
 
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
-
-    this.initializeOptions();
     this.initializeGame(teamNames, teamIDs);
   }
 
@@ -194,7 +193,7 @@ export default class Stats {
     }
   }
 
-  private initializeOptions() {
+  private optionsDiv() {
     let options = [
       "LEFT - Skip/Seek Backward",
       "RIGHT - Skip/Seek Forward",
@@ -205,23 +204,22 @@ export default class Stats {
       "v - Toggle Indicator Dots/Lines"
     ];
 
-    this.options = document.createElement("div");
-    this.options.style.textAlign = "left";
-    this.options.style.fontFamily = "Tahoma, sans serif";
-    this.options.style.fontSize = "12px";
-    this.options.style.border = "1px solid #ddd";
-    this.options.style.padding = "10px";
+    let div = document.createElement("div");
+    div.style.textAlign = "left";
+    div.style.fontFamily = "Tahoma, sans serif";
+    div.style.fontSize = "12px";
+    div.style.border = "1px solid #ddd";
+    div.style.padding = "10px";
 
     let title = document.createElement("b");
     title.appendChild(document.createTextNode("Keyboard Options"));
-    this.options.appendChild(title);
+    div.appendChild(title);
 
     for (let option of options) {
-      this.options.appendChild(document.createElement("br"));
-      this.options.appendChild(document.createTextNode(option));
+      div.appendChild(document.createElement("br"));
+      div.appendChild(document.createTextNode(option));
     }
-
-    this.div.appendChild(this.options);
+    return div;
   }
 
   /**
@@ -229,12 +227,14 @@ export default class Stats {
    */
   initializeGame(teamNames: Array<string>, teamIDs: Array<number>){
     // Remove the previous match info
-    for (let node of this.teamDivs) {
-      this.div.removeChild(node);
+    while (this.div.firstChild) {
+      this.div.removeChild(this.div.firstChild);
     }
-    this.teamDivs = new Array();
     this.robotTds = {};
     this.statTds = {};
+
+    // Add the battlecode logo
+    this.div.appendChild(this.logo);
 
     // Populate with new info
     // Add a section to the stats bar for each team in the match
@@ -246,7 +246,6 @@ export default class Stats {
 
       // A div element containing all stats information about this team
       let teamDiv = document.createElement("div");
-      this.teamDivs.push(teamDiv);
 
       // Create td elements for the robot counts and store them in robotTds
       // so we can update these robot counts later; maps robot type to count
@@ -277,7 +276,6 @@ export default class Stats {
       this.div.appendChild(teamDiv);
     }
 
-    this.div.removeChild(this.options);
     this.div.appendChild(this.options);
   }
 
