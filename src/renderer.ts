@@ -285,9 +285,11 @@ export default class Renderer {
     // indicator strings
     const width = world.maxCorner.x - world.minCorner.x;
     const height = world.maxCorner.y - world.minCorner.y;
-    const ids = world.bodies.arrays.id;
-    const radii = world.bodies.arrays.radius;
-    const controls = this.controls;
+    const ids: Int32Array = world.bodies.arrays.id;
+    const types: Int32Array = world.bodies.arrays.type;
+    const radii: Float32Array = world.bodies.arrays.radius;
+    const strings: Map<number, Array<String>> = world.indicatorStrings;
+    const controls: Controls = this.controls;
 
     this.canvas.onmousedown = function(event) {
       const x = width * event.offsetX / this.offsetWidth;
@@ -297,9 +299,11 @@ export default class Renderer {
       let selectedRobotID;
       for (let i in ids) {
         let radius = radii[i];
+        let type = types[i];
         let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
         let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
-        if (inXRange && inYRange) {
+
+        if (type != TREE_BULLET && type != TREE_NEUTRAL && inXRange && inYRange) {
           selectedRobotID = ids[i];
           break;
         }
@@ -311,10 +315,12 @@ export default class Renderer {
       }
 
       // Get the indicator strings of the robot with that ID
-      // TODO
+      let robotStrings = strings.get(selectedRobotID);
 
       // Set the indicator strings
-      controls.setIndicatorString(0, `Robot ID is ${selectedRobotID}`);
+      controls.setIndicatorString(0, `${robotStrings[0]}`);
+      controls.setIndicatorString(1, `${robotStrings[1]}`);
+      controls.setIndicatorString(2, `${robotStrings[2]}`);
     };
   }
 
@@ -354,31 +360,8 @@ export default class Renderer {
   }
 
   private renderIndicatorStrings(world: GameWorld) {
-    // const dots = world.indicatorDots;
-    // const lines = world.indicatorLines;
-    const dots = {
-      length: 0,
-      arrays: {
-        x: [],
-        y: [],
-        red: [],
-        green: [],
-        blue: []
-      }
-    };
-
-    const lines = {
-      length: 0,
-      arrays: {
-        startX: [],
-        startY: [],
-        endX: [],
-        endY: [],
-        red: [],
-        green: [],
-        blue: []
-      }
-    };
+    const dots = world.indicatorDots;
+    const lines = world.indicatorLines;
 
     // Render the indicator dots
     const dotsX = dots.arrays.x;
