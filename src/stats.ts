@@ -30,12 +30,15 @@ const hex: Object = {
 export default class Stats {
 
   div: HTMLDivElement;
-  teamDivs: Array<HTMLDivElement> = new Array();
-  images: imageloader.AllImages;
+  private images: imageloader.AllImages;
+
+  // Keyboard options
+  private logo: HTMLDivElement;
+  private options: HTMLDivElement;
 
   // Key is the team ID, folllowed by the robot/stat type
-  robotTds: Object = {};
-  statTds: Object = {};
+  private robotTds: Object = {};
+  private statTds: Object = {};
 
   // Note: robot types and number of teams are currently fixed regardless of
   // match info. Keep in mind if we ever change these, or implement this less
@@ -48,11 +51,11 @@ export default class Stats {
   constructor(images: imageloader.AllImages) {
     this.images = images;
     this.div = this.baseDiv();
-    this.div.appendChild(this.battlecodeLogo());
+    this.logo = this.battlecodeLogo();
+    this.options = this.optionsDiv();
 
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
-
     this.initializeGame(teamNames, teamIDs);
   }
 
@@ -190,17 +193,48 @@ export default class Stats {
     }
   }
 
+  private optionsDiv() {
+    let options = [
+      "LEFT - Skip/Seek Backward",
+      "RIGHT - Skip/Seek Forward",
+      "p - Pause/Unpause",
+      "o - Stop",
+      "h - Toggle Health Bars",
+      "c - Toggle Circle Bots",
+      "v - Toggle Indicator Dots/Lines"
+    ];
+
+    let div = document.createElement("div");
+    div.style.textAlign = "left";
+    div.style.fontFamily = "Tahoma, sans serif";
+    div.style.fontSize = "12px";
+    div.style.border = "1px solid #ddd";
+    div.style.padding = "10px";
+
+    let title = document.createElement("b");
+    title.appendChild(document.createTextNode("Keyboard Options"));
+    div.appendChild(title);
+
+    for (let option of options) {
+      div.appendChild(document.createElement("br"));
+      div.appendChild(document.createTextNode(option));
+    }
+    return div;
+  }
+
   /**
    * Clear the current stats bar and reinitialize it with the given teams.
    */
   initializeGame(teamNames: Array<string>, teamIDs: Array<number>){
     // Remove the previous match info
-    for (let node of this.teamDivs) {
-      this.div.removeChild(node);
+    while (this.div.firstChild) {
+      this.div.removeChild(this.div.firstChild);
     }
-    this.teamDivs = new Array();
     this.robotTds = {};
     this.statTds = {};
+
+    // Add the battlecode logo
+    this.div.appendChild(this.logo);
 
     // Populate with new info
     // Add a section to the stats bar for each team in the match
@@ -212,7 +246,6 @@ export default class Stats {
 
       // A div element containing all stats information about this team
       let teamDiv = document.createElement("div");
-      this.teamDivs.push(teamDiv);
 
       // Create td elements for the robot counts and store them in robotTds
       // so we can update these robot counts later; maps robot type to count
@@ -242,6 +275,8 @@ export default class Stats {
 
       this.div.appendChild(teamDiv);
     }
+
+    this.div.appendChild(this.options);
   }
 
   /**

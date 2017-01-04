@@ -16,14 +16,16 @@ export default class WebSocketListener {
   firstMatch: boolean;
   onFirstMatch: () => void;
 
-  constructor(url: string, pollEvery: number, onGameReceived: (game: Game) => void, onFirstMatch: () => void) {
+  constructor(url: string, pollEvery: number) {
     this.url = url;
     this.pollEvery = pollEvery;
-    this.onGameReceived = onGameReceived;
-    this.poll();
-
     this.firstMatch = true;
+  }
+
+  start(onGameReceived: (game: Game) => void, onFirstMatch: () => void) {
+    this.onGameReceived = onGameReceived;
     this.onFirstMatch = onFirstMatch;
+    this.poll();
   }
 
   private poll() {

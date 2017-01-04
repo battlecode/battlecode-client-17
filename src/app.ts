@@ -1,4 +1,4 @@
-import {Game, Match, Metadata, schema, flatbuffers} from 'battlecode-playback';
+import {Game, GameWorld, Match, Metadata, schema, flatbuffers} from 'battlecode-playback';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
@@ -77,16 +77,7 @@ export default class Client {
     if (this.conf.websocketURL !== null) {
       this.listener = new WebSocketListener(
         this.conf.websocketURL,
-        this.conf.pollEvery,
-        (game) => {
-          this.games.push(game);
-        },
-        () => {
-          // switch to running match if we haven't loaded any others
-          if (this.games.length === 1) {
-            this.setGame(0);
-          }
-        }
+        this.conf.pollEvery
       );
     }
   }
@@ -138,9 +129,8 @@ export default class Client {
     if (game < 0 || game >= this.games.length) {
       throw new Error(`No game ${game} loaded, only have ${this.games.length} games`);
     }
+    this.clearScreen();
     this.currentGame = game;
-    // hopefully we have this
-    this.setMatch(0);
   }
 
   setMatch(match: number) {
@@ -148,6 +138,7 @@ export default class Client {
     if (match < 0 || match >= matchCount) {
       throw new Error(`No match ${match} loaded, only have ${matchCount} matches in current game`);
     }
+    this.clearScreen();
     this.currentMatch = match;
 
     // Restart game loop
@@ -164,7 +155,7 @@ export default class Client {
     gameArea.style.height = "100%";
     gameArea.style.zIndex = "0.1";
     gameArea.style.position = "fixed";
-    gameArea.style.top = "60px";
+    gameArea.style.top = "75px";
     gameArea.style.left = "320px";
     // Style
     gameArea.style.background = "#333"
@@ -210,34 +201,20 @@ export default class Client {
   /**
    * Sets canvas size to maximum dimensions while maintaining the aspect ratio
    */
-  setCanvasDimensions() {
-    let leftBuffer: number = 320; // width of stats bar
-    let topBuffer: number = 50; // height of control bar
-    let aspectRatio: number = this.conf.width / this.conf.height;
-    let wrapper = {
-      width: this.canvasWrapper.clientWidth - leftBuffer,
-      height: this.canvasWrapper.clientHeight - topBuffer
-    };
+  setCanvasDimensions(world: GameWorld) {
+    const scale: number = 30; // arbitrary scaling factor
 
-    if (wrapper.width / wrapper.height < aspectRatio) {
-      wrapper.height = wrapper.width / aspectRatio;
-    } else {
-      wrapper.width = wrapper.height * aspectRatio;
-    }
-
-    this.canvas.setAttribute("width", String(wrapper.width));
-    this.canvas.setAttribute("height", String(wrapper.height));
+    this.canvas.width = world.minCorner.absDistanceX(world.maxCorner) * scale;
+    this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
 
     // looks weird if the window is tall and skinny instead of short and fat
-    this.canvas.style.width = "${100 * aspectRatio}%";
-    this.canvas.style.height = "calc(100vh - 60px)";
+    this.canvas.style.height = "calc(100vh - 75px)";
   }
 
   /**
    * Marks the client as fully loaded.
    */
   ready() {
-    this.setCanvasDimensions();
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
       const wrapper = schema.GameWrapper.getRootAsGameWrapper(
         new flatbuffers.ByteBuffer(new Uint8Array(data))
@@ -246,7 +223,35 @@ export default class Client {
       this.games[this.currentGame] = new Game();
       this.games[this.currentGame].loadFullGame(wrapper);
 
-      this.runMatch();
+      if (this.games.length === 1) {
+        // this will run the first match from the game
+        this.setGame(0);
+        this.setMatch(0);
+      }
+    }
+    if (this.listener != null) {
+      this.listener.start(
+        // What to do when we get a game from the websocket
+        (game) => {
+          this.games.push(game);
+        },
+        // What to do with the websocket's first game's first match
+        () => {
+          // switch to running match if we haven't loaded any others
+          if (this.games.length === 1) {
+            this.setGame(0);
+            this.setMatch(0);
+          }
+        }
+      );
+    }
+  }
+
+  clearScreen() {
+    // TODO clear screen
+    if (this.loopID !== null) {
+      window.cancelAnimationFrame(this.loopID);
+      this.loopID = null;
     }
   }
 
@@ -254,15 +259,15 @@ export default class Client {
     console.log('Running match.');
 
     // Cancel previous games if they're running
-    if (this.loopID !== null) {
-      window.cancelAnimationFrame(this.loopID);
-      this.loopID = null;
-    }
+    this.clearScreen();
 
     // For convenience
     const game = this.games[this.currentGame as number] as Game;
     const meta = game.meta as Metadata;
     const match = game.getMatch(this.currentMatch as number) as Match;
+
+    // Reset the canvas
+    this.setCanvasDimensions(match.current);
 
     // Reset the stats bar
     let teamNames = new Array();
@@ -278,7 +283,14 @@ export default class Client {
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
-    const renderer = new Renderer(this.canvas, this.imgs, this.conf, game.meta as Metadata);
+    const controls = this.controls;
+    const onRobotSelected = function(id: number, strs: Array<string>): void {
+      controls.setIndicatorID(id);
+      controls.setIndicatorString(0, `${strs[0]}`);
+      controls.setIndicatorString(1, `${strs[1]}`);
+      controls.setIndicatorString(2, `${strs[2]}`);
+    }
+    const renderer = new Renderer(this.canvas, this.imgs, this.conf, meta as Metadata, onRobotSelected);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -316,14 +328,40 @@ export default class Client {
     };
     this.controls.canvas.addEventListener("mousedown", function(event) {
       // jump to a frame when clicking the controls timeline
-      const offsetLeft = 330;
-      let width = event.x - offsetLeft;
+      let width = event.offsetX;
       let maxWidth = (<HTMLCanvasElement>this).width;
       let turn = Math.floor(match['_farthest'].turn * width / maxWidth);
       externalSeek = true;
       match.seek(turn);
       interpGameTime = turn;
     }, false);
+
+    // set key options
+    document.onkeydown = function(event) {
+      switch (event.keyCode) {
+        case 80: // "p" - Pause/Unpause
+          controls.pause();
+          break;
+        case 79: // "o" - Stop
+          controls.restart();
+          break;
+        case 37: // "LEFT" - Skip/Seek Backward
+          controls.rewind();
+          break;
+        case 39: // "RIGHT" - Skip/Seek Forward
+          controls.forward();
+          break;
+        case 72: // "h" - Toggle Health Bars
+          renderer.toggleHealthBars();
+          break;
+        case 67: // "c" - Toggle Circle Bots
+          renderer.toggleCircleBots();
+          break;
+        case 86: // "v" - Toggle Indicator Dots and Lines
+          renderer.toggleIndicatorStrings();
+          break;
+      }
+    };
 
     // The main update loop
     const loop = (curTime) => {
