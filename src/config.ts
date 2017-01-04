@@ -29,6 +29,16 @@ export interface Config {
    * Whether or not to interpolate between frames.
    */
   readonly interpolate: boolean;
+
+  /**
+   * The url to listen for websocket data on, if any.
+   */
+  readonly websocketURL: string | null;
+
+  /**
+   * How often to poll the server via websocket, in ms.
+   */
+  readonly pollEvery: number;
 }
 
 /**
@@ -42,6 +52,8 @@ export function defaults(supplied?: any): Config {
     width: supplied.width || 600,
     height: supplied.height || 600,
     defaultTPS: supplied.defaultTPS || 20,
-    interpolate: supplied.interpolate || true
+    interpolate: supplied.interpolate || true,
+    websocketURL: supplied.websocketURL || null,
+    pollEvery: supplied.pollEvery || 2000
   };
 }
