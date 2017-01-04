@@ -14,10 +14,12 @@ import Victor = require('victor');
 export default class Renderer {
   readonly canvas: HTMLCanvasElement;
   readonly ctx: CanvasRenderingContext2D;
-  readonly controls: Controls;
   readonly imgs: AllImages;
   readonly conf: config.Config;
   readonly metadata: Metadata;
+
+  // callback for indicator strings
+  readonly onRobotSelected: (id: number, strs: Array<string>) => void;
 
   // other cached useful values
   //readonly treeMedHealth: number;
@@ -28,12 +30,13 @@ export default class Renderer {
   private circleBots: boolean = false;
   private indicatorStrings: boolean = true;
 
-  constructor(canvas: HTMLCanvasElement, controls: Controls, imgs: AllImages, conf: config.Config, metadata: Metadata) {
+  constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config,
+    metadata: Metadata, onRobotSelected: (id: number, strs: Array<string>) => void) {
     this.canvas = canvas;
-    this.controls = controls;
     this.conf = conf;
     this.imgs = imgs;
     this.metadata = metadata;
+    this.onRobotSelected = onRobotSelected;
 
     let ctx = canvas.getContext("2d");
     if (ctx === null) {
@@ -296,8 +299,8 @@ export default class Renderer {
     const ids: Int32Array = world.bodies.arrays.id;
     const types: Int32Array = world.bodies.arrays.type;
     const radii: Float32Array = world.bodies.arrays.radius;
-    const strings: Map<number, Array<String>> = world.indicatorStrings;
-    const controls: Controls = this.controls;
+    const strings: Map<number, Array<string>> = world.indicatorStrings;
+    const onRobotSelected = this.onRobotSelected;
 
     this.canvas.onmousedown = function(event) {
       const x = width * event.offsetX / this.offsetWidth;
@@ -326,10 +329,7 @@ export default class Renderer {
       let robotStrings = strings.get(selectedRobotID);
 
       // Set the indicator strings
-      controls.setIndicatorID(selectedRobotID);
-      controls.setIndicatorString(0, `${robotStrings[0]}`);
-      controls.setIndicatorString(1, `${robotStrings[1]}`);
-      controls.setIndicatorString(2, `${robotStrings[2]}`);
+      onRobotSelected(selectedRobotID, robotStrings);
     };
   }
 
@@ -405,8 +405,6 @@ export default class Renderer {
     this.ctx.lineWidth = INDICATOR_LINE_WIDTH;
 
     for (let i = 0; i < lines.length; i++) {
-      console.log("line");
-
       const red = linesRed[i];
       const green = linesGreen[i];
       const blue = linesBlue[i];

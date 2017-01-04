@@ -221,7 +221,14 @@ export default class Client {
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
-    const renderer = new Renderer(this.canvas, this.controls, this.imgs, this.conf, meta as Metadata);
+    const controls = this.controls;
+    const onRobotSelected = function(id: number, strs: Array<string>): void {
+      controls.setIndicatorID(id);
+      controls.setIndicatorString(0, `${strs[0]}`);
+      controls.setIndicatorString(1, `${strs[1]}`);
+      controls.setIndicatorString(2, `${strs[2]}`);
+    }
+    const renderer = new Renderer(this.canvas, this.imgs, this.conf, meta as Metadata, onRobotSelected);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -268,7 +275,6 @@ export default class Client {
     }, false);
 
     // set key options
-    const controls = this.controls;
     document.onkeydown = function(event) {
       switch (event.keyCode) {
         case 80: // "p" - Pause/Unpause
