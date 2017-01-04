@@ -3,6 +3,7 @@ import NextStep from './nextstep';
 
 import {GameWorld, Metadata, schema} from 'battlecode-playback';
 import {AllImages} from './imageloader';
+import Controls from './controls';
 import Victor = require('victor');
 
 /**
@@ -17,15 +18,25 @@ export default class Renderer {
   readonly conf: config.Config;
   readonly metadata: Metadata;
 
+  // callback for indicator strings
+  readonly onRobotSelected: (id: number, strs: Array<string>) => void;
+
   // other cached useful values
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
-  constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config, metadata: Metadata) {
+  // options
+  private healthBars: boolean = true;
+  private circleBots: boolean = false;
+  private indicatorStrings: boolean = true;
+
+  constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config,
+    metadata: Metadata, onRobotSelected: (id: number, strs: Array<string>) => void) {
     this.canvas = canvas;
     this.conf = conf;
     this.imgs = imgs;
     this.metadata = metadata;
+    this.onRobotSelected = onRobotSelected;
 
     let ctx = canvas.getContext("2d");
     if (ctx === null) {
@@ -49,7 +60,7 @@ export default class Renderer {
   render(world: GameWorld, viewMin: Victor, viewWidth: number, nextStep?: NextStep, lerpAmount?: number) {
     // setup correct rendering
     const scale = this.canvas.width / viewWidth;
-    
+
     this.ctx.save();
     this.ctx.scale(scale, scale);
     this.ctx.translate(-viewMin.x, -viewMin.y);
@@ -63,7 +74,9 @@ export default class Renderer {
       this.renderBullets(world, 0);
       this.renderBodies(world);
     }
-    
+
+    this.renderIndicatorDotsLines(world);
+
     // restore default rendering
     this.ctx.restore();
   }
@@ -75,10 +88,31 @@ export default class Renderer {
     // nothing to do yet?
   }
 
+  /**
+   * Toggle health bars
+   */
+  toggleHealthBars() {
+    this.healthBars = !this.healthBars;
+  }
+
+  /**
+   * Turn the robots and trees into circles
+   */
+  toggleCircleBots() {
+    this.circleBots = !this.circleBots;
+  }
+
+  /**
+   * Turn indicator dots/lines on and off
+   */
+  toggleIndicatorStrings() {
+    this.indicatorStrings = !this.indicatorStrings;
+  }
+
   private renderBackground(world: GameWorld) {
     this.ctx.save();
     this.ctx.fillStyle = this.bgPattern;
-    
+
     const minX = world.minCorner.x;
     const minY = world.minCorner.y;
     const width = world.maxCorner.x - world.minCorner.x;
@@ -107,7 +141,7 @@ export default class Renderer {
       const x = xs[i];
       const y = ys[i];
       const radius = radii[i];
-      
+
       const team = teams[i];
 
       let img;
@@ -148,8 +182,17 @@ export default class Renderer {
           img = this.imgs.unknown;
           break;
       }
-      this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
+      if (this.circleBots) {
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#ddd";
+        this.ctx.arc(x-radius, y-radius, radius, 0, 2 * Math.PI, false);
+        this.ctx.fill();
+      }
+      this.ctx.drawImage(img, x, y, radius*2, radius*2);
+      this.drawHealthBar(x-HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
     }
+
+    this.setIndicatorStringEventListener(world, xs, ys);
   }
 
   private renderBodiesInterpolated(world: GameWorld,
@@ -165,6 +208,8 @@ export default class Renderer {
     const nextYs = nextStep.bodies.arrays.y;
     const healths = bodies.arrays.health;
     const radii = bodies.arrays.radius;
+    let realXs: Float32Array = new Float32Array(length);
+    let realYs: Float32Array = new Float32Array(length);
 
     for (let i = 0; i < length; i++) {
       const x = xs[i];
@@ -174,9 +219,11 @@ export default class Renderer {
 
       const realX = x + (nextX - x) * lerpAmount;
       const realY = y + (nextY - y) * lerpAmount;
+      realXs[i] = realX;
+      realYs[i] = realY;
 
       const radius = radii[i];
-      
+
       const team = teams[i];
 
       let img;
@@ -217,9 +264,73 @@ export default class Renderer {
           img = this.imgs.unknown;
           break;
       }
+      if (this.circleBots) {
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#ddd";
+        this.ctx.arc(realX, realY, radius, 0, 2 * Math.PI, false);
+        this.ctx.fill();
+      }
       this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
+      this.drawHealthBar(realX-HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
     }
 
+    this.setIndicatorStringEventListener(world, realXs, realYs);
+  }
+
+  private drawHealthBar(x: number, y: number, health: number, type: number) {
+    if (!this.healthBars) return; // skip if the option is turned off
+
+    const bodyType = this.metadata.types[type];
+    if (bodyType == undefined) return;
+
+    this.ctx.fillStyle = "green"; // current health
+    this.ctx.fillRect(x, y, HEALTH_BAR_WIDTH * health / bodyType.maxHealth,
+      HEALTH_BAR_HEIGHT);
+    this.ctx.strokeStyle = "black"; // outline
+    this.ctx.lineWidth = .1;
+    this.ctx.strokeRect(x, y, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+  }
+
+  private setIndicatorStringEventListener(world: GameWorld,
+    xs: Float32Array, ys: Float32Array) {
+    // indicator strings
+    const width = world.maxCorner.x - world.minCorner.x;
+    const height = world.maxCorner.y - world.minCorner.y;
+    const ids: Int32Array = world.bodies.arrays.id;
+    const types: Int32Array = world.bodies.arrays.type;
+    const radii: Float32Array = world.bodies.arrays.radius;
+    const strings: Map<number, Array<string>> = world.indicatorStrings;
+    const onRobotSelected = this.onRobotSelected;
+
+    this.canvas.onmousedown = function(event) {
+      const x = width * event.offsetX / this.offsetWidth;
+      const y = height * event.offsetY / this.offsetHeight;
+
+      // Get the ID of the selected robot
+      let selectedRobotID;
+      for (let i in ids) {
+        let radius = radii[i];
+        let type = types[i];
+        let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
+        let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
+
+        if (type != TREE_BULLET && type != TREE_NEUTRAL && inXRange && inYRange) {
+          selectedRobotID = ids[i];
+          break;
+        }
+      }
+
+      // A robot was not selected, return
+      if (selectedRobotID == undefined) {
+        return;
+      }
+
+      // Get the indicator strings of the robot with that ID
+      let robotStrings = strings.get(selectedRobotID);
+
+      // Set the indicator strings
+      onRobotSelected(selectedRobotID, robotStrings);
+    };
   }
 
   private renderBullets(world: GameWorld, lerpAmount: number) {
@@ -256,11 +367,65 @@ export default class Renderer {
                          BULLET_SIZE, BULLET_SIZE);
     }
   }
+
+  private renderIndicatorDotsLines(world: GameWorld) {
+    if (!this.indicatorStrings) {
+      return;
+    }
+
+    const dots = world.indicatorDots;
+    const lines = world.indicatorLines;
+
+    // Render the indicator dots
+    const dotsX = dots.arrays.x;
+    const dotsY = dots.arrays.y;
+    const dotsRed = dots.arrays.red;
+    const dotsGreen = dots.arrays.green;
+    const dotsBlue = dots.arrays.blue;
+
+    for (let i = 0; i < dots.length; i++) {
+      const red = dotsRed[i];
+      const green = dotsGreen[i];
+      const blue = dotsBlue[i];
+
+      this.ctx.beginPath();
+      this.ctx.arc(dotsX[i], dotsY[i], INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
+      this.ctx.fill();
+      this.ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
+    }
+
+    // Render the indicator lines
+    const linesStartX = lines.arrays.startX;
+    const linesStartY = lines.arrays.startY;
+    const linesEndX = lines.arrays.endX;
+    const linesEndY = lines.arrays.endY;
+    const linesRed = lines.arrays.red;
+    const linesGreen = lines.arrays.green;
+    const linesBlue = lines.arrays.blue;
+    this.ctx.lineWidth = INDICATOR_LINE_WIDTH;
+
+    for (let i = 0; i < lines.length; i++) {
+      const red = linesRed[i];
+      const green = linesGreen[i];
+      const blue = linesBlue[i];
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(linesStartX[i], linesStartY[i]);
+      this.ctx.lineTo(linesEndX[i], linesEndY[i]);
+      this.ctx.strokeStyle = `rgb(${red}, ${green}, ${blue})`;
+      this.ctx.stroke();
+    }
+  }
 }
 
 // Constants
-const BULLET_SIZE= .25;
+const BULLET_SIZE= .5;
 const BULLET_SIZE_HALF = BULLET_SIZE / 2;
+const INDICATOR_DOT_SIZE = .5;
+const INDICATOR_LINE_WIDTH = .4;
+const HEALTH_BAR_HEIGHT = .3;
+const HEALTH_BAR_WIDTH = 2;
+const HEALTH_BAR_WIDTH_HALF = HEALTH_BAR_WIDTH / 2;
 
 // we check if speed^2 is >= these
 const HIGH_SPEED_THRESH = (2*2) - .00001;
