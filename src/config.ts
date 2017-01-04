@@ -54,6 +54,6 @@ export function defaults(supplied?: any): Config {
     defaultTPS: supplied.defaultTPS || 20,
     interpolate: supplied.interpolate || true,
     websocketURL: supplied.websocketURL || null,
-    pollEvery: supplied.pollEvery || 2000
+    pollEvery: supplied.pollEvery || 500
   };
 }

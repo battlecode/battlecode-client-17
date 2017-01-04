@@ -139,7 +139,7 @@ export default class Client {
       throw new Error(`No game ${game} loaded, only have ${this.games.length} games`);
     }
     this.currentGame = game;
-    // guaranteed to have at least match 0
+    // hopefully we have this
     this.setMatch(0);
   }
 
