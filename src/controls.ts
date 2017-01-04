@@ -284,8 +284,11 @@ export default class Controls {
   }
 
   setIndicatorString(index: number, value: string) {
-    this.indicatorStrings[index].textContent =
-      `${index}, ${value}`;
+    if (value === "") {
+      this.indicatorStrings[index].textContent = "";
+    } else {
+      this.indicatorStrings[index].textContent = `${index}, ${value}`;
+    }
   }
 
   /**

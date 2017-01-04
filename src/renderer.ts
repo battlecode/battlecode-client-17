@@ -71,7 +71,7 @@ export default class Renderer {
       this.renderBodies(world);
     }
 
-    this.renderIndicatorStrings(world);
+    this.renderIndicatorDotsLines(world);
 
     // restore default rendering
     this.ctx.restore();
@@ -359,7 +359,7 @@ export default class Renderer {
     }
   }
 
-  private renderIndicatorStrings(world: GameWorld) {
+  private renderIndicatorDotsLines(world: GameWorld) {
     const dots = world.indicatorDots;
     const lines = world.indicatorLines;
 
@@ -378,7 +378,7 @@ export default class Renderer {
       this.ctx.beginPath();
       this.ctx.arc(dotsX[i], dotsY[i], INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
       this.ctx.fill();
-      this.ctx.fillStyle = 'rgb(${red}, ${green}, ${blue})'
+      this.ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
     }
 
     // Render the indicator lines
@@ -392,6 +392,8 @@ export default class Renderer {
     this.ctx.lineWidth = INDICATOR_LINE_WIDTH;
 
     for (let i = 0; i < lines.length; i++) {
+      console.log("line");
+
       const red = linesRed[i];
       const green = linesGreen[i];
       const blue = linesBlue[i];
@@ -399,7 +401,8 @@ export default class Renderer {
       this.ctx.beginPath();
       this.ctx.moveTo(linesStartX[i], linesStartY[i]);
       this.ctx.lineTo(linesEndX[i], linesEndY[i]);
-      this.ctx.fillStyle = 'rgb(${red}, ${green}, ${blue})'
+      this.ctx.strokeStyle = `rgb(${red}, ${green}, ${blue})`;
+      this.ctx.stroke();
     }
   }
 }
@@ -407,8 +410,8 @@ export default class Renderer {
 // Constants
 const BULLET_SIZE= .5;
 const BULLET_SIZE_HALF = BULLET_SIZE / 2;
-const INDICATOR_DOT_SIZE = .25;
-const INDICATOR_LINE_WIDTH = .1;
+const INDICATOR_DOT_SIZE = .5;
+const INDICATOR_LINE_WIDTH = .4;
 const HEALTH_BAR_HEIGHT = .3;
 const HEALTH_BAR_WIDTH = 2;
 const HEALTH_BAR_WIDTH_HALF = HEALTH_BAR_WIDTH / 2;
