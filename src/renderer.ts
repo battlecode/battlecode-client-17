@@ -422,7 +422,7 @@ export default class Renderer {
 }
 
 // Constants
-const BULLET_SIZE= .25;
+const BULLET_SIZE= .5;
 const BULLET_SIZE_HALF = BULLET_SIZE / 2;
 const INDICATOR_DOT_SIZE = .25;
 const INDICATOR_LINE_WIDTH = .1;
