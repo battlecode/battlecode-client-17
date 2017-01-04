@@ -36,10 +36,8 @@ export default class WebSocketListener {
       this.handleEvent(<ArrayBuffer> event.data);
     };
     ws.onerror = (event) => {
-      console.debug(`Websocket error: ${event.error}`);
     };
     ws.onclose = (event) => {
-      console.log(`Closed websocket: ${event.reason}`);
       window.setTimeout(() => {
         this.poll()
       }, this.pollEvery);
