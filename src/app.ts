@@ -289,6 +289,9 @@ export default class Client {
         case 67: // "c" - Toggle Circle Bots
           renderer.toggleCircleBots();
           break;
+        case 86: // "v" - Toggle Indicator Dots and Lines
+          renderer.toggleIndicatorStrings();
+          break;
       }
     };
 

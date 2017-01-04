@@ -201,7 +201,8 @@ export default class Stats {
       "p - Pause/Unpause",
       "o - Stop",
       "h - Toggle Health Bars",
-      "c - Toggle Circle Bots"
+      "c - Toggle Circle Bots",
+      "v - Toggle Indicator Dots/Lines"
     ];
 
     this.options = document.createElement("div");

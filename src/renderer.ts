@@ -26,6 +26,7 @@ export default class Renderer {
   // options
   private healthBars: boolean = true;
   private circleBots: boolean = false;
+  private indicatorStrings: boolean = true;
 
   constructor(canvas: HTMLCanvasElement, controls: Controls, imgs: AllImages, conf: config.Config, metadata: Metadata) {
     this.canvas = canvas;
@@ -96,6 +97,13 @@ export default class Renderer {
    */
   toggleCircleBots() {
     this.circleBots = !this.circleBots;
+  }
+
+  /**
+   * Turn indicator dots/lines on and off
+   */
+  toggleIndicatorStrings() {
+    this.indicatorStrings = !this.indicatorStrings;
   }
 
   private renderBackground(world: GameWorld) {
@@ -361,6 +369,10 @@ export default class Renderer {
   }
 
   private renderIndicatorDotsLines(world: GameWorld) {
+    if (!this.indicatorStrings) {
+      return;
+    }
+
     const dots = world.indicatorDots;
     const lines = world.indicatorLines;
 
