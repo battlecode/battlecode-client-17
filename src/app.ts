@@ -7,6 +7,7 @@ import NextStep from './nextstep';
 import Renderer from './renderer';
 import Stats from './stats';
 import TickCounter from './fps';
+import WebSocketListener from './websocket';
 
 /**
  * The entrypoint to the battlecode client.
@@ -43,7 +44,12 @@ export default class Client {
   canvasWrapper: HTMLDivElement;
   canvas: HTMLCanvasElement;
 
-  currentGame: Game | null;
+  listener: WebSocketListener | null;
+
+  games: Game[];
+
+  currentGame: number | null;
+  currentMatch: number | null;
 
   // used to cancel the main loop
   loopID: number | null;
@@ -65,6 +71,15 @@ export default class Client {
       this.root.appendChild(this.loadStats());
       this.ready();
     });
+
+    this.games = [];
+
+    if (this.conf.websocketURL !== null) {
+      this.listener = new WebSocketListener(
+        this.conf.websocketURL,
+        this.conf.pollEvery
+      );
+    }
   }
 
   /**
@@ -105,6 +120,29 @@ export default class Client {
       button:active, button:target {background-color: #999;}";
     this.style.appendChild(document.createTextNode(css));
     this.root.appendChild(this.style);
+  }
+
+  /**
+   * Set the current game.
+   */
+  setGame(game: number) {
+    if (game < 0 || game >= this.games.length) {
+      throw new Error(`No game ${game} loaded, only have ${this.games.length} games`);
+    }
+    this.clearScreen();
+    this.currentGame = game;
+  }
+
+  setMatch(match: number) {
+    const matchCount = this.games[this.currentGame as number].matchCount;
+    if (match < 0 || match >= matchCount) {
+      throw new Error(`No match ${match} loaded, only have ${matchCount} matches in current game`);
+    }
+    this.clearScreen();
+    this.currentMatch = match;
+
+    // Restart game loop
+    this.runMatch();
   }
 
   /**
@@ -181,40 +219,64 @@ export default class Client {
       const wrapper = schema.GameWrapper.getRootAsGameWrapper(
         new flatbuffers.ByteBuffer(new Uint8Array(data))
       );
-      this.currentGame = new Game();
-      this.currentGame.loadFullGame(wrapper);
+      this.currentGame = this.games.length;
+      this.games[this.currentGame] = new Game();
+      this.games[this.currentGame].loadFullGame(wrapper);
 
-      // For convenience
-      const meta = this.currentGame.meta as Metadata;
-      const match = this.currentGame.getMatch(0) as Match;
-
-      // Reset the canvas
-      this.setCanvasDimensions(match.current);
-
-      // Reset the stats bar
-      let teamNames = new Array();
-      let teamIDs = new Array();
-      for (let team in meta.teams) {
-        teamNames.push(meta.teams[team].name);
-        teamIDs.push(meta.teams[team].teamID);
+      if (this.games.length === 1) {
+        // this will run the first match from the game
+        this.setGame(0);
+        this.setMatch(0);
       }
-      this.stats.initializeGame(teamNames, teamIDs);
-
-      // Start the first match
-      this.runMatch(match, meta);
+    }
+    if (this.listener != null) {
+      this.listener.start(
+        // What to do when we get a game from the websocket
+        (game) => {
+          this.games.push(game);
+        },
+        // What to do with the websocket's first game's first match
+        () => {
+          // switch to running match if we haven't loaded any others
+          if (this.games.length === 1) {
+            this.setGame(0);
+            this.setMatch(0);
+          }
+        }
+      );
     }
   }
 
-  private runMatch(match: Match, meta: Metadata) {
-    // TODO(jhgilles): this is a mess
-
-    console.log('Running match.');
-
-    // Cancel previous games if they're running
+  clearScreen() {
+    // TODO clear screen
     if (this.loopID !== null) {
       window.cancelAnimationFrame(this.loopID);
       this.loopID = null;
     }
+  }
+
+  private runMatch() {
+    console.log('Running match.');
+
+    // Cancel previous games if they're running
+    this.clearScreen();
+
+    // For convenience
+    const game = this.games[this.currentGame as number] as Game;
+    const meta = game.meta as Metadata;
+    const match = game.getMatch(this.currentMatch as number) as Match;
+
+    // Reset the canvas
+    this.setCanvasDimensions(match.current);
+
+    // Reset the stats bar
+    let teamNames = new Array();
+    let teamIDs = new Array();
+    for (let team in meta.teams) {
+      teamNames.push(meta.teams[team].name);
+      teamIDs.push(meta.teams[team].teamID);
+    }
+    this.stats.initializeGame(teamNames, teamIDs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
