@@ -314,7 +314,7 @@ export default class Renderer {
         let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
         let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
 
-        if (type != TREE_BULLET && type != TREE_NEUTRAL && inXRange && inYRange) {
+        if (type != TREE_NEUTRAL && inXRange && inYRange) {
           selectedRobotID = ids[i];
           break;
         }
