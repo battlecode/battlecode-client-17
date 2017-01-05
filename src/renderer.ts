@@ -185,10 +185,10 @@ export default class Renderer {
       if (this.circleBots) {
         this.ctx.beginPath();
         this.ctx.fillStyle = "#ddd";
-        this.ctx.arc(x-radius, y-radius, radius, 0, 2 * Math.PI, false);
+        this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
       }
-      this.ctx.drawImage(img, x, y, radius*2, radius*2);
+      this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
       this.drawHealthBar(x-HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
     }
 
