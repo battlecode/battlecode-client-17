@@ -2,10 +2,14 @@ import {Game, GameWorld, Match, Metadata, schema, flatbuffers} from 'battlecode-
 import * as config from './config';
 import * as imageloader from './imageloader';
 
+import Sidebar from './sidebar';
+import Stats from './stats';
+import MapEditor from './mapeditor';
+
 import Controls from './controls';
+import GameArea from './gamearea';
 import NextStep from './nextstep';
 import Renderer from './renderer';
-import Stats from './stats';
 import TickCounter from './fps';
 import WebSocketListener from './websocket';
 
@@ -35,15 +39,19 @@ export default class Client {
   readonly root: HTMLElement;
   readonly ctx: CanvasRenderingContext2D;
 
+  // HTML components
+  style: HTMLStyleElement;
   imgs: imageloader.AllImages;
 
-  controls: Controls;
+  controls: Controls; // Upper controls bar
+  sidebar: Sidebar; // Sidebar
   stats: Stats;
+  mapeditor: MapEditor;
+  gamearea: GameArea; // Inner game area
+  gamecanvas: HTMLCanvasElement;
+  mapcanvas: HTMLCanvasElement;
 
-  style: HTMLStyleElement;
-  canvasWrapper: HTMLDivElement;
-  canvas: HTMLCanvasElement;
-
+  // Match logic
   listener: WebSocketListener | null;
 
   games: Game[];
@@ -63,12 +71,11 @@ export default class Client {
 
     this.loadStyles();
 
-    this.root.appendChild(this.loadGameArea());
-
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
       this.root.appendChild(this.loadControls());
-      this.root.appendChild(this.loadStats());
+      this.root.appendChild(this.loadSidebar());
+      this.root.appendChild(this.loadGameArea());
       this.ready();
     });
 
@@ -116,8 +123,8 @@ export default class Client {
       margin: .1rem;\
       border: 1px solid transparent;}\
       \
-      button:hover {background-color: #bbb}\
-      button:active, button:target {background-color: #999;}";
+      .custom-button:hover {background-color: #bbb}\
+      .custom-button:active, button:target {background-color: #999;}";
     this.style.appendChild(document.createTextNode(css));
     this.root.appendChild(this.style);
   }
@@ -146,43 +153,6 @@ export default class Client {
   }
 
   /**
-   * Loads canvas to display game world.
-   */
-  loadGameArea() {
-    let gameArea: HTMLDivElement = document.createElement("div");
-    // Positioning
-    gameArea.style.width = "100%";
-    gameArea.style.height = "100%";
-    gameArea.style.zIndex = "0.1";
-    gameArea.style.position = "fixed";
-    gameArea.style.top = "75px";
-    gameArea.style.left = "320px";
-    // Style
-    gameArea.style.background = "#333"
-    gameArea.style.background = "-webkit-linear-gradient(#bbb, #333)"
-    gameArea.style.background = "-o-linear-gradient(#bbb, #333)"
-    gameArea.style.background = "-moz-linear-gradient(#bbb, #333)"
-    gameArea.style.background = "linear-gradient(#bbb, #333)"
-
-    let canvasWrapper: HTMLDivElement = document.createElement("div");
-    canvasWrapper.id = "canvas-wrapper";
-    canvasWrapper.style.display = "block";
-    canvasWrapper.style.textAlign = "center";
-    canvasWrapper.style.paddingRight = "320px";
-    canvasWrapper.style.height = "100%";
-    this.canvasWrapper = canvasWrapper;
-
-    let canvas: HTMLCanvasElement = document.createElement('canvas');
-    canvas.id = "canvas";
-    canvas.setAttribute("id", "battlecode-canvas");
-    this.canvas = canvas;
-
-    gameArea.appendChild(canvasWrapper);
-    canvasWrapper.appendChild(canvas);
-    return gameArea;
-  }
-
-  /**
    * Loads control bar and timeline
    */
   loadControls() {
@@ -193,22 +163,20 @@ export default class Client {
   /**
    * Loads stats bar with team information
    */
-  loadStats() {
-    this.stats = new Stats(this.imgs);
-    return this.stats.div;
+  loadSidebar() {
+    this.sidebar = new Sidebar(this.conf, this.imgs);
+    this.stats = this.sidebar.stats;
+    this.mapeditor = this.sidebar.mapeditor;
+    return this.sidebar.div;
   }
 
   /**
-   * Sets canvas size to maximum dimensions while maintaining the aspect ratio
+   * Loads canvas to display game world.
    */
-  setCanvasDimensions(world: GameWorld) {
-    const scale: number = 30; // arbitrary scaling factor
-
-    this.canvas.width = world.minCorner.absDistanceX(world.maxCorner) * scale;
-    this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
-
-    // looks weird if the window is tall and skinny instead of short and fat
-    this.canvas.style.height = "calc(100vh - 75px)";
+  loadGameArea() {
+    this.gamearea = new GameArea(this.conf, this.imgs, this.mapeditor.canvas);
+    this.sidebar.cb = this.gamearea.setCanvas;
+    return this.gamearea.div;
   }
 
   /**
@@ -267,7 +235,7 @@ export default class Client {
     const match = game.getMatch(this.currentMatch as number) as Match;
 
     // Reset the canvas
-    this.setCanvasDimensions(match.current);
+    this.gamearea.setCanvasDimensions(match.current);
 
     // Reset the stats bar
     let teamNames = new Array();
@@ -290,7 +258,8 @@ export default class Client {
       controls.setIndicatorString(1, `${strs[1]}`);
       controls.setIndicatorString(2, `${strs[2]}`);
     }
-    const renderer = new Renderer(this.canvas, this.imgs, this.conf, meta as Metadata, onRobotSelected);
+    const renderer = new Renderer(this.gamearea.canvas, this.imgs,
+      this.conf, meta as Metadata, onRobotSelected);
 
     // How fast the simulation should progress
     let goalUPS = 10;

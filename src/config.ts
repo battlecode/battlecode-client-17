@@ -54,6 +54,16 @@ export interface Config {
    * Whether or not to display indicator dots and lines
    */
   indicators: boolean;
+
+  /**
+   * True for game mode, false for map editor mode
+   */
+  inGameMode: boolean;
+
+  /**
+   * Whether to show help information in the stats bar
+   */
+  inHelpMode: boolean;
 }
 
 /**
@@ -69,9 +79,11 @@ export function defaults(supplied?: any): Config {
     defaultTPS: supplied.defaultTPS || 20,
     websocketURL: supplied.websocketURL || null,
     pollEvery: supplied.pollEvery || 500,
-    interpolate: supplied.interpolate || true,
-    healthBars: supplied.healthBars || true,
-    circleBots: supplied.circleBots || false,
-    indicators: supplied.indicators || true
+    interpolate: true,
+    healthBars: true,
+    circleBots: false,
+    indicators: true,
+    inGameMode: true,
+    inHelpMode: false
   };
 }

@@ -1,4 +1,5 @@
-import * as imageloader from './imageloader';
+import {Config} from './config';
+import {AllImages} from './imageloader';
 
 import {schema} from 'battlecode-playback';
 
@@ -29,12 +30,8 @@ const hex: Object = {
 */
 export default class Stats {
 
-  div: HTMLDivElement;
-  private images: imageloader.AllImages;
-
-  // Keyboard options
-  private logo: HTMLDivElement;
-  private options: HTMLDivElement;
+  readonly div: HTMLDivElement;
+  private readonly images: AllImages;
 
   // Key is the team ID, folllowed by the robot/stat type
   private robotTds: Object = {};
@@ -43,66 +40,18 @@ export default class Stats {
   // Note: robot types and number of teams are currently fixed regardless of
   // match info. Keep in mind if we ever change these, or implement this less
   // statically.
-  readonly stats: string[] = ["Bullets", "Victory Points"];
-  readonly robots: schema.BodyType[] = [
+  private readonly stats: string[] = ["Bullets", "Victory Points"];
+  private readonly robots: schema.BodyType[] = [
     ARCHON, GARDENER, LUMBERJACK, RECRUIT, SOLDIER, TANK, SCOUT
   ];
 
-  constructor(images: imageloader.AllImages) {
+  constructor(conf: Config, images: AllImages) {
     this.images = images;
-    this.div = this.baseDiv();
-    this.logo = this.battlecodeLogo();
-    this.options = this.optionsDiv();
+    this.div = document.createElement("div");
 
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
     this.initializeGame(teamNames, teamIDs);
-  }
-
-  /**
-   * Initializes the styles for the stats div
-   */
-  private baseDiv() {
-    let div = document.createElement("div");
-
-    // Positioning
-    div.style.height = "100%";
-    div.style.width = "300px";
-    div.style.position = "fixed";
-    div.style.zIndex = "1";
-    div.style.top = "0";
-    div.style.left = "0";
-    div.style.overflowX = "hidden";
-
-    // Inner style
-    div.style.backgroundColor = "#151515";
-    div.style.color = "white";
-    div.style.textAlign = "center";
-    div.style.fontSize = "16px";
-    div.style.fontFamily = "Graduate";
-
-    // Inner formatting
-    div.style.padding = "10px";
-
-    return div;
-  }
-
-  /**
-   * Battlecode logo or title, at the top of the stats bar
-   */
-  private battlecodeLogo() {
-    let logo: HTMLDivElement = document.createElement("div");
-    logo.style.fontWeight = "bold";
-    logo.style.fontSize = "40px";
-    logo.style.textAlign = "center";
-    logo.style.fontFamily = "Graduate";
-
-    logo.style.paddingTop = "15px";
-    logo.style.paddingBottom = "15px";
-
-    let text = document.createTextNode("Battlecode");
-    logo.appendChild(text);
-    return logo;
   }
 
   /**
@@ -193,36 +142,6 @@ export default class Stats {
     }
   }
 
-  private optionsDiv() {
-    let options = [
-      "LEFT - Skip/Seek Backward",
-      "RIGHT - Skip/Seek Forward",
-      "p - Pause/Unpause",
-      "o - Stop",
-      "h - Toggle Health Bars",
-      "c - Toggle Circle Bots",
-      "v - Toggle Indicator Dots/Lines",
-      "b - Toggle Interpolation"
-    ];
-
-    let div = document.createElement("div");
-    div.style.textAlign = "left";
-    div.style.fontFamily = "Tahoma, sans serif";
-    div.style.fontSize = "12px";
-    div.style.border = "1px solid #ddd";
-    div.style.padding = "10px";
-
-    let title = document.createElement("b");
-    title.appendChild(document.createTextNode("Keyboard Options"));
-    div.appendChild(title);
-
-    for (let option of options) {
-      div.appendChild(document.createElement("br"));
-      div.appendChild(document.createTextNode(option));
-    }
-    return div;
-  }
-
   /**
    * Clear the current stats bar and reinitialize it with the given teams.
    */
@@ -233,9 +152,6 @@ export default class Stats {
     }
     this.robotTds = {};
     this.statTds = {};
-
-    // Add the battlecode logo
-    this.div.appendChild(this.logo);
 
     // Populate with new info
     // Add a section to the stats bar for each team in the match
@@ -276,8 +192,6 @@ export default class Stats {
 
       this.div.appendChild(teamDiv);
     }
-
-    this.div.appendChild(this.options);
   }
 
   /**
