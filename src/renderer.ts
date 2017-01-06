@@ -3,7 +3,6 @@ import NextStep from './nextstep';
 
 import {GameWorld, Metadata, schema} from 'battlecode-playback';
 import {AllImages} from './imageloader';
-import Controls from './controls';
 import Victor = require('victor');
 
 /**
