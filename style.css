@@ -1,1 +1,22 @@
 /* Global stylings here */
+
+.gameDiv {
+    background: #e0e0e0;
+    color: black;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+.gameTitle {
+    padding-bottom: 20px;
+}
+
+.blue {
+    color: blue;
+}
+
+.red {
+    color: red;
+}

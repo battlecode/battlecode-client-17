@@ -259,35 +259,52 @@ export default class Stats {
         var winner = game.winner;
 
         // Construct a team vs. team string
-        var vsString = "";
-        var winnerString = "";
+        var vsString = document.createElement("div");
+        var winnerString: HTMLSpanElement;
         if(metaData != null) {
           
           for (let team in metaData.teams) {
-              var teamName = metaData.teams[team].name;
-              vsString += teamName + " vs. ";
+              var teamName = document.createElement("span");
+              teamName.className += team === "1" ? " red" : " blue";
+              teamName.innerHTML = metaData.teams[team].name;
+              vsString.appendChild(teamName)
+              vsString.appendChild(document.createTextNode(" vs. "));
               if(metaData.teams[team].teamID == winner) {
                 winnerString = teamName;
               }
           }
-          vsString = vsString.substring(0, vsString.length - 5); // cutoff last ' vs. '
+          
+          if(vsString.lastChild != null) {
+            vsString.removeChild(vsString.lastChild);
+          }
           
           var gameDiv = document.createElement("div");
-          gameDiv.style.background = "#e0e0e0";
-          gameDiv.style.color = "#000000";
-          gameDiv.style.borderRadius = "8px";
-          gameDiv.style.padding = "8px";
-          gameDiv.style.fontSize = "12px";
-          gameDiv.style.marginTop = "4px";
-          gameDiv.appendChild(document.createTextNode(vsString + " on " + game.matchCount + " matches"));
+          gameDiv.className += " gameDiv";
+          var title = document.createElement("b");
+          title.appendChild(vsString);
+          //title.appendChild(document.createTextNode(" on " + game.matchCount + " matches"))
+          // INSTEAD, Show i.e. Playing 1/3 << >>
+          gameDiv.appendChild(title);
           gameDiv.appendChild(document.createElement("br"));
 
           for (var i = 0; i < matchCount; i++) {
             var match = game.getMatch(i);
             var mapName = match.current.mapName;
+            
+            var matchWinner = document.createElement("span");
+            for (let team in metaData.teams) {
+                if(metaData.teams[team].teamID == match.winner) {
+                  matchWinner.className += team === "1" ? " red" : " blue";
+                  matchWinner.innerHTML = metaData.teams[team].name;
+                  break;
+                }
+            }
 
             // Add the information to the list
-            let matchEntry = document.createTextNode(mapName);
+            let matchEntry = document.createTextNode(" wins after " + match.maxTurn + " rounds" );
+            let matchPrefix = document.createTextNode(mapName + " - ");
+            gameDiv.appendChild(matchPrefix);
+            gameDiv.appendChild(matchWinner);
             gameDiv.appendChild(matchEntry);
             gameDiv.appendChild(document.createElement("br"));
 
