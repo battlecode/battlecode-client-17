@@ -20,10 +20,19 @@ export default class MapEditorForm {
   private readonly canvas: HTMLCanvasElement;
   private readonly renderer: MapRenderer;
 
+  // Form elements
+  private valueID: HTMLLabelElement;
+  private inputX: HTMLInputElement;
+  private inputY: HTMLInputElement;
+  private inputRadius: HTMLInputElement;
+  private setButton: HTMLButtonElement;
+  private deleteButton: HTMLButtonElement;
+
   // Options
   private readonly conf: Config
 
   // Map information
+  private lastID: number;
   private name: string;
   private width: number;
   private height: number;
@@ -32,14 +41,15 @@ export default class MapEditorForm {
   private readonly trees: Map<number, NeutralTree>;
 
   constructor(conf: Config, imgs: AllImages, canvas: HTMLCanvasElement) {
-    this.div = this.initialDiv();
     this.conf = conf;
     this.images = imgs;
     this.canvas = canvas;
 
-    this.name = "";
+    this.lastID = 0;
+    this.name = "DEFAULT_MAP";
     this.width = 50;
     this.height = 50;
+    this.div = this.initialDiv();
     this.spawnedBodies = new Map<number, SpawnedBody>();
     this.trees = new Map<number, NeutralTree>();
 
@@ -72,6 +82,7 @@ export default class MapEditorForm {
     const inputMapName: HTMLInputElement = document.createElement("input");
     labelMapName.appendChild(document.createTextNode("Map name: "));
     inputMapName.type = "text";
+    inputMapName.value = "DEFAULT_MAP";
     inputMapName.onchange = () => {
       // Update internal map name
       this.name = inputMapName.value;
@@ -86,6 +97,7 @@ export default class MapEditorForm {
     const inputWidth: HTMLInputElement = document.createElement("input");
     labelWidth.appendChild(document.createTextNode("Width: "));
     inputWidth.type = "text";
+    inputWidth.value = String(this.width);
     inputWidth.onchange = () => {
       // Width must be in the range [30, 80]
       let value: number = parseFloat(inputWidth.value);
@@ -108,6 +120,7 @@ export default class MapEditorForm {
     const inputHeight: HTMLInputElement = document.createElement("input");
     labelHeight.appendChild(document.createTextNode("Height: "));
     inputHeight.type = "text";
+    inputHeight.value = String(this.height);
     inputHeight.onchange = () => {
       // Height must be in the range [30, 80]
       let value: number = parseFloat(inputHeight.value);
@@ -246,7 +259,7 @@ export default class MapEditorForm {
     const labelID: HTMLLabelElement = document.createElement("label");
     const valueID: HTMLLabelElement = document.createElement("label");
     labelID.appendChild(document.createTextNode("ID:"));
-    valueID.appendChild(document.createTextNode(""))
+    valueID.textContent = "";
     nodeID.appendChild(labelID);
     nodeID.appendChild(valueID);
 
@@ -256,7 +269,6 @@ export default class MapEditorForm {
     const inputX: HTMLInputElement = document.createElement("input");
     labelX.appendChild(document.createTextNode("X: "));
     inputX.type = "text";
-    inputX.onchange = validateX;
     nodeX.appendChild(labelX);
     nodeX.appendChild(inputX);
     nodeX.style.textAlign = "left";
@@ -267,7 +279,6 @@ export default class MapEditorForm {
     const inputY: HTMLInputElement = document.createElement("input");
     labelY.appendChild(document.createTextNode("Y: "));
     inputY.type = "text";
-    inputY.onchange = validateY;
     nodeY.appendChild(labelY);
     nodeY.appendChild(inputY);
     nodeY.style.textAlign = "left";
@@ -302,10 +313,10 @@ export default class MapEditorForm {
     nodeBody.appendChild(inputBody);
     nodeBody.style.textAlign = "left";
 
-    // Add/Update button
-    const addButton: HTMLButtonElement = document.createElement("button");
-    addButton.type = "button";
-    addButton.appendChild(document.createTextNode("Add/Update"));
+    // Set button
+    const setButton: HTMLButtonElement = document.createElement("button");
+    setButton.type = "button";
+    setButton.appendChild(document.createTextNode("Set"));
 
     // Delete button
     const deleteButton: HTMLButtonElement = document.createElement("button");
@@ -322,11 +333,116 @@ export default class MapEditorForm {
     // tree.appendChild(nodeBullets);
     // tree.appendChild(nodeBody);
     tree.appendChild(document.createElement("br"));
-    tree.appendChild(addButton);
+    tree.appendChild(setButton);
     tree.appendChild(deleteButton);
     tree.appendChild(document.createElement("br"));
 
+    this.valueID = valueID;
+    this.inputX = inputX;
+    this.inputY = inputY;
+    this.inputRadius = inputRadius;
+    this.setButton = setButton;
+    this.deleteButton = deleteButton;
+    this.initializeCallbacks();
     return tree;
+  }
+
+  private initializeCallbacks() {
+
+    this.inputX.onchange = () => {
+      // X must be in the range [0, this.width]
+      let value: number = parseFloat(this.inputX.value);
+      if (value < 0) value = 0;
+      if (value > this.width) value = this.width;
+      this.inputX.value = String(value);
+    };
+    this.inputY.onchange = () => {
+      // Y must be in the range [0, this.height]
+      let value: number = parseFloat(this.inputY.value);
+      if (value < 0) value = 0;
+      if (value > this.height) value = this.height;
+      this.inputY.value = String(value);
+    };
+    this.inputRadius.onchange = () => {
+      // Radius must be >= 0 and <= this.getMaxRadius(x, y)
+      let value: number = parseFloat(this.inputRadius.value);
+      let x: number = parseFloat(this.inputX.value);
+      let y: number = parseFloat(this.inputY.value);
+      if (value < 0) value = 0;
+      if (value > this.getMaxRadius(x, y)) value = this.getMaxRadius(x, y);
+      this.inputRadius.value = String(value);
+    };
+    this.setButton.onclick = () => {
+      let id = this.valueID.textContent;
+      let x = parseFloat(this.inputX.value);
+      let y = parseFloat(this.inputY.value);
+      let radius = parseFloat(this.inputRadius.value);
+
+      // Return if invalid input
+      if (isNaN(x) || isNaN(y) || isNaN(radius) || radius === 0) return;
+
+      if (id === "") {
+        // Create a new tree
+        this.setTree(this.lastID, { loc: new Victor(x, y), radius: radius });
+      } else if (id != null) {
+        // Update existing tree
+        this.setTree(parseInt(id), { loc: new Victor(x, y), radius: radius });
+      }
+    }
+    this.deleteButton.onclick = () => {
+      // Delete a tree is input is valid
+      if (this.valueID.textContent != null) {
+        let id = parseInt(this.valueID.textContent);
+        if (!isNaN(id)) {
+          this.deleteUnit(id);
+        }
+      }
+    }
+  }
+
+  /**
+   * Given an x, y on the map, returns the maximum radius such that the
+   * corresponding unit centered on x, y is DELTA away from any other existing
+   * unit. Returns 0 if no such radius exists.
+   */
+  private getMaxRadius(x, y): number {
+    return 50; // TODO
+  }
+
+  /**
+   * If a tree with the given ID already exists, updates the existing tree.
+   * Otherwise, adds the tree to the internal trees and increments lastID.
+   * Finally re-renders the canvas.
+   */
+  private setTree(id: number, tree: NeutralTree): void {
+    if (!this.trees.has(id)) {
+      this.lastID += 1;
+    }
+    this.trees.set(id, tree);
+    this.render();
+  }
+
+  /**
+   * If an archon with the given ID already exists, updates the existing archon.
+   * Otherwise, adds the archon to the internal archons and increments lastID.
+   * Finally re-renders the canvas.
+   */
+  private setArchon(id: number, body: SpawnedBody): void {
+    if (!this.spawnedBodies.has(id)) {
+      this.lastID += 1;
+    }
+    this.spawnedBodies.set(id, body);
+    this.render();
+  }
+
+  /**
+   * Deletes the tree/archon with the given ID if it exists and re-renders
+   * the canvas. Otherwise does nothing.
+   */
+  private deleteUnit(id: number): void {
+    if (this.spawnedBodies.has(id)) this.spawnedBodies.delete(id);
+    if (this.trees.has(id)) this.trees.delete(id);
+    this.render();
   }
 
   private setCanvasDimensions(): void {
@@ -341,3 +457,5 @@ export default class MapEditorForm {
     this.renderer.render(this.width, this.height, this.spawnedBodies, this.trees);
   }
 }
+
+const DELTA = .01;

@@ -5,16 +5,15 @@ import {AllImages} from './imageloader';
 import Victor = require('victor');
 
 export type SpawnedBody = {
-  x: number,
-  y: number
+  loc: Victor,
+  radius: number
 };
 
 export type NeutralTree = {
-  x: number;
-  y: number;
+  loc: Victor,
   radius: number;
-  containedBullets: number;
-  containedBody: schema.BodyType;
+  containedBullets?: number;
+  containedBody?: schema.BodyType;
 };
 
 export enum Symmetry {
@@ -97,8 +96,8 @@ export default class MapRenderer {
   private renderArchons(bodies: Map<number, SpawnedBody>): void {
     const img = this.imgs.robot.archon[1];
     bodies.forEach((archon: SpawnedBody) => {
-      const x = archon.x;
-      const y = archon.y;
+      const x = archon.loc.x;
+      const y = archon.loc.y;
       const radius = 2; // Archon radius
       this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
     });
@@ -107,8 +106,8 @@ export default class MapRenderer {
   private renderTrees(trees: Map<number, NeutralTree>) {
     const img = this.imgs.tree.fullHealth;
     trees.forEach((tree: NeutralTree) => {
-      const x = tree.x;
-      const y = tree.y;
+      const x = tree.loc.x;
+      const y = tree.loc.y;
       const radius = tree.radius;
       this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
     });
