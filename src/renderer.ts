@@ -12,10 +12,11 @@ import Victor = require('victor');
  * Note that all rendering functions draw in world-units,
  */
 export default class Renderer {
+  private conf: config.Config;
+
   readonly canvas: HTMLCanvasElement;
   readonly ctx: CanvasRenderingContext2D;
   readonly imgs: AllImages;
-  readonly conf: config.Config;
   readonly metadata: Metadata;
 
   // callback for indicator strings
@@ -24,11 +25,6 @@ export default class Renderer {
   // other cached useful values
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
-
-  // options
-  private healthBars: boolean = true;
-  private circleBots: boolean = false;
-  private indicatorStrings: boolean = true;
 
   constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config,
     metadata: Metadata, onRobotSelected: (id: number, strs: Array<string>) => void) {
@@ -86,27 +82,6 @@ export default class Renderer {
    */
   release() {
     // nothing to do yet?
-  }
-
-  /**
-   * Toggle health bars
-   */
-  toggleHealthBars() {
-    this.healthBars = !this.healthBars;
-  }
-
-  /**
-   * Turn the robots and trees into circles
-   */
-  toggleCircleBots() {
-    this.circleBots = !this.circleBots;
-  }
-
-  /**
-   * Turn indicator dots/lines on and off
-   */
-  toggleIndicatorStrings() {
-    this.indicatorStrings = !this.indicatorStrings;
   }
 
   private renderBackground(world: GameWorld) {
@@ -182,7 +157,7 @@ export default class Renderer {
           img = this.imgs.unknown;
           break;
       }
-      if (this.circleBots) {
+      if (this.conf.circleBots) {
         this.ctx.beginPath();
         this.ctx.fillStyle = "#ddd";
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
@@ -264,7 +239,7 @@ export default class Renderer {
           img = this.imgs.unknown;
           break;
       }
-      if (this.circleBots) {
+      if (this.conf.circleBots) {
         this.ctx.beginPath();
         this.ctx.fillStyle = "#ddd";
         this.ctx.arc(realX, realY, radius, 0, 2 * Math.PI, false);
@@ -278,7 +253,7 @@ export default class Renderer {
   }
 
   private drawHealthBar(x: number, y: number, health: number, type: number) {
-    if (!this.healthBars) return; // skip if the option is turned off
+    if (!this.conf.healthBars) return; // skip if the option is turned off
 
     const bodyType = this.metadata.types[type];
     if (bodyType == undefined) return;
@@ -369,7 +344,7 @@ export default class Renderer {
   }
 
   private renderIndicatorDotsLines(world: GameWorld) {
-    if (!this.indicatorStrings) {
+    if (!this.conf.indicators) {
       return;
     }
 

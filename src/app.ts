@@ -31,7 +31,7 @@ window['battlecode'] = {
  * The interface a web page uses to talk to a client.
  */
 export default class Client {
-  readonly conf: config.Config;
+  private conf: config.Config;
   readonly root: HTMLElement;
   readonly ctx: CanvasRenderingContext2D;
 
@@ -337,6 +337,7 @@ export default class Client {
     }, false);
 
     // set key options
+    const conf = this.conf;
     document.onkeydown = function(event) {
       switch (event.keyCode) {
         case 80: // "p" - Pause/Unpause
@@ -352,13 +353,16 @@ export default class Client {
           controls.forward();
           break;
         case 72: // "h" - Toggle Health Bars
-          renderer.toggleHealthBars();
+          conf.healthBars = !conf.healthBars;
           break;
         case 67: // "c" - Toggle Circle Bots
-          renderer.toggleCircleBots();
+          conf.circleBots = !conf.circleBots;
           break;
         case 86: // "v" - Toggle Indicator Dots and Lines
-          renderer.toggleIndicatorStrings();
+          conf.indicators = !conf.indicators;
+          break;
+        case 66: // "b" - Toggle Interpolation
+          conf.interpolate = !conf.interpolate;
           break;
       }
     };

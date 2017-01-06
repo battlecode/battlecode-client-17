@@ -26,11 +26,6 @@ export interface Config {
   readonly defaultTPS: number;
 
   /**
-   * Whether or not to interpolate between frames.
-   */
-  readonly interpolate: boolean;
-
-  /**
    * The url to listen for websocket data on, if any.
    */
   readonly websocketURL: string | null;
@@ -39,6 +34,26 @@ export interface Config {
    * How often to poll the server via websocket, in ms.
    */
   readonly pollEvery: number;
+
+  /**
+   * Whether or not to interpolate between frames.
+   */
+  interpolate: boolean;
+
+  /**
+   * Whether or not to display health bars
+   */
+  healthBars: boolean;
+
+  /**
+   * Whether or not to draw a circle under each robot
+   */
+  circleBots: boolean;
+
+  /**
+   * Whether or not to display indicator dots and lines
+   */
+  indicators: boolean;
 }
 
 /**
@@ -52,8 +67,11 @@ export function defaults(supplied?: any): Config {
     width: supplied.width || 600,
     height: supplied.height || 600,
     defaultTPS: supplied.defaultTPS || 20,
-    interpolate: supplied.interpolate || true,
     websocketURL: supplied.websocketURL || null,
-    pollEvery: supplied.pollEvery || 500
+    pollEvery: supplied.pollEvery || 500,
+    interpolate: supplied.interpolate || true,
+    healthBars: supplied.healthBars || true,
+    circleBots: supplied.circleBots || false,
+    indicators: supplied.indicators || true
   };
 }

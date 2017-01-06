@@ -201,7 +201,8 @@ export default class Stats {
       "o - Stop",
       "h - Toggle Health Bars",
       "c - Toggle Circle Bots",
-      "v - Toggle Indicator Dots/Lines"
+      "v - Toggle Indicator Dots/Lines",
+      "b - Toggle Interpolation"
     ];
 
     let div = document.createElement("div");
