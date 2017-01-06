@@ -1,6 +1,6 @@
 import * as imageloader from './imageloader';
 
-import {schema} from 'battlecode-playback';
+import {Game, schema} from 'battlecode-playback';
 
 const ARCHON = schema.BodyType.ARCHON;
 const GARDENER = schema.BodyType.GARDENER;
@@ -35,6 +35,9 @@ export default class Stats {
   // Keyboard options
   private logo: HTMLDivElement;
   private options: HTMLDivElement;
+  
+  // Match Options
+  private matches: HTMLDivElement;
 
   // Key is the team ID, folllowed by the robot/stat type
   private robotTds: Object = {};
@@ -53,6 +56,7 @@ export default class Stats {
     this.div = this.baseDiv();
     this.logo = this.battlecodeLogo();
     this.options = this.optionsDiv();
+    this.matches = this.matchViewer();
 
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
@@ -221,6 +225,61 @@ export default class Stats {
     }
     return div;
   }
+  
+  private matchViewer() {
+    
+    let div = document.createElement("div");
+    div.style.textAlign = "left";
+    div.style.fontFamily = "Tahoma, sans serif";
+    div.style.fontSize = "12px";
+    div.style.border = "1px solid #ddd";
+    div.style.padding = "10px";
+    
+    let title = document.createElement("b");
+    title.appendChild(document.createTextNode("Match Queue"));
+    div.appendChild(title);
+    div.appendChild(document.createElement("br"));
+    
+    return div;
+    
+  }
+  
+  refreshGameList(gameList: Array<Game>, activeGame: number, activeMatch: number) {
+    
+    // Remove all games from the list
+    while(this.matches.childNodes[2]){
+      this.matches.removeChild(this.matches.childNodes[2]);
+    }
+    
+    for (let game of gameList) {
+      if(game != null) {
+        
+        var metaData = game.meta;
+        var matchCount = game.matchCount;
+
+        // Construct a team vs. team string
+        var vsString = "";
+        if(metaData != null) {
+          
+          for (let team in metaData.teams) {
+              var teamID = metaData.teams[team].teamID;
+              vsString += teamID + " vs. ";
+          }
+          vsString = vsString.substring(0, vsString.length - 5); // cutoff last ' vs. '
+
+          for (var i = 0; i < matchCount; i++) {
+            var match = game.getMatch(i);
+            var mapName = match.current.mapName;
+
+            // Add the information to the list
+            let matchEntry = document.createTextNode(vsString + " on " + mapName);
+            this.matches.appendChild(matchEntry);
+
+          }
+        }
+      }
+    }
+  }
 
   /**
    * Clear the current stats bar and reinitialize it with the given teams.
@@ -276,6 +335,7 @@ export default class Stats {
       this.div.appendChild(teamDiv);
     }
 
+    this.div.appendChild(this.matches);
     this.div.appendChild(this.options);
   }
 

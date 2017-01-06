@@ -143,6 +143,7 @@ export default class Client {
 
     // Restart game loop
     this.runMatch();
+    this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
   }
 
   /**
