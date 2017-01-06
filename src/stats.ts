@@ -231,7 +231,7 @@ export default class Stats {
     let div = document.createElement("div");
     div.style.textAlign = "left";
     div.style.fontFamily = "Tahoma, sans serif";
-    div.style.fontSize = "12px";
+    div.style.fontSize = "18px";
     div.style.border = "1px solid #ddd";
     div.style.padding = "10px";
     
@@ -262,8 +262,8 @@ export default class Stats {
         if(metaData != null) {
           
           for (let team in metaData.teams) {
-              var teamID = metaData.teams[team].teamID;
-              vsString += teamID + " vs. ";
+              var teamName = metaData.teams[team].name;
+              vsString += teamName + " vs. ";
           }
           vsString = vsString.substring(0, vsString.length - 5); // cutoff last ' vs. '
 
@@ -274,6 +274,7 @@ export default class Stats {
             // Add the information to the list
             let matchEntry = document.createTextNode(vsString + " on " + mapName);
             this.matches.appendChild(matchEntry);
+            this.matches.appendChild(document.createElement("br"));
 
           }
         }
