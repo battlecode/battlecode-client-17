@@ -418,6 +418,20 @@ export default class Client {
         renderer.render(match.current,
                         match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
                         nextStep, lerp);
+        
+        // UPDATE STATS HERE
+        for (let team in meta.teams) {
+          var teamID = meta.teams[team].teamID;
+          var teamStats = match.current.stats.get(teamID);
+          this.stats.setBullets(teamID, teamStats.bullets);
+          this.stats.setVPs(teamID, teamStats.vps);
+          
+          // Update each robot count
+          for(var i = 0; i < 7; i++) { 
+              this.stats.setRobotCount(teamID, i, teamStats.robots[i]);
+          }
+        }
+        
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
         renderer.render(match.current,
@@ -426,6 +440,7 @@ export default class Client {
       }
 
       this.loopID = window.requestAnimationFrame(loop);
+      
     };
     this.loopID = window.requestAnimationFrame(loop);
   }

@@ -300,6 +300,6 @@ export default class Stats {
    */
   setBullets(teamID: number, count: number) {
     let td: HTMLTableCellElement = this.statTds[teamID]["Bullets"];
-    td.innerHTML = String(count);
+    td.innerHTML = count.toFixed(2);
   }
 }
