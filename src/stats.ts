@@ -256,27 +256,45 @@ export default class Stats {
         
         var metaData = game.meta;
         var matchCount = game.matchCount;
+        var winner = game.winner;
 
         // Construct a team vs. team string
         var vsString = "";
+        var winnerString = "";
         if(metaData != null) {
           
           for (let team in metaData.teams) {
               var teamName = metaData.teams[team].name;
               vsString += teamName + " vs. ";
+              if(metaData.teams[team].teamID == winner) {
+                winnerString = teamName;
+              }
           }
           vsString = vsString.substring(0, vsString.length - 5); // cutoff last ' vs. '
+          
+          var gameDiv = document.createElement("div");
+          gameDiv.style.background = "#e0e0e0";
+          gameDiv.style.color = "#000000";
+          gameDiv.style.borderRadius = "8px";
+          gameDiv.style.padding = "8px";
+          gameDiv.style.fontSize = "12px";
+          gameDiv.style.marginTop = "4px";
+          gameDiv.appendChild(document.createTextNode(vsString + " on " + game.matchCount + " matches"));
+          gameDiv.appendChild(document.createElement("br"));
 
           for (var i = 0; i < matchCount; i++) {
             var match = game.getMatch(i);
             var mapName = match.current.mapName;
 
             // Add the information to the list
-            let matchEntry = document.createTextNode(vsString + " on " + mapName);
-            this.matches.appendChild(matchEntry);
-            this.matches.appendChild(document.createElement("br"));
+            let matchEntry = document.createTextNode(mapName);
+            gameDiv.appendChild(matchEntry);
+            gameDiv.appendChild(document.createElement("br"));
 
           }
+          
+          this.matches.appendChild(gameDiv);
+          
         }
       }
     }
