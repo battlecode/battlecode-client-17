@@ -48,6 +48,7 @@ export default class Stats {
   onNextMatch: () => void;
   onPreviousMatch: () => void;
   gotoMatch: (game: number, match: number) => void;
+  removeGame: (game: number) => void;
 
   // Note: robot types and number of teams are currently fixed regardless of
   // match info. Keep in mind if we ever change these, or implement this less
@@ -319,6 +320,7 @@ export default class Stats {
           if(game == gameList[activeGame]) {
             gameDiv.appendChild(document.createTextNode("Playing match " + (activeMatch + 1) + "/" + matchCount));
           }
+          
           gameDiv.appendChild(document.createElement("br"));
 
           for (var i = 0; i < matchCount; i++) {
@@ -357,6 +359,18 @@ export default class Stats {
             gameDiv.appendChild(matchWrapper);
 
           }
+          
+          // Create remove button
+          let remove = document.createElement("button");
+          remove.setAttribute("class", "custom-button");
+          remove.setAttribute("type", "button");
+          remove.textContent = "Remove";
+          
+          remove.onclick = (function(game, removeGame) { 
+                  return function(){ removeGame(game); }
+          })(j, this.removeGame);
+          
+          gameDiv.appendChild(remove);
           
           this.matches.appendChild(gameDiv);
           
