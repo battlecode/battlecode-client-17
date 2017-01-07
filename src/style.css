@@ -20,3 +20,7 @@
 .red {
     color: red;
 }
+
+.removeButton {
+    float: right;
+}

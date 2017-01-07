@@ -321,11 +321,42 @@ export default class Client {
     this.controls.onToggleRewind = () => {
       goalUPS = goalUPS === -100 ? 10 : -100;
       rewinding = !rewinding;
-    }
+    };
     this.controls.onSeek = (turn: number) => {
       externalSeek = true;
       match.seek(turn);
       interpGameTime = turn;
+    };
+    this.stats.onNextMatch = () => {
+      console.log("NEXT MATCH");
+      
+      const matchCount = this.games[this.currentGame as number].matchCount;
+      if(this.currentMatch < matchCount - 1) {
+        this.setMatch(this.currentMatch + 1);
+      } else {
+        if(this.currentGame < this.games.length - 1) {
+          this.setGame(this.currentGame + 1);
+          this.setMatch(0);
+        } else {
+          // Do nothing, at the end
+        }
+      }
+      
+    };
+    this.stats.onPreviousMatch = () => {
+      console.log("PREV MATCH");
+      
+      if(this.currentMatch > 0) {
+        this.setMatch(this.currentMatch - 1);
+      } else {
+        if(this.currentGame > 0) {
+          this.setGame(this.currentGame - 1);
+          this.setMatch(this.games[this.currentGame as number].matchCount - 1);
+        } else {
+          // Do nothing, at the beginning
+        }
+      }
+      
     };
     this.controls.canvas.addEventListener("mousedown", function(event) {
       // jump to a frame when clicking the controls timeline

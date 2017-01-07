@@ -42,6 +42,11 @@ export default class Stats {
   // Key is the team ID, folllowed by the robot/stat type
   private robotTds: Object = {};
   private statTds: Object = {};
+  
+  // Callbacks initialized from outside Stats
+  // Yeah, it's pretty gross :/
+  onNextMatch: () => void;
+  onPreviousMatch: () => void;
 
   // Note: robot types and number of teams are currently fixed regardless of
   // match info. Keep in mind if we ever change these, or implement this less
@@ -237,6 +242,22 @@ export default class Stats {
     
     let title = document.createElement("b");
     title.appendChild(document.createTextNode("Match Queue"));
+    
+    // Add buttons
+    let next = document.createElement("button");
+    next.setAttribute("class", "custom-button");
+    next.setAttribute("type", "button");
+    next.onclick = () => this.onNextMatch();
+    next.appendChild(this.images.controls.matchForward);
+    
+    let back = document.createElement("button");
+    back.setAttribute("class", "custom-button");
+    back.setAttribute("type", "button");
+    back.onclick = () => this.onPreviousMatch();
+    back.appendChild(this.images.controls.matchBackward);
+    
+    title.appendChild(back);
+    title.appendChild(next);
     div.appendChild(title);
     div.appendChild(document.createElement("br"));
     
@@ -251,7 +272,9 @@ export default class Stats {
       this.matches.removeChild(this.matches.childNodes[2]);
     }
     
-    for (let game of gameList) {
+    //for (let game of gameList) {
+    for (var j = 0; j < gameList.length; j++) {
+      let game = gameList[j];
       if(game != null) {
         
         var metaData = game.meta;
@@ -285,6 +308,9 @@ export default class Stats {
           //title.appendChild(document.createTextNode(" on " + game.matchCount + " matches"))
           // INSTEAD, Show i.e. Playing 1/3 << >>
           gameDiv.appendChild(title);
+          if(game == gameList[activeGame]) {
+            gameDiv.appendChild(document.createTextNode("Playing match " + (activeMatch + 1) + "/" + matchCount));
+          }
           gameDiv.appendChild(document.createElement("br"));
 
           for (var i = 0; i < matchCount; i++) {
