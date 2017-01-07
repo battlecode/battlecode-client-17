@@ -1,4 +1,5 @@
 import {Config} from './config';
+import * as cst from './constants';
 import {AllImages} from './imageloader';
 import MapEditorForm from './mapeditorform';
 import {MapUnit} from './maprenderer';
@@ -6,10 +7,10 @@ import {MapUnit} from './maprenderer';
 import {schema, flatbuffers} from 'battlecode-playback';
 
 import Victor = require('victor');
-import {createWriteStream} from 'fs';
 
 /**
- * Allows the canvas and the map editor form to communicate
+ * Allows the user to download a .map17 file representing the map generated
+ * in the map editor.
  */
 export default class MapEditor {
 
@@ -85,34 +86,34 @@ export default class MapEditor {
     let formSymBodies: Map<number, MapUnit> = this.form.symmetricBodies;
     formBodies.forEach(function(unit: MapUnit, id: number) {
       let realID = id * 2; // To have unique ids for symmetric units
-      if (unit.type === TREE) {
+      if (unit.type === cst.TREE_NEUTRAL) {
         t.robotIDs.push(realID);
         t.xs.push(unit.loc.x);
         t.ys.push(unit.loc.y);
         t.radii.push(unit.radius);
         t.containedBullets.push(unit.containedBullets || 0);
-        t.containedBodies.push(unit.containedBody || TREE); // TODO
-      } else if (unit.type === ARCHON) {
+        t.containedBodies.push(unit.containedBody || cst.TREE_NEUTRAL); // TODO
+      } else if (unit.type === cst.ARCHON) {
         b.robotIDs.push(realID);
         b.teamIDs.push(1); // Team 1 ID
-        b.types.push(ARCHON);
+        b.types.push(cst.ARCHON);
         b.xs.push(unit.loc.x);
         b.ys.push(unit.loc.y);
       }
     });
     formSymBodies.forEach(function(unit: MapUnit, id: number) {
       let realID = id * 2 + 1; // To have unique ids for symmetric units
-      if (unit.type === TREE) {
+      if (unit.type === cst.TREE_NEUTRAL) {
         t.robotIDs.push(realID);
         t.xs.push(unit.loc.x);
         t.ys.push(unit.loc.y);
         t.radii.push(unit.radius);
         t.containedBullets.push(unit.containedBullets || 0);
-        t.containedBodies.push(unit.containedBody || TREE); // TODO
-      } else if (unit.type === ARCHON) {
+        t.containedBodies.push(unit.containedBody || cst.TREE_NEUTRAL); // TODO
+      } else if (unit.type === cst.ARCHON) {
         b.robotIDs.push(realID);
         b.teamIDs.push(2); // Team 2 ID
-        b.types.push(ARCHON);
+        b.types.push(cst.ARCHON);
         b.xs.push(unit.loc.x);
         b.ys.push(unit.loc.y);
       }
@@ -190,6 +191,3 @@ export default class MapEditor {
     }
   }
 }
-
-const ARCHON = schema.BodyType.ARCHON;
-const TREE = schema.BodyType.TREE_NEUTRAL;

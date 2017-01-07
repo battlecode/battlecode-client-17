@@ -1,4 +1,5 @@
 import {Config} from './config';
+import * as cst from './constants';
 import {AllImages} from './imageloader';
 import MapRenderer from './maprenderer';
 
@@ -61,7 +62,7 @@ export default class MapEditorForm {
       this.valueID.textContent = String(id);
       if (this.bodies.has(id)) {
         let body: MapUnit = this.bodies.get(id);
-        if (body.type === ARCHON) {
+        if (body.type === cst.ARCHON) {
           this.archon.checked = true;
           this.tree.checked = false;
         } else {
@@ -375,13 +376,13 @@ export default class MapEditorForm {
   private initializeCallbacks() {
 
     this.tree.onchange = () => {
-      if (this.tree.checked) this.type = TREE;
+      if (this.tree.checked) this.type = cst.TREE_NEUTRAL;
       this.inputX.value = "";
       this.inputY.value = "";
       this.inputRadius.value = "";
     };
     this.archon.onchange = () => {
-      if (this.archon.checked) this.type = ARCHON;
+      if (this.archon.checked) this.type = cst.ARCHON;
       this.inputX.value = "";
       this.inputY.value = "";
       this.inputRadius.value = "";
@@ -417,7 +418,7 @@ export default class MapEditorForm {
       // Return if invalid input
       if (isNaN(x) || isNaN(y) || isNaN(radius) || radius === 0) return;
 
-      let type = this.tree.checked ? TREE : ARCHON;
+      let type = this.tree.checked ? cst.TREE_NEUTRAL : cst.ARCHON;
       if (id === "") {
         // Create a new unit
         this.setUnit(this.lastID, {
@@ -447,7 +448,7 @@ export default class MapEditorForm {
 
   /**
    * Given an x, y on the map, returns the maximum radius such that the
-   * corresponding unit centered on x, y is DELTA away from any other existing
+   * corresponding unit centered on x, y is cst.DELTA away from any other existing
    * unit. Returns 0 if no such radius exists.
    */
   private getMaxRadius(x, y, type: schema.BodyType): number {
@@ -463,8 +464,8 @@ export default class MapEditorForm {
       maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
     });
 
-    maxRadius = Math.max(0, maxRadius - DELTA);
-    if (type === ARCHON) {
+    maxRadius = Math.max(0, maxRadius - cst.DELTA);
+    if (type === cst.ARCHON) {
       return maxRadius >= 2 ? 2 : 0;
     } else {
       return maxRadius;
@@ -566,8 +567,3 @@ export default class MapEditorForm {
     return true;
   }
 }
-
-const DELTA = .0001;
-const ARCHON_RADIUS = 2;
-const ARCHON = schema.BodyType.ARCHON;
-const TREE = schema.BodyType.TREE_NEUTRAL;

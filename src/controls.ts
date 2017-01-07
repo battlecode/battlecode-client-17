@@ -1,6 +1,5 @@
 import * as imageloader from './imageloader';
-
-const NUMBER_OF_INDICATOR_STRINGS = 3;
+import * as cst from './constants';
 
 /**
  * Game controls: pause/unpause, fast forward, rewind
@@ -81,7 +80,7 @@ export default class Controls {
     indicators.appendChild(document.createElement("br"));
 
     this.indicatorStrings = new Array();
-    for (let i = 0; i < NUMBER_OF_INDICATOR_STRINGS; i++) {
+    for (let i = 0; i < cst.NUMBER_OF_INDICATOR_STRINGS; i++) {
       let textNode = document.createTextNode("");
       this.indicatorStrings.push(textNode);
       indicators.appendChild(textNode);

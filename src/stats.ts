@@ -1,19 +1,8 @@
 import {Config} from './config';
+import * as cst from './constants';
 import {AllImages} from './imageloader';
 
 import {schema} from 'battlecode-playback';
-
-const ARCHON = schema.BodyType.ARCHON;
-const GARDENER = schema.BodyType.GARDENER;
-const LUMBERJACK = schema.BodyType.LUMBERJACK;
-const RECRUIT = schema.BodyType.RECRUIT;
-const SOLDIER = schema.BodyType.SOLDIER;
-const TANK = schema.BodyType.TANK;
-const SCOUT = schema.BodyType.SCOUT;
-const TREE_BULLET = schema.BodyType.TREE_BULLET;
-const TREE_NEUTRAL = schema.BodyType.TREE_NEUTRAL;
-
-const NUMBER_OF_TEAMS = 2;
 
 const hex: Object = {
   1: "#a62014",
@@ -42,7 +31,7 @@ export default class Stats {
   // statically.
   private readonly stats: string[] = ["Bullets", "Victory Points"];
   private readonly robots: schema.BodyType[] = [
-    ARCHON, GARDENER, LUMBERJACK, RECRUIT, SOLDIER, TANK, SCOUT
+    cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.RECRUIT, cst.SOLDIER, cst.TANK, cst.SCOUT
   ];
 
   constructor(conf: Config, images: AllImages) {
@@ -130,13 +119,13 @@ export default class Stats {
 
   private bodyTypeToString(bodyType: schema.BodyType) {
     switch(bodyType) {
-      case ARCHON: return "archon";
-      case GARDENER: return "gardener";
-      case LUMBERJACK: return "lumberjack";
-      case RECRUIT: return "recruit";
-      case SOLDIER: return "soldier";
-      case TANK: return "tank";
-      case SCOUT: return "scout";
+      case cst.ARCHON: return "archon";
+      case cst.GARDENER: return "gardener";
+      case cst.LUMBERJACK: return "lumberjack";
+      case cst.RECRUIT: return "recruit";
+      case cst.SOLDIER: return "soldier";
+      case cst.TANK: return "tank";
+      case cst.SCOUT: return "scout";
       default:
         throw new Error("invalid body type");
     }
