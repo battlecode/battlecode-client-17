@@ -1,8 +1,8 @@
-import {Config} from './config';
-import {AllImages} from './imageloader';
+import {Config} from '../config';
+import {AllImages} from '../imageloader';
 
 import Stats from './stats';
-import MapEditor from './mapeditor/main';
+import MapEditor from '../mapeditor/main';
 
 export default class Sidebar {
 

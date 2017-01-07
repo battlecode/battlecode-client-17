@@ -1,6 +1,6 @@
-import {Config} from './config';
-import * as cst from './constants';
-import {AllImages} from './imageloader';
+import {Config} from '../config';
+import * as cst from '../constants';
+import {AllImages} from '../imageloader';
 
 import {schema} from 'battlecode-playback';
 

@@ -1,5 +1,5 @@
-import * as imageloader from './imageloader';
-import * as cst from './constants';
+import * as imageloader from '../imageloader';
+import * as cst from '../constants';
 
 /**
  * Game controls: pause/unpause, fast forward, rewind

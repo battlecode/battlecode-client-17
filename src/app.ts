@@ -2,15 +2,15 @@ import {Game, GameWorld, Match, Metadata, schema, flatbuffers} from 'battlecode-
 import * as config from './config';
 import * as imageloader from './imageloader';
 
-import Sidebar from './sidebar';
-import Stats from './stats';
+import Sidebar from './html/sidebar';
+import Stats from './html/stats';
+import Controls from './html/controls';
 import MapEditor from './mapeditor/main';
 
-import Controls from './controls';
-import GameArea from './gamearea';
-import NextStep from './nextstep';
-import Renderer from './renderer';
-import TickCounter from './fps';
+import GameArea from './game/gamearea';
+import NextStep from './game/nextstep';
+import Renderer from './game/renderer';
+import TickCounter from './game/fps';
 import WebSocketListener from './websocket';
 
 /**
