@@ -4,7 +4,7 @@ import MapRenderer from './maprenderer';
 
 import {schema, flatbuffers} from 'battlecode-playback';
 
-import {Symmetry, SpawnedBody, NeutralTree} from './maprenderer';
+import {Symmetry, MapUnit} from './maprenderer';
 import Victor = require('victor');
 
 /**
@@ -37,29 +37,37 @@ export default class MapEditorForm {
   private width: number;
   private height: number;
   private symmetry: Symmetry;
-  private readonly spawnedBodies: Map<number, SpawnedBody>;
-  private readonly trees: Map<number, NeutralTree>;
+  private readonly bodies: Map<number, MapUnit>;
 
   constructor(conf: Config, imgs: AllImages, canvas: HTMLCanvasElement) {
     this.conf = conf;
     this.images = imgs;
     this.canvas = canvas;
 
-    this.lastID = 0;
+    this.lastID = 1;
     this.name = "DEFAULT_MAP";
     this.width = 50;
     this.height = 50;
+    this.symmetry = Symmetry.ROTATIONAL;
     this.div = this.initialDiv();
-    this.spawnedBodies = new Map<number, SpawnedBody>();
-    this.trees = new Map<number, NeutralTree>();
+    this.bodies = new Map<number, MapUnit>();
 
-    const onclickRobot = (robots: Map<number, SpawnedBody>, index: number) => {
-
+    const onclickUnit = (id: number) => {
+      this.valueID.textContent = String(id);
+      if (this.bodies.has(id)) {
+        let body: MapUnit = this.bodies.get(id);
+        this.inputX.value = String(body.loc.x);
+        this.inputY.value = String(body.loc.y);
+        this.inputRadius.value = String(body.radius);
+      }
     };
-    const onclickTree = (trees: Map<number, NeutralTree>, index: number) => {
-
-    };
-    this.renderer = new MapRenderer(canvas, imgs, conf, onclickRobot, onclickTree);
+    const onclickBlank = (loc: Victor) => {
+      this.valueID.textContent = "";
+      this.inputX.value = String(loc.x);
+      this.inputY.value = String(loc.y);
+      this.inputRadius.value = String(this.getMaxRadius(loc.x, loc.y));
+    }
+    this.renderer = new MapRenderer(canvas, imgs, conf, onclickUnit, onclickBlank);
     this.setCanvasDimensions();
     this.render();
   }
@@ -158,6 +166,7 @@ export default class MapEditorForm {
     rotational.checked = true;
     rotational.onchange = () => {
       if (rotational.checked) this.symmetry = Symmetry.ROTATIONAL;
+      this.render();
     };
     div.appendChild(rotational);
     div.appendChild(document.createTextNode("Rotational"));
@@ -169,6 +178,7 @@ export default class MapEditorForm {
     horizontal.value = "horizontal";
     horizontal.onchange = () => {
       if (horizontal.checked) this.symmetry = Symmetry.HORIZONTAL;
+      this.render();
     };
     div.appendChild(horizontal);
     div.appendChild(document.createTextNode("Horizontal"));
@@ -180,6 +190,7 @@ export default class MapEditorForm {
     vertical.value = "vertical";
     vertical.onchange = () => {
       if (vertical.checked) this.symmetry = Symmetry.VERTICAL;
+      this.render();
     };
     div.appendChild(vertical);
     div.appendChild(document.createTextNode("Vertical"));
@@ -383,10 +394,18 @@ export default class MapEditorForm {
 
       if (id === "") {
         // Create a new tree
-        this.setTree(this.lastID, { loc: new Victor(x, y), radius: radius });
+        this.setUnit(this.lastID, {
+          loc: new Victor(x, y),
+          radius: radius,
+          type: schema.BodyType.TREE_NEUTRAL
+        });
       } else if (id != null) {
         // Update existing tree
-        this.setTree(parseInt(id), { loc: new Victor(x, y), radius: radius });
+        this.setUnit(parseInt(id), {
+          loc: new Victor(x, y),
+          radius: radius,
+          type: schema.BodyType.TREE_NEUTRAL
+        });
       }
     }
     this.deleteButton.onclick = () => {
@@ -406,32 +425,29 @@ export default class MapEditorForm {
    * unit. Returns 0 if no such radius exists.
    */
   private getMaxRadius(x, y): number {
-    return 50; // TODO
+    // Min distance to wall
+    let maxRadius = Math.min(x, y, this.width - x, this.height -y);
+    const loc = new Victor(x, y);
+
+    // Min distance to tree or body
+    this.bodies.forEach(function(body: MapUnit) {
+      maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
+    });
+
+    // Give a buffer of DELTA
+    return Math.max(0, maxRadius - DELTA);
   }
 
   /**
-   * If a tree with the given ID already exists, updates the existing tree.
-   * Otherwise, adds the tree to the internal trees and increments lastID.
+   * If a unit with the given ID already exists, updates the existing unit.
+   * Otherwise, adds the unit to the internal units and increments lastID.
    * Finally re-renders the canvas.
    */
-  private setTree(id: number, tree: NeutralTree): void {
-    if (!this.trees.has(id)) {
+  private setUnit(id: number, body: MapUnit): void {
+    if (!this.bodies.has(id)) {
       this.lastID += 1;
     }
-    this.trees.set(id, tree);
-    this.render();
-  }
-
-  /**
-   * If an archon with the given ID already exists, updates the existing archon.
-   * Otherwise, adds the archon to the internal archons and increments lastID.
-   * Finally re-renders the canvas.
-   */
-  private setArchon(id: number, body: SpawnedBody): void {
-    if (!this.spawnedBodies.has(id)) {
-      this.lastID += 1;
-    }
-    this.spawnedBodies.set(id, body);
+    this.bodies.set(id, body);
     this.render();
   }
 
@@ -440,8 +456,7 @@ export default class MapEditorForm {
    * the canvas. Otherwise does nothing.
    */
   private deleteUnit(id: number): void {
-    if (this.spawnedBodies.has(id)) this.spawnedBodies.delete(id);
-    if (this.trees.has(id)) this.trees.delete(id);
+    if (this.bodies.has(id)) this.bodies.delete(id);
     this.render();
   }
 
@@ -454,8 +469,61 @@ export default class MapEditorForm {
   }
 
   private render() {
-    this.renderer.render(this.width, this.height, this.spawnedBodies, this.trees);
+    this.renderer.render(this.width, this.height, this.bodies,
+      this.getSymmetricBodies());
+  }
+
+  private getSymmetricBodies(): Map<number, MapUnit> {
+    // Whether or not loc lies on the point or line of symmetry
+    const onSymmetricLine = (loc: Victor): boolean => {
+      switch(this.symmetry) {
+        case(Symmetry.ROTATIONAL):
+        return loc.x === this.width / 2 && loc.y === this.height / 2;
+        case(Symmetry.HORIZONTAL):
+        return loc.y === this.height / 2;
+        case(Symmetry.VERTICAL):
+        return loc.x === this.width / 2;
+      }
+    };
+
+    // Returns the symmetric location on the canvas
+    const transformLoc = (loc: Victor): Victor => {
+      function reflect(x: number, mid: number): number {
+        if (x > mid) {
+          return mid - Math.abs(x - mid);
+        } else {
+          return mid + Math.abs(x - mid);
+        }
+      }
+
+      const midX = this.width / 2;
+      const midY = this.height / 2;
+      switch(this.symmetry) {
+        case(Symmetry.ROTATIONAL):
+        return new Victor(reflect(loc.x, midX), reflect(loc.y, midY));
+        case(Symmetry.HORIZONTAL):
+        return new Victor(loc.x, reflect(loc.y, midY));
+        case(Symmetry.VERTICAL):
+        return new Victor(reflect(loc.x, midX), loc.y);
+      }
+    };
+
+    // Create the symmetric bodies
+    const symmetricBodies: Map<number, MapUnit> = new Map<number, MapUnit>();
+    this.bodies.forEach((body: MapUnit, id: number) => {
+      if (!onSymmetricLine(body.loc)) {
+        symmetricBodies.set(id, {
+          loc: transformLoc(body.loc),
+          radius: body.radius,
+          type: body.type,
+          containedBullets: body.containedBullets,
+          containedBody: body.containedBody
+        });
+      }
+    });
+
+    return symmetricBodies;
   }
 }
 
-const DELTA = .01;
+const DELTA = .0001;
