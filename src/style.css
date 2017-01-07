@@ -25,6 +25,12 @@
     float: right;
 }
 
+.gameNum {
+    display: inline-block;
+    margin-left: 16px;
+    min-width: 100px;
+}
+
 .active-match {
   background: #ffffff;
   padding: 4px;

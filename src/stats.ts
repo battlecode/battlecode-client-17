@@ -242,7 +242,7 @@ export default class Stats {
     div.style.padding = "10px";
     
     let title = document.createElement("b");
-    title.appendChild(document.createTextNode("Match Queue"));
+    title.appendChild(document.createTextNode("Games"));
     
     // Add buttons
     let next = document.createElement("button");
@@ -257,6 +257,10 @@ export default class Stats {
     back.onclick = () => this.onPreviousMatch();
     back.appendChild(this.images.controls.matchBackward);
     
+    let gameNum = document.createElement("span");
+    gameNum.className += " gameNum";
+    
+    title.appendChild(gameNum);
     title.appendChild(back);
     title.appendChild(next);
     div.appendChild(title);
@@ -272,6 +276,9 @@ export default class Stats {
     while(this.matches.childNodes[2]){
       this.matches.removeChild(this.matches.childNodes[2]);
     }
+    
+    console.log(this.matches.childNodes);
+    this.matches.childNodes[0].childNodes[1].textContent = " (" + (activeGame + 1) + "/" + gameList.length + ")";
     
     //for (let game of gameList) {
     for (var j = 0; j < gameList.length; j++) {
@@ -328,7 +335,7 @@ export default class Stats {
             }
 
             // Add the information to the list
-            let matchEntry = document.createTextNode(" wins after " + match.lastTurn + " rounds" );
+            let matchEntry = document.createTextNode(" wins after " + (match.lastTurn + 1) + " rounds" );
             let matchPrefix = document.createTextNode(mapName + " - ");
             var matchWrapper = document.createElement("div");
             matchWrapper.appendChild(matchPrefix);
