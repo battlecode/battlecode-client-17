@@ -47,6 +47,7 @@ export default class Stats {
   // Yeah, it's pretty gross :/
   onNextMatch: () => void;
   onPreviousMatch: () => void;
+  gotoMatch: (game: number, match: number) => void;
 
   // Note: robot types and number of teams are currently fixed regardless of
   // match info. Keep in mind if we ever change these, or implement this less
@@ -329,10 +330,25 @@ export default class Stats {
             // Add the information to the list
             let matchEntry = document.createTextNode(" wins after " + match.maxTurn + " rounds" );
             let matchPrefix = document.createTextNode(mapName + " - ");
-            gameDiv.appendChild(matchPrefix);
-            gameDiv.appendChild(matchWinner);
-            gameDiv.appendChild(matchEntry);
-            gameDiv.appendChild(document.createElement("br"));
+            var matchWrapper = document.createElement("div");
+            matchWrapper.appendChild(matchPrefix);
+            matchWrapper.appendChild(matchWinner);
+            matchWrapper.appendChild(matchEntry);
+            matchWrapper.appendChild(document.createElement("br"));
+            
+            if(j == activeGame && i == activeMatch) {
+              matchWrapper.className = 'active-match';
+            } else {
+              matchWrapper.className = 'inactive-match';
+              console.log("Set on click with " + j + "," + i);
+              matchWrapper.onclick = () => {
+                const intI = i;
+                const intJ = j
+                this.gotoMatch(intJ, intI);
+              }
+            }
+            
+            gameDiv.appendChild(matchWrapper);
 
           }
           

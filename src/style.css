@@ -24,3 +24,14 @@
 .removeButton {
     float: right;
 }
+
+.active-match {
+  background: #ffffff;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.inactive-match {
+  padding: 4px;
+  cursor: pointer;
+}

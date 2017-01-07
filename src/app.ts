@@ -229,12 +229,14 @@ export default class Client {
         this.setGame(0);
         this.setMatch(0);
       }
+      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
     }
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
         (game) => {
           this.games.push(game);
+          this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         },
         // What to do with the websocket's first game's first match
         () => {
@@ -357,6 +359,10 @@ export default class Client {
         }
       }
       
+    };
+    this.stats.gotoMatch = (game: number, match: number) => {
+      this.setGame(game);
+      this.setMatch(match);
     };
     this.controls.canvas.addEventListener("mousedown", function(event) {
       // jump to a frame when clicking the controls timeline
