@@ -21,6 +21,8 @@ export default class MapEditorForm {
   private readonly renderer: MapRenderer;
 
   // Form elements
+  private tree: HTMLInputElement;
+  private archon: HTMLInputElement;
   private valueID: HTMLLabelElement;
   private inputX: HTMLInputElement;
   private inputY: HTMLInputElement;
@@ -32,12 +34,14 @@ export default class MapEditorForm {
   private readonly conf: Config
 
   // Map information
-  private lastID: number;
-  private name: string;
-  private width: number;
-  private height: number;
+  private type: schema.BodyType;
+  private lastID: number; // To give bodies unique IDs
+  name: string;
+  width: number;
+  height: number;
   private symmetry: Symmetry;
-  private readonly bodies: Map<number, MapUnit>;
+  readonly bodies: Map<number, MapUnit>;
+  symmetricBodies: Map<number, MapUnit>;
 
   constructor(conf: Config, imgs: AllImages, canvas: HTMLCanvasElement) {
     this.conf = conf;
@@ -51,11 +55,19 @@ export default class MapEditorForm {
     this.symmetry = Symmetry.ROTATIONAL;
     this.div = this.initialDiv();
     this.bodies = new Map<number, MapUnit>();
+    this.symmetricBodies = new Map<number, MapUnit>();
 
     const onclickUnit = (id: number) => {
       this.valueID.textContent = String(id);
       if (this.bodies.has(id)) {
         let body: MapUnit = this.bodies.get(id);
+        if (body.type === ARCHON) {
+          this.archon.checked = true;
+          this.tree.checked = false;
+        } else {
+          this.tree.checked = true;
+          this.archon.checked = false;
+        }
         this.inputX.value = String(body.loc.x);
         this.inputY.value = String(body.loc.y);
         this.inputRadius.value = String(body.radius);
@@ -65,7 +77,7 @@ export default class MapEditorForm {
       this.valueID.textContent = "";
       this.inputX.value = String(loc.x);
       this.inputY.value = String(loc.y);
-      this.inputRadius.value = String(this.getMaxRadius(loc.x, loc.y));
+      this.inputRadius.value = String(this.getMaxRadius(loc.x, loc.y, this.type));
     }
     this.renderer = new MapRenderer(canvas, imgs, conf, onclickUnit, onclickBlank);
     this.setCanvasDimensions();
@@ -162,7 +174,6 @@ export default class MapEditorForm {
     const rotational = document.createElement("input");
     rotational.type = "radio";
     rotational.name = "symmetry";
-    rotational.value = "rotational";
     rotational.checked = true;
     rotational.onchange = () => {
       if (rotational.checked) this.symmetry = Symmetry.ROTATIONAL;
@@ -175,7 +186,6 @@ export default class MapEditorForm {
     const horizontal = document.createElement("input");
     horizontal.type = "radio";
     horizontal.name = "symmetry";
-    horizontal.value = "horizontal";
     horizontal.onchange = () => {
       if (horizontal.checked) this.symmetry = Symmetry.HORIZONTAL;
       this.render();
@@ -187,7 +197,6 @@ export default class MapEditorForm {
     const vertical = document.createElement("input");
     vertical.type = "radio";
     vertical.name = "symmetry";
-    vertical.value = "vertical";
     vertical.onchange = () => {
       if (vertical.checked) this.symmetry = Symmetry.VERTICAL;
       this.render();
@@ -254,18 +263,23 @@ export default class MapEditorForm {
   }
 
   private treeInput() {
+    const body: HTMLFormElement = document.createElement("form");
 
-    // Callbacks
-    function validateX(input) {
-      if (this.value < 0) this.value = 0;
-      if (this.value > this.width) this.value = this.width;
-    }
-    function validateY(input) {
-      if (this.value < 0) this.value = 0;
-      if (this.value > this.height) this.value = this.height;
-    }
+    // Body type
+    const tree = document.createElement("input");
+    tree.type = "radio";
+    tree.name = "bodytype";
+    tree.checked = true;
+    const archon = document.createElement("input");
+    archon.type = "radio";
+    archon.name = "bodytype";
+    body.appendChild(tree);
+    body.appendChild(document.createTextNode("Tree"));
+    body.appendChild(archon);
+    body.appendChild(document.createTextNode("Archon"));
+    body.appendChild(document.createElement("br"));
 
-    // Archon ID
+    // ID
     const nodeID: HTMLDivElement = document.createElement("div");
     const labelID: HTMLLabelElement = document.createElement("label");
     const valueID: HTMLLabelElement = document.createElement("label");
@@ -335,19 +349,19 @@ export default class MapEditorForm {
     deleteButton.appendChild(document.createTextNode("Delete"));
 
     // HTML structure
-    const tree: HTMLFormElement = document.createElement("form");
-    tree.appendChild(document.createTextNode("Tree Creator"));
-    tree.appendChild(nodeID);
-    tree.appendChild(nodeX);
-    tree.appendChild(nodeY);
-    tree.appendChild(nodeRadius);
-    // tree.appendChild(nodeBullets);
-    // tree.appendChild(nodeBody);
-    tree.appendChild(document.createElement("br"));
-    tree.appendChild(setButton);
-    tree.appendChild(deleteButton);
-    tree.appendChild(document.createElement("br"));
+    body.appendChild(nodeID);
+    body.appendChild(nodeX);
+    body.appendChild(nodeY);
+    body.appendChild(nodeRadius);
+    // body.appendChild(nodeBullets);
+    // body.appendChild(nodeBody);
+    body.appendChild(document.createElement("br"));
+    body.appendChild(setButton);
+    body.appendChild(deleteButton);
+    body.appendChild(document.createElement("br"));
 
+    this.tree = tree;
+    this.archon = archon;
     this.valueID = valueID;
     this.inputX = inputX;
     this.inputY = inputY;
@@ -355,11 +369,23 @@ export default class MapEditorForm {
     this.setButton = setButton;
     this.deleteButton = deleteButton;
     this.initializeCallbacks();
-    return tree;
+    return body;
   }
 
   private initializeCallbacks() {
 
+    this.tree.onchange = () => {
+      if (this.tree.checked) this.type = TREE;
+      this.inputX.value = "";
+      this.inputY.value = "";
+      this.inputRadius.value = "";
+    };
+    this.archon.onchange = () => {
+      if (this.archon.checked) this.type = ARCHON;
+      this.inputX.value = "";
+      this.inputY.value = "";
+      this.inputRadius.value = "";
+    };
     this.inputX.onchange = () => {
       // X must be in the range [0, this.width]
       let value: number = parseFloat(this.inputX.value);
@@ -375,12 +401,11 @@ export default class MapEditorForm {
       this.inputY.value = String(value);
     };
     this.inputRadius.onchange = () => {
-      // Radius must be >= 0 and <= this.getMaxRadius(x, y)
       let value: number = parseFloat(this.inputRadius.value);
       let x: number = parseFloat(this.inputX.value);
       let y: number = parseFloat(this.inputY.value);
       if (value < 0) value = 0;
-      if (value > this.getMaxRadius(x, y)) value = this.getMaxRadius(x, y);
+      if (value > this.getMaxRadius(x, y, this.type)) value = this.getMaxRadius(x, y, this.type);
       this.inputRadius.value = String(value);
     };
     this.setButton.onclick = () => {
@@ -392,19 +417,20 @@ export default class MapEditorForm {
       // Return if invalid input
       if (isNaN(x) || isNaN(y) || isNaN(radius) || radius === 0) return;
 
+      let type = this.tree.checked ? TREE : ARCHON;
       if (id === "") {
-        // Create a new tree
+        // Create a new unit
         this.setUnit(this.lastID, {
           loc: new Victor(x, y),
           radius: radius,
-          type: schema.BodyType.TREE_NEUTRAL
+          type: type
         });
       } else if (id != null) {
-        // Update existing tree
+        // Update existing unit
         this.setUnit(parseInt(id), {
           loc: new Victor(x, y),
           radius: radius,
-          type: schema.BodyType.TREE_NEUTRAL
+          type: type
         });
       }
     }
@@ -424,18 +450,25 @@ export default class MapEditorForm {
    * corresponding unit centered on x, y is DELTA away from any other existing
    * unit. Returns 0 if no such radius exists.
    */
-  private getMaxRadius(x, y): number {
+  private getMaxRadius(x, y, type: schema.BodyType): number {
     // Min distance to wall
     let maxRadius = Math.min(x, y, this.width - x, this.height -y);
     const loc = new Victor(x, y);
 
     // Min distance to tree or body
-    this.bodies.forEach(function(body: MapUnit) {
+    this.bodies.forEach(function(body: MapUnit, id: number) {
+      maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
+    });
+    this.symmetricBodies.forEach(function(body: MapUnit, id: number) {
       maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
     });
 
-    // Give a buffer of DELTA
-    return Math.max(0, maxRadius - DELTA);
+    maxRadius = Math.max(0, maxRadius - DELTA);
+    if (type === ARCHON) {
+      return maxRadius >= 2 ? 2 : 0;
+    } else {
+      return maxRadius;
+    }
   }
 
   /**
@@ -469,8 +502,9 @@ export default class MapEditorForm {
   }
 
   private render() {
+    this.symmetricBodies = this.getSymmetricBodies();
     this.renderer.render(this.width, this.height, this.bodies,
-      this.getSymmetricBodies());
+      this.symmetricBodies);
   }
 
   private getSymmetricBodies(): Map<number, MapUnit> {
@@ -524,6 +558,16 @@ export default class MapEditorForm {
 
     return symmetricBodies;
   }
+
+  /**
+   * Whether the map is valid and ready to generate a GameMap
+   */
+  isValid(): boolean {
+    return true;
+  }
 }
 
 const DELTA = .0001;
+const ARCHON_RADIUS = 2;
+const ARCHON = schema.BodyType.ARCHON;
+const TREE = schema.BodyType.TREE_NEUTRAL;

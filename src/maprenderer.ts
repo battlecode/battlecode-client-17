@@ -73,8 +73,7 @@ export default class MapRenderer {
     this.ctx.scale(scale, scale);
 
     this.renderBackground();
-    this.renderBodies(bodies);
-    this.renderBodies(symmetricBodies);
+    this.renderBodies(bodies, symmetricBodies);
 
     // restore default rendering
     this.setEventListener(width, height, bodies, symmetricBodies);
@@ -99,17 +98,35 @@ export default class MapRenderer {
   /**
    * Draw trees and units on the canvas
    */
-  private renderBodies(bodies: Map<number, MapUnit>) {
-    // const img = this.imgs.tree.fullHealth;
+  private renderBodies(bodies: Map<number, MapUnit>,
+    symmetricBodies: Map<number, MapUnit>) {
+
+    const tree = this.imgs.tree.fullHealth;
+    const archons = this.imgs.robot.archon;
+
     this.ctx.fillStyle = "#84bf4b";
     bodies.forEach((body: MapUnit) => {
       const radius = body.radius;
-      if (body.type = schema.BodyType.TREE_NEUTRAL) {
-        this.ctx.beginPath();
-        this.ctx.arc(body.loc.x, body.loc.y, radius, 0, 2 * Math.PI);
-        this.ctx.fill();
-        // this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
+      if (body.type === TREE) {
+        // this.ctx.beginPath();
+        // this.ctx.arc(body.loc.x, body.loc.y, radius, 0, 2 * Math.PI);
+        // this.ctx.fill();
+        this.ctx.drawImage(tree, body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
+      } else if (body.type === ARCHON) {
+        this.ctx.drawImage(archons[1], body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
+      }
+    });
 
+    symmetricBodies.forEach((body: MapUnit) => {
+      const radius = body.radius;
+      if (body.type === TREE) {
+        // this.ctx.beginPath();
+        // this.ctx.arc(body.loc.x, body.loc.y, radius, 0, 2 * Math.PI);
+        // this.ctx.fill();
+        this.ctx.drawImage(tree, body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
+      } else if (body.type === ARCHON) {
+        this.ctx.drawImage(archons[2], body.loc.x-radius, body.loc.y-radius,
+          radius*2, radius*2);
       }
     });
   }
