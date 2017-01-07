@@ -166,9 +166,6 @@ export default class Renderer {
         case LUMBERJACK:
           img = this.imgs.robot.lumberjack[team];
           break;
-        case RECRUIT:
-          img = this.imgs.robot.recruit[team];
-          break;
         case SOLDIER:
           img = this.imgs.robot.soldier[team];
           break;
@@ -247,9 +244,6 @@ export default class Renderer {
           break;
         case LUMBERJACK:
           img = this.imgs.robot.lumberjack[team];
-          break;
-        case RECRUIT:
-          img = this.imgs.robot.recruit[team];
           break;
         case SOLDIER:
           img = this.imgs.robot.soldier[team];
@@ -435,7 +429,6 @@ const MED_SPEED_THRESH = (1.5*1.5) - .00001;
 const ARCHON = schema.BodyType.ARCHON;
 const GARDENER = schema.BodyType.GARDENER;
 const LUMBERJACK = schema.BodyType.LUMBERJACK;
-const RECRUIT = schema.BodyType.RECRUIT;
 const SOLDIER = schema.BodyType.SOLDIER;
 const TANK = schema.BodyType.TANK;
 const SCOUT = schema.BodyType.SCOUT;

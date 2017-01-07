@@ -5,7 +5,6 @@ import {schema} from 'battlecode-playback';
 const ARCHON = schema.BodyType.ARCHON;
 const GARDENER = schema.BodyType.GARDENER;
 const LUMBERJACK = schema.BodyType.LUMBERJACK;
-const RECRUIT = schema.BodyType.RECRUIT;
 const SOLDIER = schema.BodyType.SOLDIER;
 const TANK = schema.BodyType.TANK;
 const SCOUT = schema.BodyType.SCOUT;
@@ -45,7 +44,7 @@ export default class Stats {
   // statically.
   readonly stats: string[] = ["Bullets", "Victory Points"];
   readonly robots: schema.BodyType[] = [
-    ARCHON, GARDENER, LUMBERJACK, RECRUIT, SOLDIER, TANK, SCOUT
+    ARCHON, GARDENER, LUMBERJACK, SOLDIER, TANK, SCOUT
   ];
 
   constructor(images: imageloader.AllImages) {
@@ -184,7 +183,6 @@ export default class Stats {
       case ARCHON: return "archon";
       case GARDENER: return "gardener";
       case LUMBERJACK: return "lumberjack";
-      case RECRUIT: return "recruit";
       case SOLDIER: return "soldier";
       case TANK: return "tank";
       case SCOUT: return "scout";
