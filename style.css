@@ -10,3 +10,11 @@ form {
 #gamearea canvas {
     height: calc(100vh - 75px);
 }
+
+.red {
+    color: #a62014;
+}
+
+.blue {
+    color: #0636ac;
+}

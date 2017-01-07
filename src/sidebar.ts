@@ -47,32 +47,55 @@ export default class Sidebar {
    * Initializes the help div
    */
   private initializeHelp(): HTMLDivElement {
-    const options = [
-      "LEFT - Skip/Seek Backward",
-      "RIGHT - Skip/Seek Forward",
-      "p - Pause/Unpause",
-      "o - Stop",
-      "h - Toggle Health Bars",
-      "c - Toggle Circle Bots",
-      "v - Toggle Indicator Dots/Lines",
-      "b - Toggle Interpolation"
-    ];
+    const innerHTML: string =
+    `This is the client for Battlecode 2017.<br>
+    <br>
+    <b class="red">How to Play a Match</b><br>
+    <i>From the client:</i> Upload a <b>.bc17</b> file from your computer by
+    clicking the + button in the top-right corner. Use the control buttons to
+    navigate the match.<br>
+    <i>From the scaffold:</i> TODO<br>
+    <br>
+    <b class="blue">Keyboard Shortcuts</b><br>
+    LEFT - Skip/Seek Backward<br>
+    RIGHT - Skip/Seek Forward<br>
+    P - Pause/Unpause<br>
+    O - Stop<br>
+    H - Toggle Health Bars<br>
+    C - Toggle Circle Bots<br>
+    V - Toggle Indicator Dots/Lines<br>
+    B - Toggle Interpolation<br>
+    S - Add/Update (map editor mode)<br>
+    D - Delete (map editor mode)<br>
+    <br>
+    <b class="red">How to Use the Map Editor</b><br>
+    Select the initial map settings: name, width, height, symmetry. If you
+    later change these settings and the map becomes invalid, you can click
+    “EXPORT!” to see what modifications need to be made. You can also click
+    “Clear invalid units” to automatically remove overlapping or off-map units,
+    but data may be lost.<br>
+    <br>
+    Add trees and archons to the map by setting the coordinates and radius. The
+    coordinates can also be set by clicking on the map. The tree radius will
+    automatically adjust to the maximum valid radius if the input is too large,
+    and the archon radius is always 2. If the radius is 0, no unit of that type
+    can be placed there.<br>
+    <br>
+    Modify or delete existing units by clicking on them, making changes, then
+    clicking “Add/Update.”<br>
+    <br>
+    When you are happy with your map, click “EXPORT!”. (Note: the name of your
+    .map17 file must be the same as the name of your map.) Save the .map17
+    file to <b>battlecode-server/src/main/battlecode/world/resources</b>
+    directory of your scaffold.`;
 
     const div = document.createElement("div");
     div.style.textAlign = "left";
     div.style.fontFamily = "Tahoma, sans serif";
     div.style.fontSize = "12px";
-    div.style.border = "1px solid #ddd";
     div.style.padding = "10px";
 
-    const title = document.createElement("b");
-    title.appendChild(document.createTextNode("Keyboard Options"));
-    div.appendChild(title);
-
-    for (let option of options) {
-      div.appendChild(document.createElement("br"));
-      div.appendChild(document.createTextNode(option));
-    }
+    div.innerHTML = innerHTML;
     return div;
   }
 
