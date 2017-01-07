@@ -17,6 +17,7 @@ export default class GameArea {
 
   constructor(conf: Config, images: AllImages, mapEditorCanvas: HTMLCanvasElement) {
     this.div = document.createElement("div");
+    this.div.id = "gamearea";
     this.conf = conf;
     this.images = images;
     this.mapEditorCanvas = mapEditorCanvas;
@@ -71,7 +72,7 @@ export default class GameArea {
   setCanvas = () => {
     // Clear the game area
     while (this.wrapper.firstChild) {
-      this.wrapper.removeChild(this.wrapper.firstChild);  
+      this.wrapper.removeChild(this.wrapper.firstChild);
     }
 
     // Update with the correct canvas

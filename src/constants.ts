@@ -1,4 +1,5 @@
 import {schema} from 'battlecode-playback';
+import {Symmetry} from './maprenderer';
 
 // Body types
 export const ARCHON = schema.BodyType.ARCHON;
@@ -27,7 +28,31 @@ export const MED_SPEED_THRESH = (1.5*1.5) - .00001;
 // Map editor canvas parameters
 export const DELTA = .0001;
 export const ARCHON_RADIUS = 2;
+export const MIN_DIMENSION = 30;
+export const MAX_DIMENSION = 80;
 
 // Server settings
 export const NUMBER_OF_INDICATOR_STRINGS = 3;
 export const NUMBER_OF_TEAMS = 2;
+
+export function bodyTypeToString(bodyType: schema.BodyType) {
+  switch(bodyType) {
+    case ARCHON:     return "archon";
+    case GARDENER:   return "gardener";
+    case LUMBERJACK: return "lumberjack";
+    case RECRUIT:    return "recruit";
+    case SOLDIER:    return "soldier";
+    case TANK:       return "tank";
+    case SCOUT:      return "scout";
+    default:         throw new Error("invalid body type");
+  }
+}
+
+export function symmetryToString(symmetry: Symmetry) {
+  switch(symmetry) {
+    case Symmetry.ROTATIONAL: return "Rotational";
+    case Symmetry.HORIZONTAL: return "Horizontal";
+    case Symmetry.VERTICAL:   return "Vertical";
+    default:         throw new Error("invalid symmetry");
+  }
+}

@@ -1,1 +1,12 @@
-/* Global stylings here */
+#mapEditor {
+    font-family: "tahoma, sans serif";
+    font-size: 14px;
+}
+
+form {
+    text-align: center;
+}
+
+#gamearea canvas {
+    height: calc(100vh - 75px);
+}

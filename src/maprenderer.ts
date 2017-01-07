@@ -1,4 +1,5 @@
 import * as config from './config';
+import * as cst from './constants';
 
 import {GameWorld, schema} from 'battlecode-playback';
 import {AllImages} from './imageloader';
@@ -107,24 +108,24 @@ export default class MapRenderer {
     this.ctx.fillStyle = "#84bf4b";
     bodies.forEach((body: MapUnit) => {
       const radius = body.radius;
-      if (body.type === TREE) {
+      if (body.type === cst.TREE_NEUTRAL) {
         // this.ctx.beginPath();
         // this.ctx.arc(body.loc.x, body.loc.y, radius, 0, 2 * Math.PI);
         // this.ctx.fill();
         this.ctx.drawImage(tree, body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
-      } else if (body.type === ARCHON) {
+      } else if (body.type === cst.ARCHON) {
         this.ctx.drawImage(archons[1], body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
       }
     });
 
     symmetricBodies.forEach((body: MapUnit) => {
       const radius = body.radius;
-      if (body.type === TREE) {
+      if (body.type === cst.TREE_NEUTRAL) {
         // this.ctx.beginPath();
         // this.ctx.arc(body.loc.x, body.loc.y, radius, 0, 2 * Math.PI);
         // this.ctx.fill();
         this.ctx.drawImage(tree, body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
-      } else if (body.type === ARCHON) {
+      } else if (body.type === cst.ARCHON) {
         this.ctx.drawImage(archons[2], body.loc.x-radius, body.loc.y-radius,
           radius*2, radius*2);
       }
@@ -163,8 +164,4 @@ export default class MapRenderer {
     };
   }
 }
-
-// Relevant unit types
-const ARCHON = schema.BodyType.ARCHON;
-const TREE = schema.BodyType.TREE_NEUTRAL;
 

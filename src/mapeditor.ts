@@ -120,10 +120,10 @@ export default class MapEditor {
     });
 
     // Get header information from form
-    let name: string = this.form.name;
+    let name: string = this.form.name();
     let minCorner: Victor = new Victor(Math.random()*500, Math.random()*500);
     let maxCorner: Victor = minCorner.clone();
-    maxCorner.add(new Victor(this.form.width, this.form.height));
+    maxCorner.add(new Victor(this.form.width(), this.form.height()));
     let randomSeed: number = Math.round(Math.random()*1000);
 
     // Create the spawned bodies table
@@ -169,7 +169,7 @@ export default class MapEditor {
   }
 
   private exportFile() {
-    let fileName = `${this.form.name}.bcmap`;
+    let fileName = `${this.form.name}.map17`;
     let mimeType = "application/octet-stream";
     let data: Uint8Array | undefined = this.generateMap();
 

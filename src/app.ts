@@ -124,12 +124,7 @@ export default class Client {
       border: 1px solid transparent;}\
       \
       .custom-button:hover {background-color: #bbb}\
-      .custom-button:active, button:target {background-color: #999;}\
-      \
-      form { display: table; align: center; }\
-      form div { display: table-row; }\
-      form label { display: table-cell; }\
-      form input { display: table-cell; text-align: left; }";
+      .custom-button:active, button:target {background-color: #999;}";
     this.style.appendChild(document.createTextNode(css));
     this.root.appendChild(this.style);
   }

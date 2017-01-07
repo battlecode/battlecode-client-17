@@ -20,27 +20,38 @@ export default class MapEditorForm {
   private readonly images: AllImages;
   private readonly canvas: HTMLCanvasElement;
   private readonly renderer: MapRenderer;
+  private archonForm: HTMLFormElement;
+  private treeForm: HTMLFormElement;
 
   // Form elements
+  private nameGM: HTMLInputElement;
+  private widthGM: HTMLInputElement;
+  private heightGM: HTMLInputElement;
+  private symmetryGM: HTMLSelectElement;
+
   private tree: HTMLInputElement;
   private archon: HTMLInputElement;
-  private valueID: HTMLLabelElement;
-  private inputX: HTMLInputElement;
-  private inputY: HTMLInputElement;
-  private inputRadius: HTMLInputElement;
-  private setButton: HTMLButtonElement;
-  private deleteButton: HTMLButtonElement;
+
+  private idA: HTMLLabelElement;
+  private xA: HTMLInputElement;
+  private yA: HTMLInputElement;
+  private radiusA: HTMLInputElement;
+
+  private idT: HTMLLabelElement;
+  private xT: HTMLInputElement;
+  private yT: HTMLInputElement;
+  private radiusT: HTMLInputElement;
+  private bulletsT: HTMLInputElement;
+  private bodiesT: HTMLSelectElement;
+
+  private addbutton: HTMLButtonElement;
+  private deletebutton: HTMLButtonElement;
 
   // Options
   private readonly conf: Config
 
   // Map information
-  private type: schema.BodyType;
   private lastID: number; // To give bodies unique IDs
-  name: string;
-  width: number;
-  height: number;
-  private symmetry: Symmetry;
   readonly bodies: Map<number, MapUnit>;
   symmetricBodies: Map<number, MapUnit>;
 
@@ -50,395 +61,445 @@ export default class MapEditorForm {
     this.canvas = canvas;
 
     this.lastID = 1;
-    this.name = "DEFAULT_MAP";
-    this.width = 50;
-    this.height = 50;
-    this.symmetry = Symmetry.ROTATIONAL;
     this.div = this.initialDiv();
     this.bodies = new Map<number, MapUnit>();
     this.symmetricBodies = new Map<number, MapUnit>();
 
+    this.initializeCallbacks();
+
     const onclickUnit = (id: number) => {
-      this.valueID.textContent = String(id);
       if (this.bodies.has(id)) {
+        // Set the corresponding form appropriately
         let body: MapUnit = this.bodies.get(id);
         if (body.type === cst.ARCHON) {
           this.archon.checked = true;
-          this.tree.checked = false;
-        } else {
+          this.setArchonForm(body.loc, id);
+        } else if (body.type === cst.TREE_NEUTRAL) {
           this.tree.checked = true;
-          this.archon.checked = false;
+          this.setTreeForm(body.loc, body.radius, body.containedBullets,
+            body.containedBody, id);
         }
-        this.inputX.value = String(body.loc.x);
-        this.inputY.value = String(body.loc.y);
-        this.inputRadius.value = String(body.radius);
       }
     };
     const onclickBlank = (loc: Victor) => {
-      this.valueID.textContent = "";
-      this.inputX.value = String(loc.x);
-      this.inputY.value = String(loc.y);
-      this.inputRadius.value = String(this.getMaxRadius(loc.x, loc.y, this.type));
+      if (this.archon.checked) {
+        this.setArchonForm(loc);
+      } else {
+        let radius = this.getMaxRadius(loc.x, loc.y);
+        if (!isNaN(parseFloat(this.radiusT.value))) {
+          radius = Math.min(parseFloat(this.radiusT.value), radius);
+        }
+        this.setTreeForm(loc, radius);
+      }
     }
+
     this.renderer = new MapRenderer(canvas, imgs, conf, onclickUnit, onclickBlank);
     this.setCanvasDimensions();
-    this.render();
   }
 
+  /**
+   * Creates the div that contains all the map-editor related form elements.
+   */
   private initialDiv(): HTMLDivElement {
     const div: HTMLDivElement = document.createElement("div");
-    div.style.fontFamily = "tahoma, sans-serif";
-    div.style.fontSize = "14px";
+    div.id = "mapEditor";
 
-    div.appendChild(this.headerInput());
-    div.appendChild(this.symmetryInput());
-    div.appendChild(this.treeInput());
+    div.appendChild(this.createHeaderForm());
+    div.appendChild(this.createSymmetryForm());
+    div.appendChild(this.createUnitOption());
+
+    this.archonForm = this.createArchonForm();
+    this.treeForm = this.createTreeForm();
+
+    div.appendChild(this.treeForm);
+    div.appendChild(this.createFormButtons());
     return div;
   }
 
-  private headerInput(): HTMLFormElement {
+  /**
+   * Creates the form that collects match header information: name, width, height.
+   */
+  private createHeaderForm(): HTMLFormElement {
+    // HTML structure
+    const header: HTMLFormElement = document.createElement("form");
+    const mapname: HTMLDivElement = document.createElement("div");
+    const width: HTMLDivElement = document.createElement("div");
+    const height: HTMLDivElement = document.createElement("div");
+    header.appendChild(mapname);
+    header.appendChild(width);
+    header.appendChild(height);
+    header.appendChild(document.createElement("br"));
+
     // Map name
-    const nodeMapName: HTMLDivElement = document.createElement("div");
-    const labelMapName: HTMLLabelElement = document.createElement("label");
-    const inputMapName: HTMLInputElement = document.createElement("input");
-    labelMapName.appendChild(document.createTextNode("Map name: "));
-    inputMapName.type = "text";
-    inputMapName.value = "DEFAULT_MAP";
-    inputMapName.onchange = () => {
-      // Update internal map name
-      this.name = inputMapName.value;
-    }
-    inputMapName.maxLength = 50;
-    nodeMapName.appendChild(labelMapName);
-    nodeMapName.appendChild(inputMapName);
+    this.nameGM = document.createElement("input");
+    this.nameGM.type = "text";
+    this.nameGM.value = "map";
+    this.nameGM.maxLength = 50;
+    mapname.appendChild(document.createTextNode("Map name:"));
+    mapname.appendChild(this.nameGM);
 
     // Map width
-    const nodeWidth: HTMLDivElement = document.createElement("div");
-    const labelWidth: HTMLLabelElement = document.createElement("label");
-    const inputWidth: HTMLInputElement = document.createElement("input");
-    labelWidth.appendChild(document.createTextNode("Width: "));
-    inputWidth.type = "text";
-    inputWidth.value = String(this.width);
-    inputWidth.onchange = () => {
-      // Width must be in the range [30, 80]
-      let value: number = parseFloat(inputWidth.value);
-      if (value < 30) value = 30;
-      if (value > 80) value = 80;
-      inputWidth.value = String(value);
-      // Update internal and canvas width
-      this.width = value;
+    this.widthGM = document.createElement("input");
+    this.widthGM.type = "text";
+    this.widthGM.value = "50";
+    this.widthGM.onchange = () => {
+      // Width must be in the defined range
+      let value: number = parseFloat(this.widthGM.value);
+      value = Math.max(value, cst.MIN_DIMENSION);
+      value = Math.min(value, cst.MAX_DIMENSION);
+      this.widthGM.value = String(value);
       this.setCanvasDimensions();
-      this.render();
     };
-    inputWidth.style.width = "50px";
-    nodeWidth.appendChild(labelWidth);
-    nodeWidth.appendChild(inputWidth);
-    nodeWidth.style.textAlign = "left";
+    width.appendChild(document.createTextNode("Width:"));
+    width.appendChild(this.widthGM);
 
-    // Map height
-    const nodeHeight: HTMLDivElement = document.createElement("div");
-    const labelHeight: HTMLLabelElement = document.createElement("label");
-    const inputHeight: HTMLInputElement = document.createElement("input");
-    labelHeight.appendChild(document.createTextNode("Height: "));
-    inputHeight.type = "text";
-    inputHeight.value = String(this.height);
-    inputHeight.onchange = () => {
-      // Height must be in the range [30, 80]
-      let value: number = parseFloat(inputHeight.value);
-      if (value < 30) value = 30;
-      if (value > 80) value = 80;
-      inputHeight.value = String(value);
-      // Update internal and canvas width
-      this.height = value;
+    // Map width
+    this.heightGM = document.createElement("input");
+    this.heightGM.type = "text";
+    this.heightGM.value = "50";
+    this.heightGM.onchange = () => {
+      // Height must be in the defined range
+      let value: number = parseFloat(this.heightGM.value);
+      value = Math.max(value, cst.MIN_DIMENSION);
+      value = Math.min(value, cst.MAX_DIMENSION);
+      this.heightGM.value = String(value);
       this.setCanvasDimensions();
-      this.render();
     };
-    inputHeight.style.width = "50px";
-    nodeHeight.appendChild(labelHeight);
-    nodeHeight.appendChild(inputHeight);
-    nodeHeight.style.textAlign = "left";
+    height.appendChild(document.createTextNode("Height:"));
+    height.appendChild(this.heightGM);
 
-    // HTML structure
-    const headerInfo: HTMLFormElement = document.createElement("form");
-    headerInfo.appendChild(nodeMapName);
-    headerInfo.appendChild(nodeWidth);
-    headerInfo.appendChild(nodeHeight);
-    headerInfo.appendChild(document.createElement("br"));
-
-    return headerInfo;
+    return header;
   }
 
-  private symmetryInput(): HTMLDivElement {
-    const div = document.createElement("div");
-    div.appendChild(document.createTextNode("Symmetry:"));
+  private createSymmetryForm(): HTMLDivElement {
+    const form = document.createElement("div");
+    this.symmetryGM = document.createElement("select");
+    form.appendChild(document.createTextNode("Symmetry:"));
+    form.appendChild(this.symmetryGM);
 
-    const rotational = document.createElement("input");
-    rotational.type = "radio";
-    rotational.name = "symmetry";
-    rotational.checked = true;
-    rotational.onchange = () => {
-      if (rotational.checked) this.symmetry = Symmetry.ROTATIONAL;
-      this.render();
-    };
-    div.appendChild(rotational);
-    div.appendChild(document.createTextNode("Rotational"));
-    div.appendChild(document.createElement("br"));
-
-    const horizontal = document.createElement("input");
-    horizontal.type = "radio";
-    horizontal.name = "symmetry";
-    horizontal.onchange = () => {
-      if (horizontal.checked) this.symmetry = Symmetry.HORIZONTAL;
-      this.render();
-    };
-    div.appendChild(horizontal);
-    div.appendChild(document.createTextNode("Horizontal"));
-    div.appendChild(document.createElement("br"));
-
-    const vertical = document.createElement("input");
-    vertical.type = "radio";
-    vertical.name = "symmetry";
-    vertical.onchange = () => {
-      if (vertical.checked) this.symmetry = Symmetry.VERTICAL;
-      this.render();
-    };
-    div.appendChild(vertical);
-    div.appendChild(document.createTextNode("Vertical"));
-    div.appendChild(document.createElement("br"));
-    div.appendChild(document.createElement("br"));
-
-    return div;
-  }
-
-  private archonInput() {
-
-    // Callbacks
-    function validateX(input) {
-      if (this.value < 0) this.value = 0;
-      if (this.value > this.width) this.value = this.width;
-    }
-    function validateY(input) {
-      if (this.value < 0) this.value = 0;
-      if (this.value > this.height) this.value = this.height;
+    // Add an option for each value in enum Symmetry
+    const options = [Symmetry.ROTATIONAL, Symmetry.HORIZONTAL, Symmetry.VERTICAL];
+    for (let option of options) {
+      let opt = document.createElement("option");
+      opt.value = String(option);
+      opt.appendChild(document.createTextNode(cst.symmetryToString(option)));
+      this.symmetryGM.appendChild(opt);
     }
 
-    // Archon ID
-    const nodeID: HTMLDivElement = document.createElement("div");
-    const labelID: HTMLLabelElement = document.createElement("label");
-    const valueID: HTMLLabelElement = document.createElement("label");
-    labelID.appendChild(document.createTextNode("ID:"));
-    valueID.appendChild(document.createTextNode(""))
-    nodeID.appendChild(labelID);
-    nodeID.appendChild(valueID);
-
-    // X coordinate
-    const nodeX: HTMLDivElement = document.createElement("div");
-    const labelX: HTMLLabelElement = document.createElement("label");
-    const inputX: HTMLInputElement = document.createElement("input");
-    labelX.appendChild(document.createTextNode("X: "));
-    inputX.type = "text";
-    inputX.onchange = validateX;
-    nodeX.appendChild(labelX);
-    nodeX.appendChild(inputX);
-    nodeX.style.textAlign = "left";
-
-    // Y coordinate
-    const nodeY: HTMLDivElement = document.createElement("div");
-    const labelY: HTMLLabelElement = document.createElement("label");
-    const inputY: HTMLInputElement = document.createElement("input");
-    labelY.appendChild(document.createTextNode("Y: "));
-    inputY.type = "text";
-    inputY.onchange = validateY;
-    nodeY.appendChild(labelY);
-    nodeY.appendChild(inputY);
-    nodeY.style.textAlign = "left";
-
-    // HTML structure
-    const archon: HTMLFormElement = document.createElement("form");
-    archon.appendChild(nodeID);
-    archon.appendChild(nodeX);
-    archon.appendChild(nodeY);
-    archon.appendChild(document.createElement("br"));
-
-    return archon;
+    form.appendChild(document.createElement("br"));
+    form.appendChild(document.createElement("br"));
+    return form;
   }
 
-  private treeInput() {
-    const body: HTMLFormElement = document.createElement("form");
+  private createUnitOption(): HTMLDivElement {
+    let div = document.createElement("div");
 
-    // Body type
-    const tree = document.createElement("input");
+    // Tree option
+    let tree = document.createElement("input");
     tree.type = "radio";
     tree.name = "bodytype";
     tree.checked = true;
-    const archon = document.createElement("input");
+
+    // Archon option
+    let archon = document.createElement("input");
     archon.type = "radio";
     archon.name = "bodytype";
-    body.appendChild(tree);
-    body.appendChild(document.createTextNode("Tree"));
-    body.appendChild(archon);
-    body.appendChild(document.createTextNode("Archon"));
-    body.appendChild(document.createElement("br"));
 
-    // ID
-    const nodeID: HTMLDivElement = document.createElement("div");
-    const labelID: HTMLLabelElement = document.createElement("label");
-    const valueID: HTMLLabelElement = document.createElement("label");
-    labelID.appendChild(document.createTextNode("ID:"));
-    valueID.textContent = "";
-    nodeID.appendChild(labelID);
-    nodeID.appendChild(valueID);
+    // Add radio buttons HTML element
+    div.appendChild(tree);
+    div.appendChild(document.createTextNode("Tree"));
+    div.appendChild(archon);
+    div.appendChild(document.createTextNode("Archon"));
+    div.appendChild(document.createElement("br"));
 
-    // X coordinate
-    const nodeX: HTMLDivElement = document.createElement("div");
-    const labelX: HTMLLabelElement = document.createElement("label");
-    const inputX: HTMLInputElement = document.createElement("input");
-    labelX.appendChild(document.createTextNode("X: "));
-    inputX.type = "text";
-    nodeX.appendChild(labelX);
-    nodeX.appendChild(inputX);
-    nodeX.style.textAlign = "left";
-
-    // Y coordinate
-    const nodeY: HTMLDivElement = document.createElement("div");
-    const labelY: HTMLLabelElement = document.createElement("label");
-    const inputY: HTMLInputElement = document.createElement("input");
-    labelY.appendChild(document.createTextNode("Y: "));
-    inputY.type = "text";
-    nodeY.appendChild(labelY);
-    nodeY.appendChild(inputY);
-    nodeY.style.textAlign = "left";
-
-    // Radius
-    const nodeRadius: HTMLDivElement = document.createElement("div");
-    const labelRadius: HTMLLabelElement = document.createElement("label");
-    const inputRadius: HTMLInputElement = document.createElement("input");
-    labelRadius.appendChild(document.createTextNode("Radius: "));
-    inputRadius.type = "text";
-    nodeRadius.appendChild(labelRadius);
-    nodeRadius.appendChild(inputRadius);
-    nodeRadius.style.textAlign = "left";
-
-    // Tree bullets
-    const nodeBullets: HTMLDivElement = document.createElement("div");
-    const labelBullets: HTMLLabelElement = document.createElement("label");
-    const inputBullets: HTMLInputElement = document.createElement("input");
-    labelBullets.appendChild(document.createTextNode("Bullets: "));
-    inputBullets.type = "text";
-    nodeBullets.appendChild(labelBullets);
-    nodeBullets.appendChild(inputBullets);
-    nodeBullets.style.textAlign = "left";
-
-    // Tree body
-    const nodeBody: HTMLDivElement = document.createElement("div");
-    const labelBody: HTMLLabelElement = document.createElement("label");
-    const inputBody: HTMLInputElement = document.createElement("input");
-    labelBody.appendChild(document.createTextNode("Body: "));
-    inputBody.type = "text";
-    nodeBody.appendChild(labelBody);
-    nodeBody.appendChild(inputBody);
-    nodeBody.style.textAlign = "left";
-
-    // Set button
-    const setButton: HTMLButtonElement = document.createElement("button");
-    setButton.type = "button";
-    setButton.appendChild(document.createTextNode("Set"));
-
-    // Delete button
-    const deleteButton: HTMLButtonElement = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.appendChild(document.createTextNode("Delete"));
-
-    // HTML structure
-    body.appendChild(nodeID);
-    body.appendChild(nodeX);
-    body.appendChild(nodeY);
-    body.appendChild(nodeRadius);
-    // body.appendChild(nodeBullets);
-    // body.appendChild(nodeBody);
-    body.appendChild(document.createElement("br"));
-    body.appendChild(setButton);
-    body.appendChild(deleteButton);
-    body.appendChild(document.createElement("br"));
-
+    // Save input elements
     this.tree = tree;
     this.archon = archon;
-    this.valueID = valueID;
-    this.inputX = inputX;
-    this.inputY = inputY;
-    this.inputRadius = inputRadius;
-    this.setButton = setButton;
-    this.deleteButton = deleteButton;
-    this.initializeCallbacks();
-    return body;
+    return div;
+  }
+
+  private createArchonForm(): HTMLFormElement {
+    // HTML structure
+    const form: HTMLFormElement = document.createElement("form");
+    const id: HTMLDivElement = document.createElement("div");
+    const x: HTMLDivElement = document.createElement("div");
+    const y: HTMLDivElement = document.createElement("div");
+    const radius: HTMLDivElement = document.createElement("div");
+    form.appendChild(id);
+    form.appendChild(x);
+    form.appendChild(y);
+    form.appendChild(radius);
+    form.appendChild(document.createElement("br"));
+
+    // Archon ID
+    let idA = document.createElement("label");
+    idA.appendChild(document.createTextNode(""))
+    id.appendChild(document.createTextNode("ID:"));
+    id.appendChild(idA);
+
+    // X coordinate
+    let xA: HTMLInputElement = document.createElement("input");
+    xA.type = "text";
+    x.appendChild(document.createTextNode("X:"));
+    x.appendChild(xA);
+
+    // Y coordinate
+    let yA: HTMLInputElement = document.createElement("input");
+    yA.type = "text";
+    y.appendChild(document.createTextNode("Y:"));
+    y.appendChild(yA);
+
+    // Radius
+    let radiusA: HTMLInputElement = document.createElement("input");
+    radiusA.type = "text";
+    radiusA.disabled = true;
+    radiusA.value = "2";
+    radius.appendChild(document.createTextNode("Radius:"));
+    radius.appendChild(radiusA);
+
+    // Save HTML elements
+    this.idA = idA;
+    this.xA = xA;
+    this.yA = yA;
+    this.radiusA = radiusA;
+    return form;
+  }
+
+  private setArchonForm(loc: Victor, id?: number): void {
+    this.xA.value = String(loc.x);
+    this.yA.value = String(loc.y);
+
+    if (id === undefined) {
+      this.idA.textContent = "";
+      this.radiusA.value = String(this.getMaxRadius(loc.x, loc.y, id, true));
+    } else {
+      this.idA.textContent = String(id);
+      this.radiusA.value = String(cst.ARCHON_RADIUS);
+    }
+  }
+
+  private createTreeForm(): HTMLFormElement {
+    // HTML structure
+    const form: HTMLFormElement = document.createElement("form");
+    const id: HTMLDivElement = document.createElement("div");
+    const x: HTMLDivElement = document.createElement("div");
+    const y: HTMLDivElement = document.createElement("div");
+    const radius: HTMLDivElement = document.createElement("div");
+    const bullets: HTMLDivElement = document.createElement("div");
+    const body: HTMLDivElement = document.createElement("div");
+    form.appendChild(id);
+    form.appendChild(x);
+    form.appendChild(y);
+    form.appendChild(radius);
+    form.appendChild(bullets);
+    form.appendChild(body);
+    form.appendChild(document.createElement("br"));
+
+    // Tree ID
+    let idT = document.createElement("label");
+    idT.appendChild(document.createTextNode(""))
+    id.appendChild(document.createTextNode("ID:"));
+    id.appendChild(idT);
+
+    // X coordinate
+    let xT: HTMLInputElement = document.createElement("input");
+    xT.type = "text";
+    x.appendChild(document.createTextNode("X:"));
+    x.appendChild(xT);
+
+    // Y coordinate
+    let yT: HTMLInputElement = document.createElement("input");
+    yT.type = "text";
+    y.appendChild(document.createTextNode("Y:"));
+    y.appendChild(yT);
+
+    // Radius
+    let radiusT: HTMLInputElement = document.createElement("input");
+    radiusT.type = "text";
+    radius.appendChild(document.createTextNode("Radius:"));
+    radius.appendChild(radiusT);
+
+    // Bullets
+    let bulletsT: HTMLInputElement = document.createElement("input");
+    bulletsT.type = "text";
+    bulletsT.value = "0";
+    bullets.appendChild(document.createTextNode("Bullets:"));
+    bullets.appendChild(bulletsT);
+
+    // Tree body
+    const types = [cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT];
+    let bodyT: HTMLSelectElement = document.createElement("select");
+    body.appendChild(document.createTextNode("Body:"));
+    body.appendChild(bodyT);
+
+    // Create an option for each robot type
+    // bodyT.appendChild(document.createElement("option"));
+    for (let type of types) {
+      let option = document.createElement("option");
+      option.value = String(type);
+      option.appendChild(document.createTextNode(cst.bodyTypeToString(type)));
+      bodyT.appendChild(option);
+    }
+
+    // Save HTML elements
+    this.idT = idT;
+    this.xT = xT;
+    this.yT = yT;
+    this.radiusT = radiusT;
+    this.bulletsT = bulletsT;
+    this.bodiesT = bodyT;
+    return form;
+  }
+
+  private setTreeForm(loc: Victor, radius: number, bullets?: number | undefined,
+    body?: schema.BodyType | undefined, id?: number): void {
+    this.xT.value = String(loc.x);
+    this.yT.value = String(loc.y);
+    this.radiusT.value = String(radius);
+
+    if (bullets != undefined) this.bulletsT.value = String(bullets);
+    if (body != undefined) this.bodiesT.value = String(body);
+
+    this.idT.textContent = id === undefined ? "" : String(id);
+  }
+
+  private createFormButtons(): HTMLDivElement {
+    // HTML structure
+    let buttons = document.createElement("div");
+    let deletebutton: HTMLButtonElement = document.createElement("button");
+    let addbutton: HTMLButtonElement = document.createElement("button");
+    buttons.appendChild(deletebutton);
+    buttons.appendChild(addbutton);
+
+    // Delete and Add/Update buttons
+    deletebutton.type = "button";
+    deletebutton.appendChild(document.createTextNode("Delete"));
+    addbutton.type = "button";
+    addbutton.appendChild(document.createTextNode("Add/Update"));
+
+    // Save HTML elements
+    this.deletebutton = deletebutton;
+    this.addbutton = addbutton;
+    return buttons;
   }
 
   private initializeCallbacks() {
 
     this.tree.onchange = () => {
-      if (this.tree.checked) this.type = cst.TREE_NEUTRAL;
-      this.inputX.value = "";
-      this.inputY.value = "";
-      this.inputRadius.value = "";
+      // Change the displayed form
+      if (this.tree.checked) {
+        this.div.replaceChild(this.treeForm, this.archonForm);
+      }
     };
     this.archon.onchange = () => {
-      if (this.archon.checked) this.type = cst.ARCHON;
-      this.inputX.value = "";
-      this.inputY.value = "";
-      this.inputRadius.value = "";
+      // Change the displayed form
+      if (this.archon.checked) {
+        this.div.replaceChild(this.archonForm, this.treeForm);
+      }
     };
-    this.inputX.onchange = () => {
+
+
+    // Coordinates must be on the map
+    this.xT.onchange = () => {
       // X must be in the range [0, this.width]
-      let value: number = parseFloat(this.inputX.value);
-      if (value < 0) value = 0;
-      if (value > this.width) value = this.width;
-      this.inputX.value = String(value);
+      let value: number = parseFloat(this.xT.value);
+      value = Math.max(value, 0);
+      value = Math.min(value, this.width());
+      this.xT.value = String(value);
     };
-    this.inputY.onchange = () => {
+    this.xA.onchange = () => {
+      // X must be in the range [0, this.width]
+      let value: number = parseFloat(this.xA.value);
+      value = Math.max(value, 0);
+      value = Math.min(value, this.width());
+      this.xT.value = String(value);
+    };
+    this.yT.onchange = () => {
       // Y must be in the range [0, this.height]
-      let value: number = parseFloat(this.inputY.value);
-      if (value < 0) value = 0;
-      if (value > this.height) value = this.height;
-      this.inputY.value = String(value);
+      let value: number = parseFloat(this.yT.value);
+      value = Math.max(value, 0);
+      value = Math.min(value, this.height());
+      this.yT.value = String(value);
     };
-    this.inputRadius.onchange = () => {
-      let value: number = parseFloat(this.inputRadius.value);
-      let x: number = parseFloat(this.inputX.value);
-      let y: number = parseFloat(this.inputY.value);
-      if (value < 0) value = 0;
-      if (value > this.getMaxRadius(x, y, this.type)) value = this.getMaxRadius(x, y, this.type);
-      this.inputRadius.value = String(value);
+    this.yA.onchange = () => {
+      // Y must be in the range [0, this.height]
+      let value: number = parseFloat(this.yA.value);
+      value = Math.max(value, 0);
+      value = Math.min(value, this.height());
+      this.yT.value = String(value);
     };
-    this.setButton.onclick = () => {
-      let id = this.valueID.textContent;
-      let x = parseFloat(this.inputX.value);
-      let y = parseFloat(this.inputY.value);
-      let radius = parseFloat(this.inputRadius.value);
+
+    // Tree of this radius must not overlap with other units
+    this.radiusT.onchange = () => {
+      let value: number = parseFloat(this.radiusT.value);
+      let x: number = parseFloat(this.xT.value);
+      let y: number = parseFloat(this.yT.value);
+      let id: number = parseInt(this.idT.textContent || "-1");
+      value = Math.max(value, 0);
+      value = Math.min(value, this.getMaxRadius(x, y));
+      this.radiusT.value = String(value);
+    };
+    // Archon must not overlap with other units
+    this.radiusA.onchange = () => {
+      let value: number = parseFloat(this.radiusT.value);
+      let x: number = parseFloat(this.xT.value);
+      let y: number = parseFloat(this.yT.value);
+      let id: number = parseInt(this.idT.textContent || "-1");
+      this.radiusT.value = String(this.getMaxRadius(x, y, id, true));
+    };
+
+    this.addbutton.onclick = () => {
+      let id, x, y, radius, bullets, body, type;
+
+      if (this.tree.checked) {
+        // Adding a tree
+        id = this.idT.textContent;
+        x = parseFloat(this.xT.value);
+        y = parseFloat(this.yT.value);
+        radius = parseFloat(this.radiusT.value);
+        bullets = parseFloat(this.bulletsT.value);
+        body = parseInt(this.bodiesT.options[this.bodiesT.selectedIndex].value);
+        type = cst.TREE_NEUTRAL;
+      } else {
+        // Adding an archon
+        id = this.idA.textContent;
+        x = parseFloat(this.xA.value);
+        y = parseFloat(this.yA.value);
+        radius = parseFloat(this.radiusA.value);
+        bullets = 0;
+        body = cst.ARCHON;
+        type = cst.ARCHON;
+      }
 
       // Return if invalid input
       if (isNaN(x) || isNaN(y) || isNaN(radius) || radius === 0) return;
 
-      let type = this.tree.checked ? cst.TREE_NEUTRAL : cst.ARCHON;
       if (id === "") {
         // Create a new unit
         this.setUnit(this.lastID, {
           loc: new Victor(x, y),
           radius: radius,
-          type: type
+          type: type,
+          containedBullets: bullets,
+          containedBody: body
         });
       } else if (id != null) {
         // Update existing unit
         this.setUnit(parseInt(id), {
           loc: new Victor(x, y),
           radius: radius,
-          type: type
+          type: type,
+          containedBullets: bullets,
+          containedBody: body
         });
       }
     }
-    this.deleteButton.onclick = () => {
-      // Delete a tree is input is valid
-      if (this.valueID.textContent != null) {
-        let id = parseInt(this.valueID.textContent);
+
+    this.deletebutton.onclick = () => {
+      // Delete a body is input is valid
+      let idToDelete = this.tree.checked ? this.idT.textContent : this.idA.textContent
+      if (idToDelete != null) {
+        let id = parseInt(idToDelete);
         if (!isNaN(id)) {
           this.deleteUnit(id);
         }
@@ -450,22 +511,30 @@ export default class MapEditorForm {
    * Given an x, y on the map, returns the maximum radius such that the
    * corresponding unit centered on x, y is cst.DELTA away from any other existing
    * unit. Returns 0 if no such radius exists.
+   *
+   * If an id is given, does not consider the body with the corresponding id to
+   * overlap with the given coordinates.
    */
-  private getMaxRadius(x, y, type: schema.BodyType): number {
+  private getMaxRadius(x, y, ignoreID?: number, archon?: boolean): number {
     // Min distance to wall
-    let maxRadius = Math.min(x, y, this.width - x, this.height -y);
+    let maxRadius = Math.min(x, y, this.width() - x, this.height() -y);
     const loc = new Victor(x, y);
 
     // Min distance to tree or body
-    this.bodies.forEach(function(body: MapUnit, id: number) {
-      maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
+    ignoreID = ignoreID || -1;
+    this.bodies.forEach((body: MapUnit, id: number) => {
+      if (id != ignoreID) {
+        maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
+      }
     });
-    this.symmetricBodies.forEach(function(body: MapUnit, id: number) {
-      maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
+    this.symmetricBodies.forEach((body: MapUnit, id: number) => {
+      if (id != ignoreID) {
+        maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
+      }
     });
 
     maxRadius = Math.max(0, maxRadius - cst.DELTA);
-    if (type === cst.ARCHON) {
+    if (archon) {
       return maxRadius >= 2 ? 2 : 0;
     } else {
       return maxRadius;
@@ -490,34 +559,48 @@ export default class MapEditorForm {
    * the canvas. Otherwise does nothing.
    */
   private deleteUnit(id: number): void {
-    if (this.bodies.has(id)) this.bodies.delete(id);
+    if (this.bodies.has(id)) {
+      this.bodies.delete(id);
+      this.render();
+    }
+  }
+
+  /**
+   * Sets the map editor canvas to the dimensions described in the map editor
+   * form, then re-renders. Scales the canvas to render at a higher resolution.
+   */
+  private setCanvasDimensions(): void {
+    const scale: number = 30; // arbitrary scaling factor
+    this.canvas.width = this.width() * scale;
+    this.canvas.height = this.height() * scale;
     this.render();
   }
 
-  private setCanvasDimensions(): void {
-    const scale: number = 30; // arbitrary scaling factor
-    this.canvas.width = this.width * scale;
-    this.canvas.height = this.height * scale;
-    this.canvas.style.height = "calc(100vh - 75px)";
-    this.canvas.style.cursor = "pointer";
-  }
-
+  /**
+   * Re-renders the canvas based on the parameters of the map editor.
+   */
   private render() {
     this.symmetricBodies = this.getSymmetricBodies();
-    this.renderer.render(this.width, this.height, this.bodies,
+    this.renderer.render(this.width(), this.height(), this.bodies,
       this.symmetricBodies);
   }
 
+  /**
+   * Uses the bodies stored internally to create a mapping of original body
+   * IDs to the symmetric unit. A symmetric unit is a unit with the same ID
+   * that is reflected or rotated around a line or point of symmetry based on
+   * the parameter given in the map editor form.
+   */
   private getSymmetricBodies(): Map<number, MapUnit> {
     // Whether or not loc lies on the point or line of symmetry
     const onSymmetricLine = (loc: Victor): boolean => {
-      switch(this.symmetry) {
+      switch(this.symmetry()) {
         case(Symmetry.ROTATIONAL):
-        return loc.x === this.width / 2 && loc.y === this.height / 2;
+        return loc.x === this.width() / 2 && loc.y === this.height() / 2;
         case(Symmetry.HORIZONTAL):
-        return loc.y === this.height / 2;
+        return loc.y === this.height() / 2;
         case(Symmetry.VERTICAL):
-        return loc.x === this.width / 2;
+        return loc.x === this.width() / 2;
       }
     };
 
@@ -531,9 +614,9 @@ export default class MapEditorForm {
         }
       }
 
-      const midX = this.width / 2;
-      const midY = this.height / 2;
-      switch(this.symmetry) {
+      const midX = this.width() / 2;
+      const midY = this.height() / 2;
+      switch(this.symmetry()) {
         case(Symmetry.ROTATIONAL):
         return new Victor(reflect(loc.x, midX), reflect(loc.y, midY));
         case(Symmetry.HORIZONTAL):
@@ -558,6 +641,23 @@ export default class MapEditorForm {
     });
 
     return symmetricBodies;
+  }
+
+  name(): string {
+    return this.nameGM.value;
+  }
+
+  width(): number {
+    return parseFloat(this.widthGM.value);
+  }
+
+  height(): number {
+    return parseFloat(this.heightGM.value);
+  }
+
+  symmetry(): Symmetry {
+    let val = this.symmetryGM.selectedOptions[this.symmetryGM.selectedIndex].value;
+    return parseInt(val);
   }
 
   /**

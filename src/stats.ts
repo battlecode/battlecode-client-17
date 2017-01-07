@@ -70,7 +70,7 @@ export default class Stats {
     // Create the table row with the robot images
     let robotImages: HTMLTableRowElement = document.createElement("tr");
     for (let robot of this.robots) {
-      let robotName: string = this.bodyTypeToString(robot);
+      let robotName: string = cst.bodyTypeToString(robot);
       let td: HTMLTableCellElement = document.createElement("td");
       td.appendChild(this.images.robot[robotName][inGameID]);
       robotImages.appendChild(td);
@@ -115,20 +115,6 @@ export default class Stats {
     }
 
     return table;
-  }
-
-  private bodyTypeToString(bodyType: schema.BodyType) {
-    switch(bodyType) {
-      case cst.ARCHON: return "archon";
-      case cst.GARDENER: return "gardener";
-      case cst.LUMBERJACK: return "lumberjack";
-      case cst.RECRUIT: return "recruit";
-      case cst.SOLDIER: return "soldier";
-      case cst.TANK: return "tank";
-      case cst.SCOUT: return "scout";
-      default:
-        throw new Error("invalid body type");
-    }
   }
 
   /**
