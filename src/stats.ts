@@ -328,7 +328,7 @@ export default class Stats {
             }
 
             // Add the information to the list
-            let matchEntry = document.createTextNode(" wins after " + match.maxTurn + " rounds" );
+            let matchEntry = document.createTextNode(" wins after " + match.lastTurn + " rounds" );
             let matchPrefix = document.createTextNode(mapName + " - ");
             var matchWrapper = document.createElement("div");
             matchWrapper.appendChild(matchPrefix);
