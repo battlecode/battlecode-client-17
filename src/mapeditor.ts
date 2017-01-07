@@ -87,7 +87,7 @@ export default class MapEditor {
   /**
    * Adds multiple bodies to internal arrays with the given teamID.
    */
-  private addBodies(bodies: Map<number, MapUnit>, teamID: number, idTransform: (number) => number) {
+  private addBodies(bodies: Map<number, MapUnit>) {
 
     function treeHealth(radius: number) {
       return cst.NEUTRAL_TREE_HEALTH_RATE * radius;
@@ -96,7 +96,7 @@ export default class MapEditor {
     bodies.forEach((unit: MapUnit, id: number) => {
       if (unit.type === cst.TREE_NEUTRAL) {
         this.addTree(
-          idTransform(id),
+          id,
           unit.loc.x,
           unit.loc.y,
           unit.radius,
@@ -106,8 +106,8 @@ export default class MapEditor {
         );
       } else if (unit.type === cst.ARCHON) {
         this.addBody(
-          idTransform(id),
-          teamID,
+          id,
+          unit.teamID || 0, // Must be set if archon
           cst.ARCHON,
           unit.loc.x,
           unit.loc.y
@@ -157,12 +157,7 @@ export default class MapEditor {
     };
 
     // Get body information from form and convert to arrays
-    this.addBodies(this.form.bodies, 1, function(id) {
-      return id*2;
-    });
-    this.addBodies(this.form.symmetricBodies, 2, function(id) {
-      return id*2+1;
-    });
+    this.addBodies(this.form.bodies());
 
     // Get header information from form
     let name: string = this.form.name();

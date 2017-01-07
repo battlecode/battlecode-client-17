@@ -10,7 +10,8 @@ export type MapUnit = {
   radius: number,
   type: schema.BodyType,
   containedBullets: number,
-  containedBody: schema.BodyType
+  containedBody: schema.BodyType,
+  teamID?: number
 };
 
 export enum Symmetry {

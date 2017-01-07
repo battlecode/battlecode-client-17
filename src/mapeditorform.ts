@@ -52,8 +52,8 @@ export default class MapEditorForm {
 
   // Map information
   private lastID: number; // To give bodies unique IDs
-  readonly bodies: Map<number, MapUnit>;
-  symmetricBodies: Map<number, MapUnit>;
+  private originalBodies: Map<number, MapUnit>;
+  private symmetricBodies: Map<number, MapUnit>;
 
   constructor(conf: Config, imgs: AllImages, canvas: HTMLCanvasElement) {
     this.conf = conf;
@@ -62,15 +62,15 @@ export default class MapEditorForm {
 
     this.lastID = 1;
     this.div = this.initialDiv();
-    this.bodies = new Map<number, MapUnit>();
+    this.originalBodies = new Map<number, MapUnit>();
     this.symmetricBodies = new Map<number, MapUnit>();
 
     this.initializeCallbacks();
 
     const onclickUnit = (id: number) => {
-      if (this.bodies.has(id)) {
+      if (this.originalBodies.has(id)) {
         // Set the corresponding form appropriately
-        let body: MapUnit = this.bodies.get(id);
+        let body: MapUnit = this.originalBodies.get(id);
         if (body.type === cst.ARCHON) {
           this.archon.checked = true;
           this.setArchonForm(body.loc, id);
@@ -526,7 +526,7 @@ export default class MapEditorForm {
 
     // Min distance to tree or body
     ignoreID = ignoreID || -1;
-    this.bodies.forEach((body: MapUnit, id: number) => {
+    this.originalBodies.forEach((body: MapUnit, id: number) => {
       if (id != ignoreID) {
         maxRadius = Math.min(maxRadius, loc.distance(body.loc) - body.radius);
       }
@@ -552,10 +552,10 @@ export default class MapEditorForm {
    * Finally re-renders the canvas.
    */
   private setUnit(id: number, body: MapUnit): void {
-    if (!this.bodies.has(id)) {
+    if (!this.originalBodies.has(id)) {
       this.lastID += 1;
     }
-    this.bodies.set(id, body);
+    this.originalBodies.set(id, body);
     this.render();
   }
 
@@ -564,8 +564,8 @@ export default class MapEditorForm {
    * the canvas. Otherwise does nothing.
    */
   private deleteUnit(id: number): void {
-    if (this.bodies.has(id)) {
-      this.bodies.delete(id);
+    if (this.originalBodies.has(id)) {
+      this.originalBodies.delete(id);
       this.render();
     }
   }
@@ -586,7 +586,7 @@ export default class MapEditorForm {
    */
   private render() {
     this.symmetricBodies = this.getSymmetricBodies();
-    this.renderer.render(this.width(), this.height(), this.bodies, this.symmetricBodies);
+    this.renderer.render(this.width(), this.height(), this.originalBodies, this.symmetricBodies);
   }
 
 
@@ -632,7 +632,7 @@ export default class MapEditorForm {
    */
   private getSymmetricBodies(): Map<number, MapUnit> {
     const symmetricBodies: Map<number, MapUnit> = new Map<number, MapUnit>();
-    this.bodies.forEach((body: MapUnit, id: number) => {
+    this.originalBodies.forEach((body: MapUnit, id: number) => {
       if (!this.onSymmetricLine(body.loc)) {
         symmetricBodies.set(id, {
           loc: this.transformLoc(body.loc),
@@ -659,6 +659,22 @@ export default class MapEditorForm {
     return parseFloat(this.heightGM.value);
   }
 
+  bodies(): Map<number, MapUnit> {
+    let map = new Map<number, MapUnit>();
+
+    // TODO: randomize archon IDs so tiebreakers aren't rigged
+    this.originalBodies.forEach((body: MapUnit, id: number) => {
+      if (body.type === cst.ARCHON) body.teamID = 1;
+      map.set(id * 2, body);
+    });
+    this.symmetricBodies.forEach((body: MapUnit, id: number) => {
+      if (body.type === cst.ARCHON) body.teamID = 2;
+      map.set(id * 2 + 1, body);
+    });
+
+    return map;
+  }
+
   symmetry(): Symmetry {
     return parseInt(this.symmetryGM.options[this.symmetryGM.selectedIndex].value);
   }
@@ -680,7 +696,7 @@ export default class MapEditorForm {
 
     // There must be cst.MIN_NUMBER_OF_ARCHONS to cst.MAX_NUMBER_OF_ARCHONS archons
     let archonCount = 0;
-    this.bodies.forEach((unit: MapUnit) => {
+    this.originalBodies.forEach((unit: MapUnit) => {
       archonCount += unit.type === cst.ARCHON ? 1 : 0;
     });
     if (archonCount < cst.MIN_NUMBER_OF_ARCHONS || archonCount > cst.MAX_NUMBER_OF_ARCHONS) {
@@ -688,10 +704,10 @@ export default class MapEditorForm {
     }
 
     // Bodies must be on the map
-    for (let key in this.bodies.keys) {
+    for (let key in this.originalBodies.keys) {
       console.log(key);
     }
-    this.bodies.forEach((unit: MapUnit, id: number) => {
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
       let x = unit.loc.x;
       let y = unit.loc.y;
       let distanceToWall = Math.min(x, y, this.width() - x, this.height() - y);
@@ -701,7 +717,7 @@ export default class MapEditorForm {
     });
 
     // Bodies must not overlap
-    this.bodies.forEach((unitA: MapUnit, idA: number) => {
+    this.originalBodies.forEach((unitA: MapUnit, idA: number) => {
       this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
         if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
           errors.push (`IDs ${idA} and ${idB} are overlapping.`);
