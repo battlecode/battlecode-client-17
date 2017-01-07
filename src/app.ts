@@ -4,7 +4,7 @@ import * as imageloader from './imageloader';
 
 import Sidebar from './sidebar';
 import Stats from './stats';
-import MapEditor from './mapeditor';
+import MapEditor from './mapeditor/main';
 
 import Controls from './controls';
 import GameArea from './gamearea';

@@ -1,8 +1,8 @@
-import {Config} from './config';
-import * as cst from './constants';
-import {AllImages} from './imageloader';
-import MapEditorForm from './mapeditorform';
-import {MapUnit} from './maprenderer';
+import {Config} from '../config';
+import * as cst from '../constants';
+import {AllImages} from '../imageloader';
+import MapEditorForm from './form';
+import {MapUnit} from './renderer';
 
 import {schema, flatbuffers} from 'battlecode-playback';
 
@@ -87,7 +87,7 @@ export default class MapEditor {
   /**
    * Adds multiple bodies to internal arrays with the given teamID.
    */
-  private addBodies(bodies: Map<number, MapUnit>) {
+  private addBodies(bodies: Map<number, MapUnit>, minCorner: Victor) {
 
     function treeHealth(radius: number) {
       return cst.NEUTRAL_TREE_HEALTH_RATE * radius;
@@ -97,8 +97,8 @@ export default class MapEditor {
       if (unit.type === cst.TREE_NEUTRAL) {
         this.addTree(
           id,
-          unit.loc.x,
-          unit.loc.y,
+          unit.loc.x + minCorner.x,
+          unit.loc.y + minCorner.y,
           unit.radius,
           treeHealth(unit.radius),
           unit.containedBullets,
@@ -109,8 +109,8 @@ export default class MapEditor {
           id,
           unit.teamID || 0, // Must be set if archon
           cst.ARCHON,
-          unit.loc.x,
-          unit.loc.y
+          unit.loc.x + minCorner.x,
+          unit.loc.y + minCorner.y
         );
       }
     });
@@ -156,15 +156,15 @@ export default class MapEditor {
       containedBodies: []
     };
 
-    // Get body information from form and convert to arrays
-    this.addBodies(this.form.bodies());
-
     // Get header information from form
     let name: string = this.form.name();
     let minCorner: Victor = new Victor(Math.random()*500, Math.random()*500);
     let maxCorner: Victor = minCorner.clone();
     maxCorner.add(new Victor(this.form.width(), this.form.height()));
     let randomSeed: number = Math.round(Math.random()*1000);
+
+    // Get body information from form and convert to arrays
+    this.addBodies(this.form.bodies(), minCorner);
 
     // Create the spawned bodies table
     let robotIDsVectorB = schema.SpawnedBodyTable.createRobotIDsVector(builder, this.bodiesArray.robotIDs);

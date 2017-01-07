@@ -1,11 +1,11 @@
-import {Config} from './config';
-import * as cst from './constants';
-import {AllImages} from './imageloader';
-import MapRenderer from './maprenderer';
+import {Config} from '../config';
+import * as cst from '../constants';
+import {AllImages} from '../imageloader';
+import MapRenderer from './renderer';
 
 import {schema, flatbuffers} from 'battlecode-playback';
 
-import {Symmetry, MapUnit} from './maprenderer';
+import {Symmetry, MapUnit} from './renderer';
 import Victor = require('victor');
 
 /**
@@ -72,10 +72,10 @@ export default class MapEditorForm {
         // Set the corresponding form appropriately
         let body: MapUnit = this.originalBodies.get(id);
         if (body.type === cst.ARCHON) {
-          this.archon.checked = true;
+          this.archon.click();
           this.setArchonForm(body.loc, id);
         } else if (body.type === cst.TREE_NEUTRAL) {
-          this.tree.checked = true;
+          this.tree.click();
           this.setTreeForm(body.loc, body.radius, body.containedBullets,
             body.containedBody, id);
         }
@@ -369,9 +369,9 @@ export default class MapEditorForm {
 
   private createFormButtons(): HTMLDivElement {
     // HTML structure
-    let buttons = document.createElement("div");
-    let deletebutton: HTMLButtonElement = document.createElement("button");
-    let addbutton: HTMLButtonElement = document.createElement("button");
+    const buttons = document.createElement("div");
+    const deletebutton: HTMLButtonElement = document.createElement("button");
+    const addbutton: HTMLButtonElement = document.createElement("button");
     buttons.appendChild(deletebutton);
     buttons.appendChild(addbutton);
 
@@ -384,6 +384,18 @@ export default class MapEditorForm {
     // Save HTML elements
     this.deletebutton = deletebutton;
     this.addbutton = addbutton;
+
+    // Quick add and delete mousedown events
+    document.onkeydown = (event) => {
+      switch (event.keyCode) {
+        case 83: // "s" - Set (Add/Update)c
+        this.addbutton.click();
+        break;
+        case 68: // "d" - Delete
+        this.deletebutton.click();
+        break;
+      }
+    };
     return buttons;
   }
 
@@ -409,28 +421,28 @@ export default class MapEditorForm {
       let value: number = parseFloat(this.xT.value);
       value = Math.max(value, 0);
       value = Math.min(value, this.width());
-      this.xT.value = String(value);
+      this.xT.value = isNaN(value) ? "" : String(value);
     };
     this.xA.onchange = () => {
       // X must be in the range [0, this.width]
       let value: number = parseFloat(this.xA.value);
       value = Math.max(value, 0);
       value = Math.min(value, this.width());
-      this.xT.value = String(value);
+      this.xT.value = isNaN(value) ? "" : String(value);
     };
     this.yT.onchange = () => {
       // Y must be in the range [0, this.height]
       let value: number = parseFloat(this.yT.value);
       value = Math.max(value, 0);
       value = Math.min(value, this.height());
-      this.yT.value = String(value);
+      this.yT.value = isNaN(value) ? "" : String(value);
     };
     this.yA.onchange = () => {
       // Y must be in the range [0, this.height]
       let value: number = parseFloat(this.yA.value);
       value = Math.max(value, 0);
       value = Math.min(value, this.height());
-      this.yT.value = String(value);
+      this.yT.value = isNaN(value) ? "" : String(value);
     };
 
     // Tree of this radius must not overlap with other units
@@ -441,7 +453,7 @@ export default class MapEditorForm {
       let id: number = parseInt(this.idT.textContent || "-1");
       value = Math.max(value, 0);
       value = Math.min(value, this.getMaxRadius(x, y));
-      this.radiusT.value = String(value);
+      this.radiusT.value = isNaN(value) ? "" : String(value);
     };
     // Archon must not overlap with other units
     this.radiusA.onchange = () => {
@@ -449,7 +461,14 @@ export default class MapEditorForm {
       let x: number = parseFloat(this.xT.value);
       let y: number = parseFloat(this.yT.value);
       let id: number = parseInt(this.idT.textContent || "-1");
-      this.radiusT.value = String(this.getMaxRadius(x, y, id, true));
+      this.radiusT.value = isNaN(value) ? "" : String(this.getMaxRadius(x, y, id, true));
+    };
+
+    this.bulletsT.onchange = () => {
+      // Bullets must be a number >= 0
+      let value: number = parseFloat(this.yA.value);
+      value = Math.max(value, 0);
+      this.yT.value = isNaN(value) ? "" : String(value);
     };
 
     this.addbutton.onclick = () => {
@@ -471,7 +490,7 @@ export default class MapEditorForm {
         y = parseFloat(this.yA.value);
         radius = parseFloat(this.radiusA.value);
         bullets = 0;
-        body = cst.ARCHON;
+        body = cst.ARCHON; // Arbitrary
         type = cst.ARCHON;
       }
 
@@ -487,6 +506,15 @@ export default class MapEditorForm {
           containedBullets: bullets,
           containedBody: body
         });
+
+        // Reset the form
+        if (type === cst.ARCHON) {
+          this.xA.value = "";
+          this.yA.value = "";
+        } else if (type === cst.TREE_NEUTRAL) {
+          this.xT.value = "";
+          this.yT.value = "";
+        }
       } else if (id != null) {
         // Update existing unit
         this.setUnit(parseInt(id), {

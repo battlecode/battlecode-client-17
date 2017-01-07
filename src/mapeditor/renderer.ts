@@ -1,8 +1,8 @@
-import * as config from './config';
-import * as cst from './constants';
+import * as config from '../config';
+import * as cst from '../constants';
 
 import {GameWorld, schema} from 'battlecode-playback';
-import {AllImages} from './imageloader';
+import {AllImages} from '../imageloader';
 import Victor = require('victor');
 
 export type MapUnit = {
