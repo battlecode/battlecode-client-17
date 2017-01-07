@@ -347,12 +347,11 @@ export default class Stats {
               matchWrapper.className = 'active-match';
             } else {
               matchWrapper.className = 'inactive-match';
-              console.log("Set on click with " + j + "," + i);
-              matchWrapper.onclick = () => {
-                const intI = i;
-                const intJ = j
-                this.gotoMatch(intJ, intI);
-              }
+              
+              matchWrapper.onclick = (function(game, match, gotoMatch) { 
+                  return function(){ gotoMatch(game, match); }
+              })(j,i, this.gotoMatch);
+              
             }
             
             gameDiv.appendChild(matchWrapper);
