@@ -34,6 +34,9 @@ export const MAX_DIMENSION = 80;
 // Server settings
 export const NUMBER_OF_INDICATOR_STRINGS = 3;
 export const NUMBER_OF_TEAMS = 2;
+export const NEUTRAL_TREE_HEALTH_RATE = 50;
+export const MIN_NUMBER_OF_ARCHONS = 1;
+export const MAX_NUMBER_OF_ARCHONS = 3;
 
 export function bodyTypeToString(bodyType: schema.BodyType) {
   switch(bodyType) {

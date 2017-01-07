@@ -25,6 +25,25 @@ export default class MapEditor {
   // Options
   private readonly conf: Config;
 
+  // For storing map information
+  private bodiesArray: {
+    robotIDs: number[],
+    teamIDs: number[],
+    types: schema.BodyType[],
+    xs: number[],
+    ys: number[]
+  };
+  // Neutral tree information
+  private treesArray: {
+    robotIDs: number[],
+    xs: number[],
+    ys: number[],
+    radii: number[],
+    healths: number[],
+    containedBullets: number[],
+    containedBodies: schema.BodyType[]
+  };
+
   constructor(conf: Config, images: AllImages) {
     this.canvas = document.createElement("canvas");
     this.form = new MapEditorForm(conf, images, this.canvas);
@@ -39,7 +58,9 @@ export default class MapEditor {
     const button = document.createElement("button");
     button.type = "button";
     button.appendChild(document.createTextNode("EXPORT!"));
-    button.onclick = () => {this.exportFile()};
+    button.onclick = () => {
+      if (this.form.isValid()) this.exportFile();
+    };
     return button;
   }
 
@@ -53,70 +74,94 @@ export default class MapEditor {
   }
 
   /**
+   * Adds a robot body to internal arrays
+   */
+  private addBody(robotID: number, teamID: number, type: schema.BodyType, x: number, y: number) {
+    this.bodiesArray.robotIDs.push(robotID);
+    this.bodiesArray.teamIDs.push(teamID);
+    this.bodiesArray.types.push(type);
+    this.bodiesArray.xs.push(x);
+    this.bodiesArray.ys.push(y);
+  }
+
+  /**
+   * Adds multiple bodies to internal arrays with the given teamID.
+   */
+  private addBodies(bodies: Map<number, MapUnit>, teamID: number, idTransform: (number) => number) {
+
+    function treeHealth(radius: number) {
+      return cst.NEUTRAL_TREE_HEALTH_RATE * radius;
+    }
+
+    bodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.TREE_NEUTRAL) {
+        this.addTree(
+          idTransform(id),
+          unit.loc.x,
+          unit.loc.y,
+          unit.radius,
+          treeHealth(unit.radius),
+          unit.containedBullets,
+          unit.containedBody
+        );
+      } else if (unit.type === cst.ARCHON) {
+        this.addBody(
+          idTransform(id),
+          teamID,
+          cst.ARCHON,
+          unit.loc.x,
+          unit.loc.y
+        );
+      }
+    });
+  }
+
+  /**
+   * Adds a tree to internal arrays
+   */
+  private addTree(robotID: number, x: number, y: number, radius: number, health: number,
+    containedBullets: number, containedBody: schema.BodyType) {
+    this.treesArray.robotIDs.push(robotID);
+    this.treesArray.xs.push(x);
+    this.treesArray.ys.push(y);
+    this.treesArray.radii.push(radius);
+    this.treesArray.healths.push(health);
+    this.treesArray.containedBullets.push(containedBullets);
+    this.treesArray.containedBodies.push(containedBody);
+  }
+
+  /**
    * Write fields to a schema.GameMap and write the game map out to a file
    */
   private generateMap(): Uint8Array | undefined {
-    if (!this.form.isValid()) {
-      alert("This map is invalid! Make sure all of the fields are filled out.");
-      return;
-    }
 
     let builder = new flatbuffers.Builder();
 
     // Spawned body information
-    let b: {
-      robotIDs: number[],
-      teamIDs: number[],
-      types: schema.BodyType[],
-      xs: number[],
-      ys: number[]
-    } = {robotIDs: [], teamIDs: [], types: [], xs: [], ys: []};
+    this.bodiesArray = {
+      robotIDs: [],
+      teamIDs: [],
+      types: [],
+      xs: [],
+      ys: []
+    };
     // Neutral tree information
-    let t: {
-      robotIDs: number[],
-      xs: number[],
-      ys: number[],
-      radii: number[],
-      containedBullets: number[],
-      containedBodies: schema.BodyType[]
-    } = {robotIDs: [], xs: [], ys: [], radii: [], containedBullets: [], containedBodies: []};
+    this.treesArray = {
+      robotIDs: [],
+      xs: [],
+      ys: [],
+      radii: [],
+      healths: [],
+      containedBullets: [],
+      containedBodies: []
+    };
 
     // Get body information from form and convert to arrays
-    let formBodies: Map<number, MapUnit> = this.form.bodies;
-    let formSymBodies: Map<number, MapUnit> = this.form.symmetricBodies;
-    formBodies.forEach(function(unit: MapUnit, id: number) {
-      let realID = id * 2; // To have unique ids for symmetric units
-      if (unit.type === cst.TREE_NEUTRAL) {
-        t.robotIDs.push(realID);
-        t.xs.push(unit.loc.x);
-        t.ys.push(unit.loc.y);
-        t.radii.push(unit.radius);
-        t.containedBullets.push(unit.containedBullets || 0);
-        t.containedBodies.push(unit.containedBody || cst.TREE_NEUTRAL); // TODO
-      } else if (unit.type === cst.ARCHON) {
-        b.robotIDs.push(realID);
-        b.teamIDs.push(1); // Team 1 ID
-        b.types.push(cst.ARCHON);
-        b.xs.push(unit.loc.x);
-        b.ys.push(unit.loc.y);
-      }
+    this.addBodies(this.form.bodies, 1, function(id) {
+      return id*2;
     });
-    formSymBodies.forEach(function(unit: MapUnit, id: number) {
-      let realID = id * 2 + 1; // To have unique ids for symmetric units
-      if (unit.type === cst.TREE_NEUTRAL) {
-        t.robotIDs.push(realID);
-        t.xs.push(unit.loc.x);
-        t.ys.push(unit.loc.y);
-        t.radii.push(unit.radius);
-        t.containedBullets.push(unit.containedBullets || 0);
-        t.containedBodies.push(unit.containedBody || cst.TREE_NEUTRAL); // TODO
-      } else if (unit.type === cst.ARCHON) {
-        b.robotIDs.push(realID);
-        b.teamIDs.push(2); // Team 2 ID
-        b.types.push(cst.ARCHON);
-        b.xs.push(unit.loc.x);
-        b.ys.push(unit.loc.y);
-      }
+    this.addBodies(this.form.symmetricBodies, 2, function(id) {
+      return id*2+1;
     });
 
     // Get header information from form
@@ -127,10 +172,10 @@ export default class MapEditor {
     let randomSeed: number = Math.round(Math.random()*1000);
 
     // Create the spawned bodies table
-    let robotIDsVectorB = schema.SpawnedBodyTable.createRobotIDsVector(builder, b.robotIDs);
-    let teamIDsVectorB = schema.SpawnedBodyTable.createTeamIDsVector(builder, b.teamIDs);
-    let typesVectorB = schema.SpawnedBodyTable.createTypesVector(builder, b.types)
-    let locsVecTableB = this.createVecTable(builder, b.xs, b.ys);
+    let robotIDsVectorB = schema.SpawnedBodyTable.createRobotIDsVector(builder, this.bodiesArray.robotIDs);
+    let teamIDsVectorB = schema.SpawnedBodyTable.createTeamIDsVector(builder, this.bodiesArray.teamIDs);
+    let typesVectorB = schema.SpawnedBodyTable.createTypesVector(builder, this.bodiesArray.types)
+    let locsVecTableB = this.createVecTable(builder, this.bodiesArray.xs, this.bodiesArray.ys);
     schema.SpawnedBodyTable.startSpawnedBodyTable(builder)
     schema.SpawnedBodyTable.addRobotIDs(builder, robotIDsVectorB);
     schema.SpawnedBodyTable.addTeamIDs(builder, teamIDsVectorB);
@@ -139,11 +184,11 @@ export default class MapEditor {
     const bodies = schema.SpawnedBodyTable.endSpawnedBodyTable(builder);
 
     // Create the neutral trees table
-    let robotIDsVectorT = schema.NeutralTreeTable.createRobotIDsVector(builder, t.robotIDs);
-    let locsVecTableT = this.createVecTable(builder, t.xs, t.ys);
-    let radiiVectorT = schema.NeutralTreeTable.createRadiiVector(builder, t.radii);
-    let containedBulletsVectorT = schema.NeutralTreeTable.createContainedBulletsVector(builder, t.containedBullets);
-    let containedBodiesVectorT = schema.NeutralTreeTable.createContainedBodiesVector(builder, t.containedBodies);
+    let robotIDsVectorT = schema.NeutralTreeTable.createRobotIDsVector(builder, this.treesArray.robotIDs);
+    let locsVecTableT = this.createVecTable(builder, this.treesArray.xs, this.treesArray.ys);
+    let radiiVectorT = schema.NeutralTreeTable.createRadiiVector(builder, this.treesArray.radii);
+    let containedBulletsVectorT = schema.NeutralTreeTable.createContainedBulletsVector(builder, this.treesArray.containedBullets);
+    let containedBodiesVectorT = schema.NeutralTreeTable.createContainedBodiesVector(builder, this.treesArray.containedBodies);
     schema.NeutralTreeTable.startNeutralTreeTable(builder)
     schema.NeutralTreeTable.addRobotIDs(builder, robotIDsVectorT);
     schema.NeutralTreeTable.addLocs(builder, locsVecTableT);
@@ -169,7 +214,7 @@ export default class MapEditor {
   }
 
   private exportFile() {
-    let fileName = `${this.form.name}.map17`;
+    let fileName = `${this.form.name()}.map17`;
     let mimeType = "application/octet-stream";
     let data: Uint8Array | undefined = this.generateMap();
 
@@ -177,6 +222,7 @@ export default class MapEditor {
       let blob = new Blob([data], { type: mimeType });
       let url = window.URL.createObjectURL(blob);
 
+      // Create phantom link
       let link = document.createElement("a");
       link.href = url;
       link.download = fileName;
@@ -187,7 +233,7 @@ export default class MapEditor {
 
       setTimeout(function() {
         return window.URL.revokeObjectURL(url);
-      }, 1000);
+      }, 30000);
     }
   }
 }

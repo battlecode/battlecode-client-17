@@ -9,8 +9,8 @@ export type MapUnit = {
   loc: Victor,
   radius: number,
   type: schema.BodyType,
-  containedBullets?: number,
-  containedBody?: schema.BodyType
+  containedBullets: number,
+  containedBody: schema.BodyType
 };
 
 export enum Symmetry {

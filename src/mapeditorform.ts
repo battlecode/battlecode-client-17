@@ -147,7 +147,7 @@ export default class MapEditorForm {
       let value: number = parseFloat(this.widthGM.value);
       value = Math.max(value, cst.MIN_DIMENSION);
       value = Math.min(value, cst.MAX_DIMENSION);
-      this.widthGM.value = String(value);
+      this.widthGM.value = isNaN(value) ? "50" : String(value);
       this.setCanvasDimensions();
     };
     width.appendChild(document.createTextNode("Width:"));
@@ -162,7 +162,7 @@ export default class MapEditorForm {
       let value: number = parseFloat(this.heightGM.value);
       value = Math.max(value, cst.MIN_DIMENSION);
       value = Math.min(value, cst.MAX_DIMENSION);
-      this.heightGM.value = String(value);
+      this.heightGM.value = isNaN(value) ? "50" : String(value);
       this.setCanvasDimensions();
     };
     height.appendChild(document.createTextNode("Height:"));
@@ -185,6 +185,10 @@ export default class MapEditorForm {
       opt.appendChild(document.createTextNode(cst.symmetryToString(option)));
       this.symmetryGM.appendChild(opt);
     }
+
+    this.symmetryGM.onchange = () => {
+      this.render();
+    };
 
     form.appendChild(document.createElement("br"));
     form.appendChild(document.createElement("br"));
@@ -515,7 +519,7 @@ export default class MapEditorForm {
    * If an id is given, does not consider the body with the corresponding id to
    * overlap with the given coordinates.
    */
-  private getMaxRadius(x, y, ignoreID?: number, archon?: boolean): number {
+  private getMaxRadius(x: number, y: number, ignoreID?: number, archon?: boolean): number {
     // Min distance to wall
     let maxRadius = Math.min(x, y, this.width() - x, this.height() -y);
     const loc = new Victor(x, y);
@@ -535,6 +539,7 @@ export default class MapEditorForm {
 
     maxRadius = Math.max(0, maxRadius - cst.DELTA);
     if (archon) {
+      if (this.onSymmetricLine(new Victor(x, y))) return 0;
       return maxRadius >= 2 ? 2 : 0;
     } else {
       return maxRadius;
@@ -581,9 +586,43 @@ export default class MapEditorForm {
    */
   private render() {
     this.symmetricBodies = this.getSymmetricBodies();
-    this.renderer.render(this.width(), this.height(), this.bodies,
-      this.symmetricBodies);
+    this.renderer.render(this.width(), this.height(), this.bodies, this.symmetricBodies);
   }
+
+
+  // Whether or not loc lies on the point or line of symmetry
+  private onSymmetricLine(loc: Victor): boolean {
+    switch(this.symmetry()) {
+      case(Symmetry.ROTATIONAL):
+      return loc.x === this.width() / 2 && loc.y === this.height() / 2;
+      case(Symmetry.HORIZONTAL):
+      return loc.y === this.height() / 2;
+      case(Symmetry.VERTICAL):
+      return loc.x === this.width() / 2;
+    }
+  };
+
+  // Returns the symmetric location on the canvas
+  private transformLoc (loc: Victor): Victor {
+    function reflect(x: number, mid: number): number {
+      if (x > mid) {
+        return mid - Math.abs(x - mid);
+      } else {
+        return mid + Math.abs(x - mid);
+      }
+    }
+
+    const midX = this.width() / 2;
+    const midY = this.height() / 2;
+    switch(this.symmetry()) {
+      case(Symmetry.ROTATIONAL):
+      return new Victor(reflect(loc.x, midX), reflect(loc.y, midY));
+      case(Symmetry.HORIZONTAL):
+      return new Victor(loc.x, reflect(loc.y, midY));
+      case(Symmetry.VERTICAL):
+      return new Victor(reflect(loc.x, midX), loc.y);
+    }
+  };
 
   /**
    * Uses the bodies stored internally to create a mapping of original body
@@ -592,46 +631,11 @@ export default class MapEditorForm {
    * the parameter given in the map editor form.
    */
   private getSymmetricBodies(): Map<number, MapUnit> {
-    // Whether or not loc lies on the point or line of symmetry
-    const onSymmetricLine = (loc: Victor): boolean => {
-      switch(this.symmetry()) {
-        case(Symmetry.ROTATIONAL):
-        return loc.x === this.width() / 2 && loc.y === this.height() / 2;
-        case(Symmetry.HORIZONTAL):
-        return loc.y === this.height() / 2;
-        case(Symmetry.VERTICAL):
-        return loc.x === this.width() / 2;
-      }
-    };
-
-    // Returns the symmetric location on the canvas
-    const transformLoc = (loc: Victor): Victor => {
-      function reflect(x: number, mid: number): number {
-        if (x > mid) {
-          return mid - Math.abs(x - mid);
-        } else {
-          return mid + Math.abs(x - mid);
-        }
-      }
-
-      const midX = this.width() / 2;
-      const midY = this.height() / 2;
-      switch(this.symmetry()) {
-        case(Symmetry.ROTATIONAL):
-        return new Victor(reflect(loc.x, midX), reflect(loc.y, midY));
-        case(Symmetry.HORIZONTAL):
-        return new Victor(loc.x, reflect(loc.y, midY));
-        case(Symmetry.VERTICAL):
-        return new Victor(reflect(loc.x, midX), loc.y);
-      }
-    };
-
-    // Create the symmetric bodies
     const symmetricBodies: Map<number, MapUnit> = new Map<number, MapUnit>();
     this.bodies.forEach((body: MapUnit, id: number) => {
-      if (!onSymmetricLine(body.loc)) {
+      if (!this.onSymmetricLine(body.loc)) {
         symmetricBodies.set(id, {
-          loc: transformLoc(body.loc),
+          loc: this.transformLoc(body.loc),
           radius: body.radius,
           type: body.type,
           containedBullets: body.containedBullets,
@@ -656,14 +660,61 @@ export default class MapEditorForm {
   }
 
   symmetry(): Symmetry {
-    let val = this.symmetryGM.selectedOptions[this.symmetryGM.selectedIndex].value;
-    return parseInt(val);
+    return parseInt(this.symmetryGM.options[this.symmetryGM.selectedIndex].value);
   }
 
   /**
-   * Whether the map is valid and ready to generate a GameMap
+   * Whether the status of the map. If isValid() returns MapStatus.VALID, the
+   * map editor is valid and ready to generate a map.
    */
   isValid(): boolean {
+    let errors = new Array();
+
+    if (isNaN(this.width()) || this.width() < cst.MIN_DIMENSION || this.width() > cst.MAX_DIMENSION) {
+      // Width must be in range [cst.MIN_DIMENSION, cst.MAX_DIMENSION]
+      errors.push(`The width must be between ${cst.MIN_DIMENSION} and ${cst.MAX_DIMENSION}.`);
+    } else if (isNaN(this.height()) || this.height() < cst.MIN_DIMENSION || this.height() > cst.MAX_DIMENSION) {
+      // Height must be in range [cst.MIN_DIMENSION, cst.MAX_DIMENSION]
+      errors.push(`The height must be between ${cst.MIN_DIMENSION} and ${cst.MAX_DIMENSION}.`);
+    }
+
+    // There must be cst.MIN_NUMBER_OF_ARCHONS to cst.MAX_NUMBER_OF_ARCHONS archons
+    let archonCount = 0;
+    this.bodies.forEach((unit: MapUnit) => {
+      archonCount += unit.type === cst.ARCHON ? 1 : 0;
+    });
+    if (archonCount < cst.MIN_NUMBER_OF_ARCHONS || archonCount > cst.MAX_NUMBER_OF_ARCHONS) {
+      errors.push(`There must be ${cst.MIN_NUMBER_OF_ARCHONS} to ${cst.MAX_NUMBER_OF_ARCHONS} archons.`);
+    }
+
+    // Bodies must be on the map
+    for (let key in this.bodies.keys) {
+      console.log(key);
+    }
+    this.bodies.forEach((unit: MapUnit, id: number) => {
+      let x = unit.loc.x;
+      let y = unit.loc.y;
+      let distanceToWall = Math.min(x, y, this.width() - x, this.height() - y);
+      if (unit.radius > distanceToWall || x < 0 || y < 0 || x > this.width() || y > this.height()) {
+        errors.push(`ID ${id} is off the map.`);
+      }
+    });
+
+    // Bodies must not overlap
+    this.bodies.forEach((unitA: MapUnit, idA: number) => {
+      this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
+        if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
+          errors.push (`IDs ${idA} and ${idB} are overlapping.`);
+        }
+      });
+    });
+
+    if (errors.length > 0) {
+      alert(errors.join("\n"));
+      return false;
+    }
+
+    // It's good :)
     return true;
   }
 }
