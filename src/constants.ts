@@ -5,7 +5,6 @@ import {Symmetry} from './mapeditor/renderer';
 export const ARCHON = schema.BodyType.ARCHON;
 export const GARDENER = schema.BodyType.GARDENER;
 export const LUMBERJACK = schema.BodyType.LUMBERJACK;
-export const RECRUIT = schema.BodyType.RECRUIT;
 export const SOLDIER = schema.BodyType.SOLDIER;
 export const TANK = schema.BodyType.TANK;
 export const SCOUT = schema.BodyType.SCOUT;
@@ -43,7 +42,6 @@ export function bodyTypeToString(bodyType: schema.BodyType) {
     case ARCHON:     return "archon";
     case GARDENER:   return "gardener";
     case LUMBERJACK: return "lumberjack";
-    case RECRUIT:    return "recruit";
     case SOLDIER:    return "soldier";
     case TANK:       return "tank";
     case SCOUT:      return "scout";
