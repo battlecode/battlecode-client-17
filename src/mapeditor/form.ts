@@ -602,7 +602,7 @@ export default class MapEditorForm {
   /**
    * Re-renders the canvas based on the parameters of the map editor.
    */
-  private render() {
+  render() {
     this.symmetricBodies = this.getSymmetricBodies();
     this.renderer.render(this.width(), this.height(), this.originalBodies, this.symmetricBodies);
   }

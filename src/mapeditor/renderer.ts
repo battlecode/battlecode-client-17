@@ -108,27 +108,28 @@ export default class MapRenderer {
 
     this.ctx.fillStyle = "#84bf4b";
     bodies.forEach((body: MapUnit) => {
+      const x = body.loc.x;
+      const y = body.loc.y;
       const radius = body.radius;
+
+      this.drawCircleBot(x, y, radius);
       if (body.type === cst.TREE_NEUTRAL) {
-        // this.ctx.beginPath();
-        // this.ctx.arc(body.loc.x, body.loc.y, radius, 0, 2 * Math.PI);
-        // this.ctx.fill();
-        this.ctx.drawImage(tree, body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
+        this.drawImage(tree, x, y, radius);
       } else if (body.type === cst.ARCHON) {
-        this.ctx.drawImage(archons[1], body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
+        this.drawImage(archons[1], x, y, radius);
       }
     });
 
     symmetricBodies.forEach((body: MapUnit) => {
+      const x = body.loc.x;
+      const y = body.loc.y;
       const radius = body.radius;
+
+      this.drawCircleBot(x, y, radius);
       if (body.type === cst.TREE_NEUTRAL) {
-        // this.ctx.beginPath();
-        // this.ctx.arc(body.loc.x, body.loc.y, radius, 0, 2 * Math.PI);
-        // this.ctx.fill();
-        this.ctx.drawImage(tree, body.loc.x-radius, body.loc.y-radius, radius*2, radius*2);
+        this.drawImage(tree, x, y, radius);
       } else if (body.type === cst.ARCHON) {
-        this.ctx.drawImage(archons[2], body.loc.x-radius, body.loc.y-radius,
-          radius*2, radius*2);
+        this.drawImage(archons[2], x, y, radius);
       }
     });
   }
@@ -163,6 +164,25 @@ export default class MapRenderer {
         this.onclickBlank(loc);
       }
     };
+  }
+
+  /**
+   * Draws a circle centered at (x, y) with the given radius
+   */
+  private drawCircleBot(x: number, y: number, radius: number) {
+    if (!this.conf.circleBots) return; // skip if the option is turned off
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = "#ddd";
+    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    this.ctx.fill();
+  }
+
+  /**
+   * Draws an image centered at (x, y) with the given radius
+   */
+  private drawImage(img: HTMLImageElement, x: number, y: number, radius: number) {
+    this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
   }
 }
 

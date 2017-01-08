@@ -61,6 +61,7 @@ export default class MapEditor {
       switch (event.keyCode) {
         case 67: // "c" - Toggle Circle Bots
         this.conf.circleBots = !this.conf.circleBots;
+        this.form.render();
         break;
         case 83: // "s" - Set (Add/Update)c
         this.form.addToMap();
