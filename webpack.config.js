@@ -23,7 +23,8 @@ var conf = {
   module: {
     rules: [
       { test: /\.ts$/, loader: 'awesome-typescript-loader' },
-      { test: /\.(png|jpg)$/, loader: 'url-loader?limit=10000&name=[name]-[hash:base64:7].[ext]' }
+      { test: /\.(png|jpg)$/, loader: 'url-loader?limit=10000&name=[name]-[hash:base64:7].[ext]' },
+      { test: /\.css$/, loader: "style-loader!css-loader" }
     ]
   }
 };
