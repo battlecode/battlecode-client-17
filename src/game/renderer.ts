@@ -1,9 +1,9 @@
-import * as config from './config';
+import * as config from '../config';
+import * as cst from '../constants';
 import NextStep from './nextstep';
 
 import {GameWorld, Metadata, schema} from 'battlecode-playback';
-import {AllImages} from './imageloader';
-import Controls from './controls';
+import {AllImages} from '../imageloader';
 import Victor = require('victor');
 
 /**
@@ -12,10 +12,11 @@ import Victor = require('victor');
  * Note that all rendering functions draw in world-units,
  */
 export default class Renderer {
+  private conf: config.Config;
+
   readonly canvas: HTMLCanvasElement;
   readonly ctx: CanvasRenderingContext2D;
   readonly imgs: AllImages;
-  readonly conf: config.Config;
   readonly metadata: Metadata;
 
   // callback for indicator strings
@@ -24,11 +25,6 @@ export default class Renderer {
   // other cached useful values
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
-
-  // options
-  private healthBars: boolean = true;
-  private circleBots: boolean = false;
-  private indicatorStrings: boolean = true;
 
   constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config,
     metadata: Metadata, onRobotSelected: (id: number, strs: Array<string>) => void) {
@@ -88,27 +84,6 @@ export default class Renderer {
     // nothing to do yet?
   }
 
-  /**
-   * Toggle health bars
-   */
-  toggleHealthBars() {
-    this.healthBars = !this.healthBars;
-  }
-
-  /**
-   * Turn the robots and trees into circles
-   */
-  toggleCircleBots() {
-    this.circleBots = !this.circleBots;
-  }
-
-  /**
-   * Turn indicator dots/lines on and off
-   */
-  toggleIndicatorStrings() {
-    this.indicatorStrings = !this.indicatorStrings;
-  }
-
   private renderBackground(world: GameWorld) {
     this.ctx.save();
     this.ctx.fillStyle = this.bgPattern;
@@ -147,46 +122,46 @@ export default class Renderer {
       let img;
 
       switch (types[i]) {
-        case TREE_NEUTRAL:
+        case cst.TREE_NEUTRAL:
           //if (healths[i] > this.treeMedHealth) {
             img = this.imgs.tree.fullHealth;
           //} else {
           //  img = this.imgs.tree.lowHealth;
           //}
           break;
-        case TREE_BULLET:
+        case cst.TREE_BULLET:
           img = this.imgs.robot.bulletTree[team];
           break;
-        case ARCHON:
+        case cst.ARCHON:
           img = this.imgs.robot.archon[team];
           break;
-        case GARDENER:
+        case cst.GARDENER:
           img = this.imgs.robot.gardener[team];
           break;
-        case LUMBERJACK:
+        case cst.LUMBERJACK:
           img = this.imgs.robot.lumberjack[team];
           break;
-        case SOLDIER:
+        case cst.SOLDIER:
           img = this.imgs.robot.soldier[team];
           break;
-        case TANK:
+        case cst.TANK:
           img = this.imgs.robot.tank[team];
           break;
-        case SCOUT:
+        case cst.SCOUT:
           img = this.imgs.robot.scout[team];
           break;
         default:
           img = this.imgs.unknown;
           break;
       }
-      if (this.circleBots) {
+      if (this.conf.circleBots) {
         this.ctx.beginPath();
         this.ctx.fillStyle = "#ddd";
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
       }
       this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
-      this.drawHealthBar(x-HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
+      this.drawHealthBar(x-cst.HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
     }
 
     this.setIndicatorStringEventListener(world, xs, ys);
@@ -226,63 +201,63 @@ export default class Renderer {
       let img;
 
       switch (types[i]) {
-        case TREE_NEUTRAL:
+        case cst.TREE_NEUTRAL:
           //if (healths[i] > this.treeMedHealth) {
             img = this.imgs.tree.fullHealth;
           //} else {
           //  img = this.imgs.tree.lowHealth;
           //}
           break;
-        case TREE_BULLET:
+        case cst.TREE_BULLET:
           img = this.imgs.robot.bulletTree[team];
           break;
-        case ARCHON:
+        case cst.ARCHON:
           img = this.imgs.robot.archon[team];
           break;
-        case GARDENER:
+        case cst.GARDENER:
           img = this.imgs.robot.gardener[team];
           break;
-        case LUMBERJACK:
+        case cst.LUMBERJACK:
           img = this.imgs.robot.lumberjack[team];
           break;
-        case SOLDIER:
+        case cst.SOLDIER:
           img = this.imgs.robot.soldier[team];
           break;
-        case TANK:
+        case cst.TANK:
           img = this.imgs.robot.tank[team];
           break;
-        case SCOUT:
+        case cst.SCOUT:
           img = this.imgs.robot.scout[team];
           break;
         default:
           img = this.imgs.unknown;
           break;
       }
-      if (this.circleBots) {
+      if (this.conf.circleBots) {
         this.ctx.beginPath();
         this.ctx.fillStyle = "#ddd";
         this.ctx.arc(realX, realY, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
       }
       this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
-      this.drawHealthBar(realX-HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
+      this.drawHealthBar(realX-cst.HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
     }
 
     this.setIndicatorStringEventListener(world, realXs, realYs);
   }
 
   private drawHealthBar(x: number, y: number, health: number, type: number) {
-    if (!this.healthBars) return; // skip if the option is turned off
+    if (!this.conf.healthBars) return; // skip if the option is turned off
 
     const bodyType = this.metadata.types[type];
     if (bodyType == undefined) return;
 
     this.ctx.fillStyle = "green"; // current health
-    this.ctx.fillRect(x, y, HEALTH_BAR_WIDTH * health / bodyType.maxHealth,
-      HEALTH_BAR_HEIGHT);
+    this.ctx.fillRect(x, y, cst.HEALTH_BAR_WIDTH * health / bodyType.maxHealth,
+      cst.HEALTH_BAR_HEIGHT);
     this.ctx.strokeStyle = "black"; // outline
     this.ctx.lineWidth = .1;
-    this.ctx.strokeRect(x, y, HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT);
+    this.ctx.strokeRect(x, y, cst.HEALTH_BAR_WIDTH, cst.HEALTH_BAR_HEIGHT);
   }
 
   private setIndicatorStringEventListener(world: GameWorld,
@@ -308,7 +283,7 @@ export default class Renderer {
         let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
         let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
 
-        if (type != TREE_NEUTRAL && inXRange && inYRange) {
+        if (type != cst.TREE_NEUTRAL && inXRange && inYRange) {
           selectedRobotID = ids[i];
           break;
         }
@@ -348,22 +323,22 @@ export default class Renderer {
       const speedsq = velX*velX + velY*velY;
 
       let img;
-      if (speedsq >= HIGH_SPEED_THRESH) {
+      if (speedsq >= cst.HIGH_SPEED_THRESH) {
         img = this.imgs.bullet.fast;
-      } else if (speedsq >= MED_SPEED_THRESH) {
+      } else if (speedsq >= cst.MED_SPEED_THRESH) {
         img = this.imgs.bullet.medium;
       } else {
         img = this.imgs.bullet.slow;
       }
 
       this.ctx.drawImage(img,
-                         x - BULLET_SIZE_HALF, y - BULLET_SIZE_HALF,
-                         BULLET_SIZE, BULLET_SIZE);
+                         x - cst.BULLET_SIZE_HALF, y - cst.BULLET_SIZE_HALF,
+                         cst.BULLET_SIZE, cst.BULLET_SIZE);
     }
   }
 
   private renderIndicatorDotsLines(world: GameWorld) {
-    if (!this.indicatorStrings) {
+    if (!this.conf.indicators) {
       return;
     }
 
@@ -383,7 +358,7 @@ export default class Renderer {
       const blue = dotsBlue[i];
 
       this.ctx.beginPath();
-      this.ctx.arc(dotsX[i], dotsY[i], INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
+      this.ctx.arc(dotsX[i], dotsY[i], cst.INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
       this.ctx.fill();
       this.ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
     }
@@ -396,7 +371,7 @@ export default class Renderer {
     const linesRed = lines.arrays.red;
     const linesGreen = lines.arrays.green;
     const linesBlue = lines.arrays.blue;
-    this.ctx.lineWidth = INDICATOR_LINE_WIDTH;
+    this.ctx.lineWidth = cst.INDICATOR_LINE_WIDTH;
 
     for (let i = 0; i < lines.length; i++) {
       const red = linesRed[i];
@@ -411,27 +386,3 @@ export default class Renderer {
     }
   }
 }
-
-// Constants
-const BULLET_SIZE= .5;
-const BULLET_SIZE_HALF = BULLET_SIZE / 2;
-const INDICATOR_DOT_SIZE = .5;
-const INDICATOR_LINE_WIDTH = .4;
-const HEALTH_BAR_HEIGHT = .3;
-const HEALTH_BAR_WIDTH = 2;
-const HEALTH_BAR_WIDTH_HALF = HEALTH_BAR_WIDTH / 2;
-
-// we check if speed^2 is >= these
-const HIGH_SPEED_THRESH = (2*2) - .00001;
-const MED_SPEED_THRESH = (1.5*1.5) - .00001;
-
-// might speed things up
-const ARCHON = schema.BodyType.ARCHON;
-const GARDENER = schema.BodyType.GARDENER;
-const LUMBERJACK = schema.BodyType.LUMBERJACK;
-const SOLDIER = schema.BodyType.SOLDIER;
-const TANK = schema.BodyType.TANK;
-const SCOUT = schema.BodyType.SCOUT;
-const TREE_BULLET = schema.BodyType.TREE_BULLET;
-const TREE_NEUTRAL = schema.BodyType.TREE_NEUTRAL;
-

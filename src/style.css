@@ -41,3 +41,24 @@
   padding: 4px;
   cursor: pointer;
 }
+
+#mapEditor {
+    font-family: "tahoma, sans serif";
+    font-size: 14px;
+}
+
+form {
+    text-align: center;
+}
+
+#gamearea canvas {
+    height: calc(100vh - 75px);
+}
+
+.red {
+    color: #a62014;
+}
+
+.blue {
+    color: #0636ac;
+}
