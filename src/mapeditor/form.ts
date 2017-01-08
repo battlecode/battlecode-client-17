@@ -102,7 +102,6 @@ export default class MapEditorForm {
    */
   private initialDiv(): HTMLDivElement {
     const div: HTMLDivElement = document.createElement("div");
-    div.id = "mapEditor";
 
     div.appendChild(this.createHeaderForm());
     div.appendChild(this.createSymmetryForm());
@@ -113,6 +112,8 @@ export default class MapEditorForm {
 
     div.appendChild(this.treeForm);
     div.appendChild(this.createFormButtons());
+
+    div.appendChild(document.createElement("br"));
     return div;
   }
 
@@ -751,9 +752,8 @@ export default class MapEditorForm {
     }
 
     // Bodies must be on the map
-    for (let key in this.originalBodies.keys) {
-      console.log(key);
-    }
+    // Invariant: bodies in originalBodies don't overlap with each other, and
+    //            bodies in symmetricBodies don't overlap with each other
     this.originalBodies.forEach((unit: MapUnit, id: number) => {
       let x = unit.loc.x;
       let y = unit.loc.y;
@@ -779,5 +779,64 @@ export default class MapEditorForm {
 
     // It's good :)
     return true;
+  }
+
+  removeInvalidUnits(): void {
+    let actions = new Array();
+
+    // If there are too many archons, remove them until there aren't
+    let archonIDs = new Array<number>();
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.ARCHON) {
+        archonIDs.push(id);
+      }
+    });
+    while (archonIDs.length > cst.MAX_NUMBER_OF_ARCHONS) {
+      let poppedID = archonIDs.pop();
+      if (poppedID) {
+        this.originalBodies.delete(poppedID);
+        this.symmetricBodies.delete(poppedID);
+        actions.push(`Removed archon ID ${poppedID}`);
+      }
+    }
+
+    // If there aren't enough archons, tell them
+    if (archonIDs.length < cst.MIN_NUMBER_OF_ARCHONS) {
+      actions.push(`NOTE: You must manually add ${cst.MIN_NUMBER_OF_ARCHONS - archonIDs.length} archon(s).`);
+    }
+
+    // Remove bodies that are off the map
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      let x = unit.loc.x;
+      let y = unit.loc.y;
+      let distanceToWall = Math.min(x, y, this.width() - x, this.height() - y);
+      if (unit.radius > distanceToWall || x < 0 || y < 0 || x > this.width() || y > this.height()) {
+        this.originalBodies.delete(id);
+        this.symmetricBodies.delete(id);
+        actions.push(`Removed ID ${id}. (off the map)`);
+      }
+    });
+
+    // Remove bodies that overlap
+    // Invariant: bodies in originalBodies don't overlap with each other, and
+    //            bodies in symmetricBodies don't overlap with each other
+    this.originalBodies.forEach((unitA: MapUnit, idA: number) => {
+      this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
+        if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
+          this.originalBodies.delete(idA);
+          this.symmetricBodies.delete(idA);
+          this.originalBodies.delete(idB);
+          this.symmetricBodies.delete(idB);
+          actions.push (`Removed IDs ${idA} and ${idB}. (overlapping)`);
+        }
+      });
+    });
+
+    if (actions.length > 0) {
+      alert(actions.join("\n"));
+      this.render();
+    } else {
+      alert("Congratulations, the map is already valid!");
+    }
   }
 }

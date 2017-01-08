@@ -46,11 +46,29 @@ export default class MapEditor {
   constructor(conf: Config, images: AllImages) {
     this.canvas = document.createElement("canvas");
     this.form = new MapEditorForm(conf, images, this.canvas);
-    this.div = document.createElement("div");
-    this.div.appendChild(this.form.div);
-    this.div.appendChild(this.exportButton());
+    this.div = this.basediv();
     this.images = images;
     this.conf = conf;
+  }
+
+  basediv(): HTMLDivElement {
+    let div = document.createElement("div");
+    div.id = "mapEditor";
+
+    div.appendChild(document.createTextNode(
+      "TIP: \"S\"=quick add, \"D\"=quick delete."));
+    div.appendChild(document.createElement("br"));
+    div.appendChild(document.createElement("br"));
+
+    div.appendChild(this.form.div);
+
+    div.appendChild(this.removeInvalidButton());
+    div.appendChild(document.createElement("br"));
+    div.appendChild(document.createElement("br"));
+
+    div.appendChild(this.exportButton());
+
+    return div;
   }
 
   /**
@@ -73,8 +91,19 @@ export default class MapEditor {
     };
   }
 
+  private removeInvalidButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("Remove invalid units"));
+    button.onclick = () => {
+      this.form.removeInvalidUnits();
+    };
+    return button;
+  }
+
   private exportButton(): HTMLButtonElement {
     const button = document.createElement("button");
+    button.id = "export";
     button.type = "button";
     button.appendChild(document.createTextNode("EXPORT!"));
     button.onclick = () => {
