@@ -64,7 +64,7 @@ export default class Renderer {
 
     if (lerpAmount != null && nextStep != null) {
       this.renderBullets(world, lerpAmount);
-      this.renderBodiesInterpolated(world, nextStep, lerpAmount);
+      this.renderBodies(world, nextStep, lerpAmount);
     } else {
       this.renderBullets(world, 0);
       this.renderBodies(world);
@@ -101,7 +101,7 @@ export default class Renderer {
     this.ctx.restore();
   }
 
-  private renderBodies(world: GameWorld) {
+  private renderBodies(world: GameWorld, nextStep?: NextStep, lerpAmount?: number) {
     const bodies = world.bodies;
     const length = bodies.length;
     const types = bodies.arrays.type;
@@ -112,22 +112,33 @@ export default class Renderer {
     const maxHealths = bodies.arrays.maxHealth;
     const radii = bodies.arrays.radius;
 
-    for (let i = 0; i < length; i++) {
-      const x = xs[i];
-      const y = ys[i];
-      const radius = radii[i];
+    let nextXs, nextYs, realXs, realYs;
+    if (nextStep && lerpAmount) {
+      // Interpolated
+      nextXs = nextStep.bodies.arrays.x;
+      nextYs = nextStep.bodies.arrays.y;
+      realXs = new Float32Array(length)
+      realYs = new Float32Array(length)
+    }
 
+    for (let i = 0; i < length; i++) {
+      if (nextStep && lerpAmount) {
+        // Interpolated
+        xs[i] = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
+        ys[i] = ys[i] + (nextYs[i] - ys[i]) * lerpAmount;
+      }
+
+      const x = xs[i]
+      const y = ys[i]
+
+      const radius = radii[i];
       const team = teams[i];
 
       let img;
 
       switch (types[i]) {
         case cst.TREE_NEUTRAL:
-          //if (healths[i] > this.treeMedHealth) {
-            img = this.imgs.tree.fullHealth;
-          //} else {
-          //  img = this.imgs.tree.lowHealth;
-          //}
+          img = this.imgs.tree.fullHealth;
           break;
         case cst.TREE_BULLET:
           img = this.imgs.robot.bulletTree[team];
@@ -153,12 +164,6 @@ export default class Renderer {
         default:
           img = this.imgs.unknown;
           break;
-      }
-      if (this.conf.circleBots) {
-        this.ctx.beginPath();
-        this.ctx.fillStyle = "#ddd";
-        this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-        this.ctx.fill();
       }
       this.drawCircleBot(x, y, radius);
       this.drawImage(img, x, y, radius);
@@ -166,81 +171,6 @@ export default class Renderer {
     }
 
     this.setIndicatorStringEventListener(world, xs, ys);
-  }
-
-  private renderBodiesInterpolated(world: GameWorld,
-                                   nextStep: NextStep,
-                                   lerpAmount: number) {
-    const bodies = world.bodies;
-    const length = bodies.length;
-    const types = bodies.arrays.type;
-    const teams = bodies.arrays.team;
-    const xs = bodies.arrays.x;
-    const ys = bodies.arrays.y;
-    const nextXs = nextStep.bodies.arrays.x;
-    const nextYs = nextStep.bodies.arrays.y;
-    const healths = bodies.arrays.health;
-    const maxHealths = bodies.arrays.maxHealth;
-    const radii = bodies.arrays.radius;
-    let realXs: Float32Array = new Float32Array(length);
-    let realYs: Float32Array = new Float32Array(length);
-
-    for (let i = 0; i < length; i++) {
-      const x = xs[i];
-      const y = ys[i];
-      const nextX = nextXs[i];
-      const nextY = nextYs[i];
-
-      const realX = x + (nextX - x) * lerpAmount;
-      const realY = y + (nextY - y) * lerpAmount;
-      realXs[i] = realX;
-      realYs[i] = realY;
-
-      const radius = radii[i];
-
-      const team = teams[i];
-
-      let img;
-
-      switch (types[i]) {
-        case cst.TREE_NEUTRAL:
-          //if (healths[i] > this.treeMedHealth) {
-            img = this.imgs.tree.fullHealth;
-          //} else {
-          //  img = this.imgs.tree.lowHealth;
-          //}
-          break;
-        case cst.TREE_BULLET:
-          img = this.imgs.robot.bulletTree[team];
-          break;
-        case cst.ARCHON:
-          img = this.imgs.robot.archon[team];
-          break;
-        case cst.GARDENER:
-          img = this.imgs.robot.gardener[team];
-          break;
-        case cst.LUMBERJACK:
-          img = this.imgs.robot.lumberjack[team];
-          break;
-        case cst.SOLDIER:
-          img = this.imgs.robot.soldier[team];
-          break;
-        case cst.TANK:
-          img = this.imgs.robot.tank[team];
-          break;
-        case cst.SCOUT:
-          img = this.imgs.robot.scout[team];
-          break;
-        default:
-          img = this.imgs.unknown;
-          break;
-      }
-      this.drawCircleBot(realX, realY, radius);
-      this.drawImage(img, realX, realY, radius);
-      this.drawHealthBar(realX, realY, radius, healths[i], maxHealths[i]);
-    }
-
-    this.setIndicatorStringEventListener(world, realXs, realYs);
   }
 
   /**
