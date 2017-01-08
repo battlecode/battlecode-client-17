@@ -160,8 +160,9 @@ export default class Renderer {
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
       }
-      this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
-      this.drawHealthBar(x-cst.HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], maxHealths[i]);
+      this.drawCircleBot(x, y, radius);
+      this.drawImage(img, x, y, radius);
+      this.drawHealthBar(x, y, radius, healths[i], maxHealths[i]);
     }
 
     this.setIndicatorStringEventListener(world, xs, ys);
@@ -234,22 +235,43 @@ export default class Renderer {
           img = this.imgs.unknown;
           break;
       }
-      if (this.conf.circleBots) {
-        this.ctx.beginPath();
-        this.ctx.fillStyle = "#ddd";
-        this.ctx.arc(realX, realY, radius, 0, 2 * Math.PI, false);
-        this.ctx.fill();
-      }
-      this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
-      this.drawHealthBar(realX-cst.HEALTH_BAR_WIDTH_HALF, realY+radius,
-        healths[i], maxHealths[i]);
+      this.drawCircleBot(realX, realY, radius);
+      this.drawImage(img, realX, realY, radius);
+      this.drawHealthBar(realX, realY, radius, healths[i], maxHealths[i]);
     }
 
     this.setIndicatorStringEventListener(world, realXs, realYs);
   }
 
-  private drawHealthBar(x: number, y: number, health: number, maxHealth: number) {
+  /**
+   * Draws a circle centered at (x, y) with the given radius
+   */
+  private drawCircleBot(x: number, y: number, radius: number) {
+    if (!this.conf.circleBots) return; // skip if the option is turned off
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = "#ddd";
+    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    this.ctx.fill();
+  }
+
+  /**
+   * Draws an image centered at (x, y) with the given radius
+   */
+  private drawImage(img: HTMLImageElement, x: number, y: number, radius: number) {
+    this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
+  }
+
+  /**
+   * Draws a health bar for a unit centered at (xRobot, yRobot) with the given
+   * radius, health, and maxHealth
+   */
+  private drawHealthBar(xRobot: number, yRobot: number, radius: number,
+    health: number, maxHealth: number) {
     if (!this.conf.healthBars) return; // skip if the option is turned off
+
+    let x = xRobot - cst.HEALTH_BAR_WIDTH_HALF;
+    let y = yRobot + radius;
 
     this.ctx.fillStyle = "green"; // current health
     this.ctx.fillRect(x, y, cst.HEALTH_BAR_WIDTH * health / maxHealth,
@@ -326,9 +348,7 @@ export default class Renderer {
         img = this.imgs.bullet.slow;
       }
 
-      this.ctx.drawImage(img,
-                         x - cst.BULLET_SIZE_HALF, y - cst.BULLET_SIZE_HALF,
-                         cst.BULLET_SIZE, cst.BULLET_SIZE);
+      this.drawImage(img, x, y, cst.BULLET_SIZE_HALF);
     }
   }
 
