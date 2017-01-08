@@ -172,8 +172,8 @@ export default class Renderer {
           break;
         case TANK:
           img = this.imgs.robot.tank[team];
-          angle = Math.atan2(y - ys[i-1], x-xs[i-1]);
-          console.log(angle);
+          //angle = Math.atan2(y - ys[i-1], x-xs[i-1]);
+          //console.log(angle);
           break;
         case SCOUT:
           img = this.imgs.robot.scout[team];
@@ -188,9 +188,7 @@ export default class Renderer {
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
       }
-      this.ctx.rotate(angle);
       this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
-      this.ctx.rotate(-angle);
       this.drawHealthBar(x-HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
     }
 
@@ -256,7 +254,11 @@ export default class Renderer {
           break;
         case TANK:
           img = this.imgs.robot.tank[team];
-          angle = Math.atan2(y - ys[i-1], x-xs[i-1]);
+          if(nextY === y && nextX === x) {
+            angle = 0;
+          } else {
+            angle = Math.atan2(nextY - y, nextX - x) + Math.PI / 2;
+          }
           break;
         case SCOUT:
           img = this.imgs.robot.scout[team];
@@ -271,10 +273,12 @@ export default class Renderer {
         this.ctx.arc(realX, realY, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
       }
+      this.ctx.translate(realX, realY);
       this.ctx.rotate(angle);
-      this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
+      this.ctx.drawImage(img, -radius, -radius, radius*2, radius*2);
       this.ctx.rotate(-angle);
-      this.drawHealthBar(realX-HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
+      this.drawHealthBar(-HEALTH_BAR_WIDTH_HALF, 2*radius, healths[i], types[i]);
+      this.ctx.translate(-realX, -realY);
     }
 
     this.setIndicatorStringEventListener(world, realXs, realYs);
