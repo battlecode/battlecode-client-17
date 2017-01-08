@@ -386,17 +386,6 @@ export default class MapEditorForm {
     this.deletebutton = deletebutton;
     this.addbutton = addbutton;
 
-    // Quick add and delete mousedown events
-    document.onkeydown = (event) => {
-      switch (event.keyCode) {
-        case 83: // "s" - Set (Add/Update)c
-        this.addbutton.click();
-        break;
-        case 68: // "d" - Delete
-        this.deletebutton.click();
-        break;
-      }
-    };
     return buttons;
   }
 
@@ -676,18 +665,44 @@ export default class MapEditorForm {
     return symmetricBodies;
   }
 
+   /**
+   * Adds the current unit to the map
+   */
+  addToMap(): void {
+    return this.addbutton.click();
+  }
+
+  /**
+   * Deletes the current unit from the map
+   */
+  deleteFromMap(): void {
+    return this.deletebutton.click();
+  }
+
+  /**
+   * The name of the map currently in the field
+   */
   name(): string {
     return this.nameGM.value;
   }
 
+  /**
+   * The width of the map currently in the field
+   */
   width(): number {
     return parseFloat(this.widthGM.value);
   }
 
+  /**
+   * The height of the map currently in the field
+   */
   height(): number {
     return parseFloat(this.heightGM.value);
   }
 
+  /**
+   * The bodies (trees and archons) currently on the map
+   */
   bodies(): Map<number, MapUnit> {
     let map = new Map<number, MapUnit>();
 
@@ -704,13 +719,16 @@ export default class MapEditorForm {
     return map;
   }
 
+  /**
+   * The symmetry of the map currently selected
+   */
   symmetry(): Symmetry {
     return parseInt(this.symmetryGM.options[this.symmetryGM.selectedIndex].value);
   }
 
   /**
-   * Whether the status of the map. If isValid() returns MapStatus.VALID, the
-   * map editor is valid and ready to generate a map.
+   * Whether the map is valid. If the map is valid, then the map eidtor is
+   * ready to generate a map.
    */
   isValid(): boolean {
     let errors = new Array();

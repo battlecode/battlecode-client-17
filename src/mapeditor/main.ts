@@ -53,6 +53,25 @@ export default class MapEditor {
     this.conf = conf;
   }
 
+  /**
+   * Quick add and delete units in the map editor
+   */
+  onkeydown(): (event: KeyboardEvent) => void {
+    return (event: KeyboardEvent) => {
+      switch (event.keyCode) {
+        case 67: // "c" - Toggle Circle Bots
+        this.conf.circleBots = !this.conf.circleBots;
+        break;
+        case 83: // "s" - Set (Add/Update)c
+        this.form.addToMap();
+        break;
+        case 68: // "d" - Delete
+        this.form.deleteFromMap();
+        break;
+      }
+    };
+  }
+
   private exportButton(): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";

@@ -109,6 +109,7 @@ export default class Renderer {
     const xs = bodies.arrays.x;
     const ys = bodies.arrays.y;
     const healths = bodies.arrays.health;
+    const maxHealths = bodies.arrays.maxHealth;
     const radii = bodies.arrays.radius;
 
     for (let i = 0; i < length; i++) {
@@ -160,7 +161,7 @@ export default class Renderer {
         this.ctx.fill();
       }
       this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
-      this.drawHealthBar(x-cst.HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
+      this.drawHealthBar(x-cst.HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], maxHealths[i]);
     }
 
     this.setIndicatorStringEventListener(world, xs, ys);

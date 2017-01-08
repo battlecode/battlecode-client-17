@@ -19,10 +19,14 @@ export default class Sidebar {
   // Options
   private readonly conf: Config;
 
+  // onkeydown event that uses the controls depending on the game mode
+  private readonly onkeydownControls: (event: KeyboardEvent) => void;
+
   // Callback to update the game area when changing modes
   cb: () => void;
 
-  constructor(conf: Config, images: AllImages) {
+  // onkeydownControls is an onkeydown event that uses the controls depending on the game mode
+  constructor(conf: Config, images: AllImages, onkeydownControls: (event: KeyboardEvent) => void) {
     // Initialize fields
     this.div = document.createElement("div");
     this.innerDiv = document.createElement("div");
@@ -31,6 +35,7 @@ export default class Sidebar {
     this.mapeditor = new MapEditor(conf, images);
     this.help = this.initializeHelp();
     this.conf = conf;
+    this.onkeydownControls = onkeydownControls
 
     // Initialize div structure
     this.loadStyles();
@@ -172,13 +177,31 @@ export default class Sidebar {
       this.innerDiv.removeChild(this.innerDiv.firstChild);
     }
 
-    // Update the div
+    // Update the div and set the corret onkeydown events
     if (this.conf.inHelpMode) {
       this.innerDiv.appendChild(this.help);
     } else if (this.conf.inGameMode) {
       this.innerDiv.appendChild(this.stats.div);
+      document.onkeydown = (event) => {
+        this.onkeydownControls(event);
+        switch (event.keyCode) {
+          case 72: // "h" - Toggle Health Bars
+          this.conf.healthBars = !this.conf.healthBars;
+          break;
+          case 67: // "c" - Toggle Circle Bots
+          this.conf.circleBots = !this.conf.circleBots;
+          break;
+          case 86: // "v" - Toggle Indicator Dots and Lines
+          this.conf.indicators = !this.conf.indicators;
+          break;
+          case 66: // "b" - Toggle Interpolation
+          this.conf.interpolate = !this.conf.interpolate;
+          break;
+        }
+      };
     } else {
       this.innerDiv.appendChild(this.mapeditor.div);
+      document.onkeydown = this.mapeditor.onkeydown();
     }
 
     this.cb();
