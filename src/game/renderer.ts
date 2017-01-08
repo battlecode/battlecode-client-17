@@ -178,6 +178,7 @@ export default class Renderer {
     const nextXs = nextStep.bodies.arrays.x;
     const nextYs = nextStep.bodies.arrays.y;
     const healths = bodies.arrays.health;
+    const maxHealths = bodies.arrays.maxHealth;
     const radii = bodies.arrays.radius;
     let realXs: Float32Array = new Float32Array(length);
     let realYs: Float32Array = new Float32Array(length);
@@ -239,20 +240,18 @@ export default class Renderer {
         this.ctx.fill();
       }
       this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
-      this.drawHealthBar(realX-cst.HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
+      this.drawHealthBar(realX-cst.HEALTH_BAR_WIDTH_HALF, realY+radius,
+        healths[i], maxHealths[i]);
     }
 
     this.setIndicatorStringEventListener(world, realXs, realYs);
   }
 
-  private drawHealthBar(x: number, y: number, health: number, type: number) {
+  private drawHealthBar(x: number, y: number, health: number, maxHealth: number) {
     if (!this.conf.healthBars) return; // skip if the option is turned off
 
-    const bodyType = this.metadata.types[type];
-    if (bodyType == undefined) return;
-
     this.ctx.fillStyle = "green"; // current health
-    this.ctx.fillRect(x, y, cst.HEALTH_BAR_WIDTH * health / bodyType.maxHealth,
+    this.ctx.fillRect(x, y, cst.HEALTH_BAR_WIDTH * health / maxHealth,
       cst.HEALTH_BAR_HEIGHT);
     this.ctx.strokeStyle = "black"; // outline
     this.ctx.lineWidth = .1;
