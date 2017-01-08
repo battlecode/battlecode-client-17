@@ -19,7 +19,6 @@ export type AllImages = {
     archon: Array<Image>,
     gardener: Array<Image>,
     lumberjack: Array<Image>,
-    recruit: Array<Image>,
     scout: Array<Image>,
     soldier: Array<Image>,
     tank: Array<Image>,
@@ -35,13 +34,15 @@ export type AllImages = {
     seekForward: Image,
     skipBackward: Image,
     skipForward: Image,
+    matchForward: Image,
+    matchBackward: Image,
     upload: Image
   }
 };
 
 export function loadAll(config: Config, finished: (AllImages) => void) {
   let expected = 0, loaded = 0;
-  let result: any = {tree: {}, bullet: {}, robot: {archon: [], gardener: [], lumberjack: [], recruit: [], scout: [], soldier: [], tank: [], bulletTree: []}, controls: {}};
+  let result: any = {tree: {}, bullet: {}, robot: {archon: [], gardener: [], lumberjack: [], scout: [], soldier: [], tank: [], bulletTree: []}, controls: {}};
 
   // write loaded image to obj[slot]
   function img(obj, slot, url: string) {
@@ -95,9 +96,6 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.robot.lumberjack, 0, require('./img/sprites/lumberjack_neutral.png'));
   img(result.robot.lumberjack, 1, require('./img/sprites/lumberjack_red.png'));
   img(result.robot.lumberjack, 2, require('./img/sprites/lumberjack_blue.png'));
-  img(result.robot.recruit, 0, require('./img/sprites/recruit_neutral.png'));
-  img(result.robot.recruit, 1, require('./img/sprites/recruit_red.png'));
-  img(result.robot.recruit, 2, require('./img/sprites/recruit_blue.png'));
   img(result.robot.scout, 0, require('./img/sprites/scout_neutral.png'));
   img(result.robot.scout, 1, require('./img/sprites/scout_red.png'));
   img(result.robot.scout, 2, require('./img/sprites/scout_blue.png'));
@@ -117,6 +115,8 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.controls, 'seekForward', require('./img/controls/seek-forward.png'));
   img(result.controls, 'skipBackward', require('./img/controls/skip-backward.png'));
   img(result.controls, 'skipForward', require('./img/controls/skip-forward.png'));
+  img(result.controls, 'matchBackward', require('./img/controls/skip-backward.png'));
+  img(result.controls, 'matchForward', require('./img/controls/skip-forward.png'));
   img(result.controls, 'upload', require('./img/controls/upload.png'));
 }
 

@@ -141,9 +141,6 @@ export default class Renderer {
         case cst.LUMBERJACK:
           img = this.imgs.robot.lumberjack[team];
           break;
-        case cst.RECRUIT:
-          img = this.imgs.robot.recruit[team];
-          break;
         case cst.SOLDIER:
           img = this.imgs.robot.soldier[team];
           break;
@@ -222,9 +219,6 @@ export default class Renderer {
           break;
         case cst.LUMBERJACK:
           img = this.imgs.robot.lumberjack[team];
-          break;
-        case cst.RECRUIT:
-          img = this.imgs.robot.recruit[team];
           break;
         case cst.SOLDIER:
           img = this.imgs.robot.soldier[team];
