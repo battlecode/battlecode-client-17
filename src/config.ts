@@ -79,11 +79,11 @@ export function defaults(supplied?: any): Config {
     defaultTPS: supplied.defaultTPS || 20,
     websocketURL: supplied.websocketURL || null,
     pollEvery: supplied.pollEvery || 500,
-    interpolate: true,
-    healthBars: true,
-    circleBots: false,
-    indicators: true,
-    inGameMode: true,
-    inHelpMode: false
+    interpolate: supplied.interpolate || true,
+    healthBars: supplied.healthBars || true,
+    circleBots: supplied.circleBots || false,
+    indicators: supplied.indicators || true,
+    inGameMode: supplied.inGameMode || true,
+    inHelpMode: supplied.inHelpMode || false
   };
 }
