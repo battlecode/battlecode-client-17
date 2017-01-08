@@ -188,13 +188,9 @@ export default class Client {
    */
   ready() {
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
-      const wrapper = schema.GameWrapper.getRootAsGameWrapper(
-        new flatbuffers.ByteBuffer(new Uint8Array(data))
-      );
-      //this.currentGame = this.games.length;
       var lastGame = this.games.length
       this.games[lastGame] = new Game();
-      this.games[lastGame].loadFullGame(wrapper);
+      this.games[lastGame].loadFullGameRaw(data);
 
       if (this.games.length === 1) {
         // this will run the first match from the game
@@ -259,11 +255,8 @@ export default class Client {
     // Configure renderer for this match
     // (radii, etc. may change between matches)
     const controls = this.controls;
-    const onRobotSelected = function(id: number, strs: Array<string>): void {
-      controls.setIndicatorID(id);
-      controls.setIndicatorString(0, `${strs[0]}`);
-      controls.setIndicatorString(1, `${strs[1]}`);
-      controls.setIndicatorString(2, `${strs[2]}`);
+    const onRobotSelected = function(id: number): void {
+      console.log(`Robot ${id} selected, do something with it!`);
     }
     const renderer = new Renderer(this.gamearea.canvas, this.imgs,
       this.conf, meta as Metadata, onRobotSelected);

@@ -19,15 +19,14 @@ export default class Renderer {
   readonly imgs: AllImages;
   readonly metadata: Metadata;
 
-  // callback for indicator strings
-  readonly onRobotSelected: (id: number, strs: Array<string>) => void;
+  readonly onRobotSelected: (id: number) => void;
 
   // other cached useful values
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
   constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config,
-    metadata: Metadata, onRobotSelected: (id: number, strs: Array<string>) => void) {
+    metadata: Metadata, onRobotSelected: (id: number) => void) {
     this.canvas = canvas;
     this.conf = conf;
     this.imgs = imgs;
@@ -268,7 +267,6 @@ export default class Renderer {
     const ids: Int32Array = world.bodies.arrays.id;
     const types: Int32Array = world.bodies.arrays.type;
     const radii: Float32Array = world.bodies.arrays.radius;
-    const strings: Map<number, Array<string>> = world.indicatorStrings;
     const onRobotSelected = this.onRobotSelected;
 
     this.canvas.onmousedown = function(event) {
@@ -294,11 +292,8 @@ export default class Renderer {
         return;
       }
 
-      // Get the indicator strings of the robot with that ID
-      let robotStrings = strings.get(selectedRobotID);
-
       // Set the indicator strings
-      onRobotSelected(selectedRobotID, robotStrings);
+      onRobotSelected(selectedRobotID);
     };
   }
 
