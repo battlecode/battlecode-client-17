@@ -157,7 +157,7 @@ export default class Client {
    * Loads control bar and timeline
    */
   loadControls() {
-    this.controls = new Controls(this.imgs);
+    this.controls = new Controls(this.conf, this.imgs);
     return this.controls.div;
   }
 
@@ -176,7 +176,10 @@ export default class Client {
    */
   loadGameArea() {
     this.gamearea = new GameArea(this.conf, this.imgs, this.mapeditor.canvas);
-    this.sidebar.cb = this.gamearea.setCanvas;
+    this.sidebar.cb = () => {
+      this.gamearea.setCanvas();
+      this.controls.setControls();
+    };
     return this.gamearea.div;
   }
 
