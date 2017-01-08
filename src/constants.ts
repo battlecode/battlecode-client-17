@@ -10,6 +10,7 @@ export const TANK = schema.BodyType.TANK;
 export const SCOUT = schema.BodyType.SCOUT;
 export const TREE_BULLET = schema.BodyType.TREE_BULLET;
 export const TREE_NEUTRAL = schema.BodyType.TREE_NEUTRAL;
+export const NONE = schema.BodyType.NONE;
 
 // Game canvas rendering sizes
 export const BULLET_SIZE = .5;
@@ -45,6 +46,7 @@ export function bodyTypeToString(bodyType: schema.BodyType) {
     case SOLDIER:    return "soldier";
     case TANK:       return "tank";
     case SCOUT:      return "scout";
+    case NONE:       return "";
     default:         throw new Error("invalid body type");
   }
 }

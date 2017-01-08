@@ -331,7 +331,8 @@ export default class MapEditorForm {
     bullets.appendChild(bulletsT);
 
     // Tree body
-    const types = [cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT];
+    const types = [cst.NONE, cst.ARCHON, cst.GARDENER, cst.LUMBERJACK,
+      cst.SOLDIER, cst.TANK, cst.SCOUT];
     let bodyT: HTMLSelectElement = document.createElement("select");
     body.appendChild(document.createTextNode("Body:"));
     body.appendChild(bodyT);
@@ -490,7 +491,7 @@ export default class MapEditorForm {
         y = parseFloat(this.yA.value);
         radius = parseFloat(this.radiusA.value);
         bullets = 0;
-        body = cst.ARCHON; // Arbitrary
+        body = cst.NONE;
         type = cst.ARCHON;
       }
 
