@@ -145,6 +145,7 @@ export default class Renderer {
       const team = teams[i];
 
       let img;
+      let angle = 0;
 
       switch (types[i]) {
         case TREE_NEUTRAL:
@@ -171,6 +172,8 @@ export default class Renderer {
           break;
         case TANK:
           img = this.imgs.robot.tank[team];
+          angle = Math.atan2(y - ys[i-1], x-xs[i-1]);
+          console.log(angle);
           break;
         case SCOUT:
           img = this.imgs.robot.scout[team];
@@ -185,7 +188,9 @@ export default class Renderer {
         this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
       }
+      this.ctx.rotate(angle);
       this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
+      this.ctx.rotate(-angle);
       this.drawHealthBar(x-HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
     }
 
@@ -220,6 +225,7 @@ export default class Renderer {
       realYs[i] = realY;
 
       const radius = radii[i];
+      let angle = 0;
 
       const team = teams[i];
 
@@ -250,6 +256,7 @@ export default class Renderer {
           break;
         case TANK:
           img = this.imgs.robot.tank[team];
+          angle = Math.atan2(y - ys[i-1], x-xs[i-1]);
           break;
         case SCOUT:
           img = this.imgs.robot.scout[team];
@@ -264,7 +271,9 @@ export default class Renderer {
         this.ctx.arc(realX, realY, radius, 0, 2 * Math.PI, false);
         this.ctx.fill();
       }
+      this.ctx.rotate(angle);
       this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
+      this.ctx.rotate(-angle);
       this.drawHealthBar(realX-HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
     }
 
