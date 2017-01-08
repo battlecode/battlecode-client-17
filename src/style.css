@@ -1,0 +1,43 @@
+/* Global stylings here */
+
+.gameDiv {
+    background: #e0e0e0;
+    color: black;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+.gameTitle {
+    padding-bottom: 20px;
+}
+
+.blue {
+    color: blue;
+}
+
+.red {
+    color: red;
+}
+
+.removeButton {
+    float: right;
+}
+
+.gameNum {
+    display: inline-block;
+    margin-left: 16px;
+    min-width: 100px;
+}
+
+.active-match {
+  background: #ffffff;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.inactive-match {
+  padding: 4px;
+  cursor: pointer;
+}

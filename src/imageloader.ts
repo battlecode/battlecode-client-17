@@ -34,6 +34,8 @@ export type AllImages = {
     seekForward: Image,
     skipBackward: Image,
     skipForward: Image,
+    matchForward: Image,
+    matchBackward: Image,
     upload: Image
   }
 };
@@ -113,6 +115,8 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.controls, 'seekForward', require('./img/controls/seek-forward.png'));
   img(result.controls, 'skipBackward', require('./img/controls/skip-backward.png'));
   img(result.controls, 'skipForward', require('./img/controls/skip-forward.png'));
+  img(result.controls, 'matchBackward', require('./img/controls/skip-backward.png'));
+  img(result.controls, 'matchForward', require('./img/controls/skip-forward.png'));
   img(result.controls, 'upload', require('./img/controls/upload.png'));
 }
 

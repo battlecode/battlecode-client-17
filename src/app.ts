@@ -143,6 +143,7 @@ export default class Client {
 
     // Restart game loop
     this.runMatch();
+    this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
   }
 
   /**
@@ -219,21 +220,24 @@ export default class Client {
       const wrapper = schema.GameWrapper.getRootAsGameWrapper(
         new flatbuffers.ByteBuffer(new Uint8Array(data))
       );
-      this.currentGame = this.games.length;
-      this.games[this.currentGame] = new Game();
-      this.games[this.currentGame].loadFullGame(wrapper);
+      //this.currentGame = this.games.length;
+      var lastGame = this.games.length
+      this.games[lastGame] = new Game();
+      this.games[lastGame].loadFullGame(wrapper);
 
       if (this.games.length === 1) {
         // this will run the first match from the game
         this.setGame(0);
         this.setMatch(0);
       }
+      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
     }
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
         (game) => {
           this.games.push(game);
+          this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         },
         // What to do with the websocket's first game's first match
         () => {
@@ -320,11 +324,80 @@ export default class Client {
     this.controls.onToggleRewind = () => {
       goalUPS = goalUPS === -100 ? 10 : -100;
       rewinding = !rewinding;
-    }
+    };
     this.controls.onSeek = (turn: number) => {
       externalSeek = true;
       match.seek(turn);
       interpGameTime = turn;
+    };
+    this.stats.onNextMatch = () => {
+      console.log("NEXT MATCH");
+      
+      if(this.currentGame < 0) {
+        return; // Special case when deleting games
+      }
+      
+      const matchCount = this.games[this.currentGame as number].matchCount;
+      if(this.currentMatch < matchCount - 1) {
+        this.setMatch(this.currentMatch + 1);
+      } else {
+        if(this.currentGame < this.games.length - 1) {
+          this.setGame(this.currentGame + 1);
+          this.setMatch(0);
+        } else {
+          // Do nothing, at the end
+        }
+      }
+      
+    };
+    this.stats.onPreviousMatch = () => {
+      console.log("PREV MATCH");
+      
+      if(this.currentMatch > 0) {
+        this.setMatch(this.currentMatch - 1);
+      } else {
+        if(this.currentGame > 0) {
+          this.setGame(this.currentGame - 1);
+          this.setMatch(this.games[this.currentGame as number].matchCount - 1);
+        } else {
+          // Do nothing, at the beginning
+        }
+      }
+      
+    };
+    this.stats.removeGame = (game: number) => {
+      
+      if (game > this.currentGame) {
+        this.games.splice(game, 1);
+      } else if (this.currentGame == game) {
+        if (game == 0) {
+          // if games.length > 1, remove game, set game to 0, set match to 0
+          if (this.games.length > 1) {
+            this.setGame(0);
+            this.setMatch(0);
+            this.games.splice(game, 1);
+          } else {
+            this.games.splice(game, 1);
+            this.clearScreen();
+            this.currentGame = -1;
+            this.currentMatch = 0;
+          }
+        } else {
+          this.setGame(game - 1);
+          this.setMatch(0);
+          this.games.splice(game, 1);
+        }
+      } else {
+        // remove game, set game to game - 1
+        this.games.splice(game, 1);
+        this.currentGame = game - 1;
+      }
+          
+      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
+    };
+    this.stats.gotoMatch = (game: number, match: number) => {
+      this.setGame(game);
+      this.setMatch(match);
     };
     this.controls.canvas.addEventListener("mousedown", function(event) {
       // jump to a frame when clicking the controls timeline
