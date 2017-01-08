@@ -1,12 +1,13 @@
-import * as imageloader from './imageloader';
-
-const NUMBER_OF_INDICATOR_STRINGS = 3;
+import {Config} from '../config';
+import * as imageloader from '../imageloader';
+import * as cst from '../constants';
 
 /**
  * Game controls: pause/unpause, fast forward, rewind
  */
 export default class Controls {
   div: HTMLDivElement;
+  wrapper: HTMLDivElement;
 
   readonly speedReadout: Text;
   readonly indicatorStrings: Array<Text>;
@@ -26,7 +27,8 @@ export default class Controls {
   ctx;
 
   // buttons
-  imgs: {
+  readonly conf: Config;
+  readonly imgs: {
     playbackStart: HTMLImageElement,
     playbackPause: HTMLImageElement,
     playbackStop: HTMLImageElement,
@@ -37,11 +39,12 @@ export default class Controls {
     upload: HTMLImageElement
   };
 
-  constructor(images: imageloader.AllImages) {
+  constructor(conf: Config, images: imageloader.AllImages) {
     this.div = this.baseDiv();
     this.speedReadout = document.createTextNode('No match loaded');
 
     // initialize the images
+    this.conf = conf;
     this.imgs = {
       playbackStart: images.controls.playbackStart,
       playbackPause: images.controls.playbackPause,
@@ -81,7 +84,7 @@ export default class Controls {
     indicators.appendChild(document.createElement("br"));
 
     this.indicatorStrings = new Array();
-    for (let i = 0; i < NUMBER_OF_INDICATOR_STRINGS; i++) {
+    for (let i = 0; i < cst.NUMBER_OF_INDICATOR_STRINGS; i++) {
       let textNode = document.createTextNode("");
       this.indicatorStrings.push(textNode);
       indicators.appendChild(textNode);
@@ -93,7 +96,9 @@ export default class Controls {
     tr.appendChild(buttons);
     tr.appendChild(indicators);
 
-    this.div.appendChild(table);
+    this.wrapper = document.createElement("div");
+    this.wrapper.appendChild(table);
+    this.div.appendChild(this.wrapper);
   }
 
   /**
@@ -179,6 +184,22 @@ export default class Controls {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     this.ctx.fillRect(0, 0, this.canvas.width * frame / maxFrame, this.canvas.height)
   }
+
+  /**
+   * Displays the correct controls depending on whether we are in game mode
+   * or map editor mode
+   */
+  setControls = () => {
+    // Clear the game area
+    while (this.div.firstChild) {
+      this.div.removeChild(this.div.firstChild);
+    }
+
+    // Add the controls bar back if we are in game mode
+    if (this.conf.inGameMode) {
+      this.div.appendChild(this.wrapper);
+    }
+  };
 
   /**
    * Upload a battlecode match file.

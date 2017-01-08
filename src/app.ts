@@ -2,11 +2,15 @@ import {Game, GameWorld, Match, Metadata, schema, flatbuffers} from 'battlecode-
 import * as config from './config';
 import * as imageloader from './imageloader';
 
-import Controls from './controls';
-import NextStep from './nextstep';
-import Renderer from './renderer';
-import Stats from './stats';
-import TickCounter from './fps';
+import Sidebar from './html/sidebar';
+import Stats from './html/stats';
+import Controls from './html/controls';
+import MapEditor from './mapeditor/main';
+
+import GameArea from './game/gamearea';
+import NextStep from './game/nextstep';
+import Renderer from './game/renderer';
+import TickCounter from './game/fps';
 import WebSocketListener from './websocket';
 
 /**
@@ -31,19 +35,23 @@ window['battlecode'] = {
  * The interface a web page uses to talk to a client.
  */
 export default class Client {
-  readonly conf: config.Config;
+  private conf: config.Config;
   readonly root: HTMLElement;
   readonly ctx: CanvasRenderingContext2D;
 
+  // HTML components
+  style: HTMLStyleElement;
   imgs: imageloader.AllImages;
 
-  controls: Controls;
+  controls: Controls; // Upper controls bar
+  sidebar: Sidebar; // Sidebar
   stats: Stats;
+  mapeditor: MapEditor;
+  gamearea: GameArea; // Inner game area
+  gamecanvas: HTMLCanvasElement;
+  mapcanvas: HTMLCanvasElement;
 
-  style: HTMLStyleElement;
-  canvasWrapper: HTMLDivElement;
-  canvas: HTMLCanvasElement;
-
+  // Match logic
   listener: WebSocketListener | null;
 
   games: Game[];
@@ -63,12 +71,11 @@ export default class Client {
 
     this.loadStyles();
 
-    this.root.appendChild(this.loadGameArea());
-
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
       this.root.appendChild(this.loadControls());
-      this.root.appendChild(this.loadStats());
+      this.root.appendChild(this.loadSidebar());
+      this.root.appendChild(this.loadGameArea());
       this.ready();
     });
 
@@ -116,8 +123,8 @@ export default class Client {
       margin: .1rem;\
       border: 1px solid transparent;}\
       \
-      button:hover {background-color: #bbb}\
-      button:active, button:target {background-color: #999;}";
+      .custom-button:hover {background-color: #bbb}\
+      .custom-button:active, button:target {background-color: #999;}";
     this.style.appendChild(document.createTextNode(css));
     this.root.appendChild(this.style);
   }
@@ -147,69 +154,33 @@ export default class Client {
   }
 
   /**
-   * Loads canvas to display game world.
-   */
-  loadGameArea() {
-    let gameArea: HTMLDivElement = document.createElement("div");
-    // Positioning
-    gameArea.style.width = "100%";
-    gameArea.style.height = "100%";
-    gameArea.style.zIndex = "0.1";
-    gameArea.style.position = "fixed";
-    gameArea.style.top = "75px";
-    gameArea.style.left = "320px";
-    // Style
-    gameArea.style.background = "#333"
-    gameArea.style.background = "-webkit-linear-gradient(#bbb, #333)"
-    gameArea.style.background = "-o-linear-gradient(#bbb, #333)"
-    gameArea.style.background = "-moz-linear-gradient(#bbb, #333)"
-    gameArea.style.background = "linear-gradient(#bbb, #333)"
-
-    let canvasWrapper: HTMLDivElement = document.createElement("div");
-    canvasWrapper.id = "canvas-wrapper";
-    canvasWrapper.style.display = "block";
-    canvasWrapper.style.textAlign = "center";
-    canvasWrapper.style.paddingRight = "320px";
-    canvasWrapper.style.height = "100%";
-    this.canvasWrapper = canvasWrapper;
-
-    let canvas: HTMLCanvasElement = document.createElement('canvas');
-    canvas.id = "canvas";
-    canvas.setAttribute("id", "battlecode-canvas");
-    this.canvas = canvas;
-
-    gameArea.appendChild(canvasWrapper);
-    canvasWrapper.appendChild(canvas);
-    return gameArea;
-  }
-
-  /**
    * Loads control bar and timeline
    */
   loadControls() {
-    this.controls = new Controls(this.imgs);
+    this.controls = new Controls(this.conf, this.imgs);
     return this.controls.div;
   }
 
   /**
    * Loads stats bar with team information
    */
-  loadStats() {
-    this.stats = new Stats(this.imgs);
-    return this.stats.div;
+  loadSidebar() {
+    this.sidebar = new Sidebar(this.conf, this.imgs);
+    this.stats = this.sidebar.stats;
+    this.mapeditor = this.sidebar.mapeditor;
+    return this.sidebar.div;
   }
 
   /**
-   * Sets canvas size to maximum dimensions while maintaining the aspect ratio
+   * Loads canvas to display game world.
    */
-  setCanvasDimensions(world: GameWorld) {
-    const scale: number = 30; // arbitrary scaling factor
-
-    this.canvas.width = world.minCorner.absDistanceX(world.maxCorner) * scale;
-    this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
-
-    // looks weird if the window is tall and skinny instead of short and fat
-    this.canvas.style.height = "calc(100vh - 75px)";
+  loadGameArea() {
+    this.gamearea = new GameArea(this.conf, this.imgs, this.mapeditor.canvas);
+    this.sidebar.cb = () => {
+      this.gamearea.setCanvas();
+      this.controls.setControls();
+    };
+    return this.gamearea.div;
   }
 
   /**
@@ -271,7 +242,7 @@ export default class Client {
     const match = game.getMatch(this.currentMatch as number) as Match;
 
     // Reset the canvas
-    this.setCanvasDimensions(match.current);
+    this.gamearea.setCanvasDimensions(match.current);
 
     // Reset the stats bar
     let teamNames = new Array();
@@ -294,7 +265,8 @@ export default class Client {
       controls.setIndicatorString(1, `${strs[1]}`);
       controls.setIndicatorString(2, `${strs[2]}`);
     }
-    const renderer = new Renderer(this.canvas, this.imgs, this.conf, meta as Metadata, onRobotSelected);
+    const renderer = new Renderer(this.gamearea.canvas, this.imgs,
+      this.conf, meta as Metadata, onRobotSelected);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -332,11 +304,11 @@ export default class Client {
     };
     this.stats.onNextMatch = () => {
       console.log("NEXT MATCH");
-      
+
       if(this.currentGame < 0) {
         return; // Special case when deleting games
       }
-      
+
       const matchCount = this.games[this.currentGame as number].matchCount;
       if(this.currentMatch < matchCount - 1) {
         this.setMatch(this.currentMatch + 1);
@@ -348,11 +320,11 @@ export default class Client {
           // Do nothing, at the end
         }
       }
-      
+
     };
     this.stats.onPreviousMatch = () => {
       console.log("PREV MATCH");
-      
+
       if(this.currentMatch > 0) {
         this.setMatch(this.currentMatch - 1);
       } else {
@@ -363,10 +335,10 @@ export default class Client {
           // Do nothing, at the beginning
         }
       }
-      
+
     };
     this.stats.removeGame = (game: number) => {
-      
+
       if (game > this.currentGame) {
         this.games.splice(game, 1);
       } else if (this.currentGame == game) {
@@ -392,7 +364,7 @@ export default class Client {
         this.games.splice(game, 1);
         this.currentGame = game - 1;
       }
-          
+
       this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
     };
     this.stats.gotoMatch = (game: number, match: number) => {
@@ -410,6 +382,7 @@ export default class Client {
     }, false);
 
     // set key options
+    const conf = this.conf;
     document.onkeydown = function(event) {
       switch (event.keyCode) {
         case 80: // "p" - Pause/Unpause
@@ -425,13 +398,16 @@ export default class Client {
           controls.forward();
           break;
         case 72: // "h" - Toggle Health Bars
-          renderer.toggleHealthBars();
+          conf.healthBars = !conf.healthBars;
           break;
         case 67: // "c" - Toggle Circle Bots
-          renderer.toggleCircleBots();
+          conf.circleBots = !conf.circleBots;
           break;
         case 86: // "v" - Toggle Indicator Dots and Lines
-          renderer.toggleIndicatorStrings();
+          conf.indicators = !conf.indicators;
+          break;
+        case 66: // "b" - Toggle Interpolation
+          conf.interpolate = !conf.interpolate;
           break;
       }
     };
@@ -491,20 +467,20 @@ export default class Client {
         renderer.render(match.current,
                         match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
                         nextStep, lerp);
-        
+
         // UPDATE STATS HERE
         for (let team in meta.teams) {
           var teamID = meta.teams[team].teamID;
           var teamStats = match.current.stats.get(teamID);
           this.stats.setBullets(teamID, teamStats.bullets);
           this.stats.setVPs(teamID, teamStats.vps);
-          
+
           // Update each robot count
           for(var i = 0; i < 6; i++) { // TODO: We need a way to get the number of robot types that are robots
-              this.stats.setRobotCount(teamID, i, teamStats.robots[i]);
+            this.stats.setRobotCount(teamID, i, teamStats.robots[i]);
           }
         }
-        
+
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
         renderer.render(match.current,
@@ -513,7 +489,7 @@ export default class Client {
       }
 
       this.loopID = window.requestAnimationFrame(loop);
-      
+
     };
     this.loopID = window.requestAnimationFrame(loop);
   }

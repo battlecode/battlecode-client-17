@@ -1,17 +1,8 @@
-import * as imageloader from './imageloader';
+import {Config} from '../config';
+import * as cst from '../constants';
+import {AllImages} from '../imageloader';
 
 import {Game, schema} from 'battlecode-playback';
-
-const ARCHON = schema.BodyType.ARCHON;
-const GARDENER = schema.BodyType.GARDENER;
-const LUMBERJACK = schema.BodyType.LUMBERJACK;
-const SOLDIER = schema.BodyType.SOLDIER;
-const TANK = schema.BodyType.TANK;
-const SCOUT = schema.BodyType.SCOUT;
-const TREE_BULLET = schema.BodyType.TREE_BULLET;
-const TREE_NEUTRAL = schema.BodyType.TREE_NEUTRAL;
-
-const NUMBER_OF_TEAMS = 2;
 
 const hex: Object = {
   1: "#a62014",
@@ -28,20 +19,16 @@ const hex: Object = {
 */
 export default class Stats {
 
-  div: HTMLDivElement;
-  private images: imageloader.AllImages;
+  readonly div: HTMLDivElement;
+  private readonly images: AllImages;
 
-  // Keyboard options
-  private logo: HTMLDivElement;
-  private options: HTMLDivElement;
-  
   // Match Options
   private matches: HTMLDivElement;
 
   // Key is the team ID, folllowed by the robot/stat type
   private robotTds: Object = {};
   private statTds: Object = {};
-  
+
   // Callbacks initialized from outside Stats
   // Yeah, it's pretty gross :/
   onNextMatch: () => void;
@@ -52,67 +39,21 @@ export default class Stats {
   // Note: robot types and number of teams are currently fixed regardless of
   // match info. Keep in mind if we ever change these, or implement this less
   // statically.
-  readonly stats: string[] = ["Bullets", "Victory Points"];
-  readonly robots: schema.BodyType[] = [
-    ARCHON, GARDENER, LUMBERJACK, SOLDIER, TANK, SCOUT
+
+  private readonly stats: string[] = ["Bullets", "Victory Points"];
+  private readonly robots: schema.BodyType[] = [
+    cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT
   ];
 
-  constructor(images: imageloader.AllImages) {
+  constructor(conf: Config, images: AllImages) {
     this.images = images;
-    this.div = this.baseDiv();
-    this.logo = this.battlecodeLogo();
-    this.options = this.optionsDiv();
+
+    this.div = document.createElement("div");
     this.matches = this.matchViewer();
 
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
     this.initializeGame(teamNames, teamIDs);
-  }
-
-  /**
-   * Initializes the styles for the stats div
-   */
-  private baseDiv() {
-    let div = document.createElement("div");
-
-    // Positioning
-    div.style.height = "100%";
-    div.style.width = "300px";
-    div.style.position = "fixed";
-    div.style.zIndex = "1";
-    div.style.top = "0";
-    div.style.left = "0";
-    div.style.overflowX = "hidden";
-
-    // Inner style
-    div.style.backgroundColor = "#151515";
-    div.style.color = "white";
-    div.style.textAlign = "center";
-    div.style.fontSize = "16px";
-    div.style.fontFamily = "Graduate";
-
-    // Inner formatting
-    div.style.padding = "10px";
-
-    return div;
-  }
-
-  /**
-   * Battlecode logo or title, at the top of the stats bar
-   */
-  private battlecodeLogo() {
-    let logo: HTMLDivElement = document.createElement("div");
-    logo.style.fontWeight = "bold";
-    logo.style.fontSize = "40px";
-    logo.style.textAlign = "center";
-    logo.style.fontFamily = "Graduate";
-
-    logo.style.paddingTop = "15px";
-    logo.style.paddingBottom = "15px";
-
-    let text = document.createTextNode("Battlecode");
-    logo.appendChild(text);
-    return logo;
   }
 
   /**
@@ -142,7 +83,7 @@ export default class Stats {
     // Create the table row with the robot images
     let robotImages: HTMLTableRowElement = document.createElement("tr");
     for (let robot of this.robots) {
-      let robotName: string = this.bodyTypeToString(robot);
+      let robotName: string = cst.bodyTypeToString(robot);
       let td: HTMLTableCellElement = document.createElement("td");
       td.appendChild(this.images.robot[robotName][inGameID]);
       robotImages.appendChild(td);
@@ -189,101 +130,59 @@ export default class Stats {
     return table;
   }
 
-  private bodyTypeToString(bodyType: schema.BodyType) {
-    switch(bodyType) {
-      case ARCHON: return "archon";
-      case GARDENER: return "gardener";
-      case LUMBERJACK: return "lumberjack";
-      case SOLDIER: return "soldier";
-      case TANK: return "tank";
-      case SCOUT: return "scout";
-      default:
-        throw new Error("invalid body type");
-    }
-  }
-
-  private optionsDiv() {
-    let options = [
-      "LEFT - Skip/Seek Backward",
-      "RIGHT - Skip/Seek Forward",
-      "p - Pause/Unpause",
-      "o - Stop",
-      "h - Toggle Health Bars",
-      "c - Toggle Circle Bots",
-      "v - Toggle Indicator Dots/Lines"
-    ];
-
-    let div = document.createElement("div");
-    div.style.textAlign = "left";
-    div.style.fontFamily = "Tahoma, sans serif";
-    div.style.fontSize = "12px";
-    div.style.border = "1px solid #ddd";
-    div.style.padding = "10px";
-
-    let title = document.createElement("b");
-    title.appendChild(document.createTextNode("Keyboard Options"));
-    div.appendChild(title);
-
-    for (let option of options) {
-      div.appendChild(document.createElement("br"));
-      div.appendChild(document.createTextNode(option));
-    }
-    return div;
-  }
-  
   private matchViewer() {
-    
+
     let div = document.createElement("div");
     div.style.textAlign = "left";
     div.style.fontFamily = "Tahoma, sans serif";
     div.style.fontSize = "18px";
     div.style.border = "1px solid #ddd";
     div.style.padding = "10px";
-    
+
     let title = document.createElement("b");
     title.appendChild(document.createTextNode("Games"));
-    
+
     // Add buttons
     let next = document.createElement("button");
     next.setAttribute("class", "custom-button");
     next.setAttribute("type", "button");
     next.onclick = () => this.onNextMatch();
     next.appendChild(this.images.controls.matchForward);
-    
+
     let back = document.createElement("button");
     back.setAttribute("class", "custom-button");
     back.setAttribute("type", "button");
     back.onclick = () => this.onPreviousMatch();
     back.appendChild(this.images.controls.matchBackward);
-    
+
     let gameNum = document.createElement("span");
     gameNum.className += " gameNum";
-    
+
     title.appendChild(gameNum);
     title.appendChild(back);
     title.appendChild(next);
     div.appendChild(title);
     div.appendChild(document.createElement("br"));
-    
+
     return div;
-    
+
   }
-  
+
   refreshGameList(gameList: Array<Game>, activeGame: number, activeMatch: number) {
-    
+
     // Remove all games from the list
     while(this.matches.childNodes[2]){
       this.matches.removeChild(this.matches.childNodes[2]);
     }
-    
+
     console.log(this.matches.childNodes);
     this.matches.childNodes[0].childNodes[1].textContent = " (" + (activeGame + 1) + "/" + gameList.length + ")";
-    
+
     //for (let game of gameList) {
     for (var j = 0; j < gameList.length; j++) {
       let game = gameList[j];
       if(game != null) {
-        
+
         var metaData = game.meta;
         var matchCount = game.matchCount;
         var winner = game.winner;
@@ -292,7 +191,7 @@ export default class Stats {
         var vsString = document.createElement("div");
         var winnerString: HTMLSpanElement;
         if(metaData != null) {
-          
+
           for (let team in metaData.teams) {
               var teamName = document.createElement("span");
               teamName.className += team === "1" ? " red" : " blue";
@@ -303,11 +202,11 @@ export default class Stats {
                 winnerString = teamName;
               }
           }
-          
+
           if(vsString.lastChild != null) {
             vsString.removeChild(vsString.lastChild);
           }
-          
+
           var gameDiv = document.createElement("div");
           gameDiv.className += " gameDiv";
           var title = document.createElement("b");
@@ -318,13 +217,13 @@ export default class Stats {
           if(game == gameList[activeGame]) {
             gameDiv.appendChild(document.createTextNode("Playing match " + (activeMatch + 1) + "/" + matchCount));
           }
-          
+
           gameDiv.appendChild(document.createElement("br"));
 
           for (var i = 0; i < matchCount; i++) {
             var match = game.getMatch(i);
             var mapName = match.current.mapName;
-            
+
             var matchWinner = document.createElement("span");
             for (let team in metaData.teams) {
                 if(metaData.teams[team].teamID == match.winner) {
@@ -342,36 +241,36 @@ export default class Stats {
             matchWrapper.appendChild(matchWinner);
             matchWrapper.appendChild(matchEntry);
             matchWrapper.appendChild(document.createElement("br"));
-            
+
             if(j == activeGame && i == activeMatch) {
               matchWrapper.className = 'active-match';
             } else {
               matchWrapper.className = 'inactive-match';
-              
-              matchWrapper.onclick = (function(game, match, gotoMatch) { 
+
+              matchWrapper.onclick = (function(game, match, gotoMatch) {
                   return function(){ gotoMatch(game, match); }
               })(j,i, this.gotoMatch);
-              
+
             }
-            
+
             gameDiv.appendChild(matchWrapper);
 
           }
-          
+
           // Create remove button
           let remove = document.createElement("button");
           remove.setAttribute("class", "custom-button");
           remove.setAttribute("type", "button");
           remove.textContent = "Remove";
-          
-          remove.onclick = (function(game, removeGame) { 
+
+          remove.onclick = (function(game, removeGame) {
                   return function(){ removeGame(game); }
           })(j, this.removeGame);
-          
+
           gameDiv.appendChild(remove);
-          
+
           this.matches.appendChild(gameDiv);
-          
+
         }
       }
     }
@@ -387,9 +286,6 @@ export default class Stats {
     }
     this.robotTds = {};
     this.statTds = {};
-
-    // Add the battlecode logo
-    this.div.appendChild(this.logo);
 
     // Populate with new info
     // Add a section to the stats bar for each team in the match
@@ -432,7 +328,6 @@ export default class Stats {
     }
 
     this.div.appendChild(this.matches);
-    this.div.appendChild(this.options);
   }
 
   /**
