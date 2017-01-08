@@ -39,7 +39,6 @@ export default class MapEditor {
     xs: number[],
     ys: number[],
     radii: number[],
-    healths: number[],
     containedBullets: number[],
     containedBodies: schema.BodyType[]
   };
@@ -89,10 +88,6 @@ export default class MapEditor {
    */
   private addBodies(bodies: Map<number, MapUnit>, minCorner: Victor) {
 
-    function treeHealth(radius: number) {
-      return cst.NEUTRAL_TREE_HEALTH_RATE * radius;
-    }
-
     bodies.forEach((unit: MapUnit, id: number) => {
       if (unit.type === cst.TREE_NEUTRAL) {
         this.addTree(
@@ -100,7 +95,6 @@ export default class MapEditor {
           unit.loc.x + minCorner.x,
           unit.loc.y + minCorner.y,
           unit.radius,
-          treeHealth(unit.radius),
           unit.containedBullets,
           unit.containedBody
         );
@@ -119,13 +113,12 @@ export default class MapEditor {
   /**
    * Adds a tree to internal arrays
    */
-  private addTree(robotID: number, x: number, y: number, radius: number, health: number,
+  private addTree(robotID: number, x: number, y: number, radius: number,
     containedBullets: number, containedBody: schema.BodyType) {
     this.treesArray.robotIDs.push(robotID);
     this.treesArray.xs.push(x);
     this.treesArray.ys.push(y);
     this.treesArray.radii.push(radius);
-    this.treesArray.healths.push(health);
     this.treesArray.containedBullets.push(containedBullets);
     this.treesArray.containedBodies.push(containedBody);
   }
@@ -151,7 +144,6 @@ export default class MapEditor {
       xs: [],
       ys: [],
       radii: [],
-      healths: [],
       containedBullets: [],
       containedBodies: []
     };
