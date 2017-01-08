@@ -122,14 +122,18 @@ export default class Renderer {
     }
 
     for (let i = 0; i < length; i++) {
+      let x, y;
       if (nextStep && lerpAmount) {
         // Interpolated
-        xs[i] = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
-        ys[i] = ys[i] + (nextYs[i] - ys[i]) * lerpAmount;
+        x = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
+        y = ys[i] + (nextYs[i] - ys[i]) * lerpAmount;
+        realXs[i] = x;
+        realYs[i] = y;
+      } else {
+        // Not interpolated
+        x = xs[i];
+        y = ys[i];
       }
-
-      const x = xs[i]
-      const y = ys[i]
 
       const radius = radii[i];
       const team = teams[i];
@@ -170,7 +174,13 @@ export default class Renderer {
       this.drawHealthBar(x, y, radius, healths[i], maxHealths[i]);
     }
 
-    this.setIndicatorStringEventListener(world, xs, ys);
+    if (realXs && realYs) {
+      // Interpolated
+      this.setIndicatorStringEventListener(world, realXs, realYs);
+    } else {
+      // Not inteprolated
+      this.setIndicatorStringEventListener(world, xs, ys);
+    }
   }
 
   /**
