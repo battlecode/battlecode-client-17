@@ -13,6 +13,10 @@ import Renderer from './game/renderer';
 import TickCounter from './game/fps';
 import WebSocketListener from './websocket';
 
+// webpack magic
+// this loads the stylesheet and injects it into the dom
+require('./style.css');
+
 /**
  * The entrypoint to the battlecode client.
  *
