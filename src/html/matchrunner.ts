@@ -121,6 +121,7 @@ export default class MatchRunner {
     // Found the maps
     if (maps) {
       console.log(maps);
+      this.maps = new Array();
       // Create a checkbox for each map...
       for (let map of maps) {
         const checkbox = document.createElement("input");
@@ -169,10 +170,4 @@ export default class MatchRunner {
     }
     return maps;
   }
-
-
-
-
-
-
 }
