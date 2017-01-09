@@ -96,7 +96,11 @@ export default class MapEditor {
     button.type = "button";
     button.appendChild(document.createTextNode("Remove invalid units"));
     button.onclick = () => {
-      this.form.removeInvalidUnits();
+      let youAreSure = confirm(
+        "Are you sure? Continuing will permanently remove invalid units.");
+      if (youAreSure) {
+        this.form.removeInvalidUnits();
+      }
     };
     return button;
   }
