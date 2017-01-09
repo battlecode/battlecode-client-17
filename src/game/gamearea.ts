@@ -22,25 +22,9 @@ export default class GameArea {
     this.images = images;
     this.mapEditorCanvas = mapEditorCanvas;
 
-    // Positioning
-    this.div.style.width = "100%";
-    this.div.style.height = "100%";
-    this.div.style.position = "fixed";
-    this.div.style.top = "75px";
-    this.div.style.left = "320px";
-
-    // Style
-    this.div.style.background = "#333"
-    this.div.style.background = "-webkit-linear-gradient(#bbb, #333)"
-    this.div.style.background = "-o-linear-gradient(#bbb, #333)"
-    this.div.style.background = "-moz-linear-gradient(#bbb, #333)"
-    this.div.style.background = "linear-gradient(#bbb, #333)"
-
     // Create the canvas
     const wrapper: HTMLDivElement = document.createElement("div");
     wrapper.id = "canvas-wrapper";
-    wrapper.style.textAlign = "center";
-    wrapper.style.paddingRight = "320px";
     this.wrapper = wrapper;
 
     const canvas: HTMLCanvasElement = document.createElement('canvas');
