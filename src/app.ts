@@ -465,7 +465,8 @@ export default class Client {
       if (lastSelectedID !== undefined) {
         let bodies = match.current.bodies.arrays;
         let index = bodies.id.indexOf(lastSelectedID)
-        if (index === undefined) {
+        if (index === -1) {
+          // The body doesn't exist anymore so indexOf returns -1
           lastSelectedID = undefined;
         } else {
           let id = bodies.id[index];

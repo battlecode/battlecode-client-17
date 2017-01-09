@@ -43,7 +43,7 @@ export default class ScaffoldCommunicator {
     // scaffold/client/app
     const fromWinLin = path.dirname(path.dirname(appPath));
     // scaffold/Battlecode Client.app/Contents/Resources/app.asar
-    const fromMac = path.dirname(path.dirname(path.dirname(path.dirname(appPath))));
+    const fromMac = path.dirname(path.dirname(path.dirname(path.dirname(path.dirname(appPath)))));
 
     if (fs.existsSync(path.join(fromDev, GRADLE_WRAPPER))) {
       return fromDev;
@@ -95,6 +95,11 @@ export default class ScaffoldCommunicator {
         }
       }
 
+      if (maps.length === 0) {
+        console.log(stdout);
+        console.log(stderr);
+      }
+
       cb(null, maps);
     });
   }
@@ -103,7 +108,12 @@ export default class ScaffoldCommunicator {
    * Saves a map to the scaffold's maps/ folder.
    */
   saveMap(mapData: Uint8Array, mapName: string, cb: (err: Error | null) => void) {
-    fs.writeFile(path.join(this.scaffoldPath, 'maps', `${mapName}.bc17`),
+    const dir = path.join(this.scaffoldPath, 'maps');
+    if (!fs.existsSync(dir)){
+      fs.mkdirSync(dir);
+    }
+
+    fs.writeFile(path.join(this.scaffoldPath, 'maps', `${mapName}.map17`),
                  new Buffer(mapData),
                  cb);
   }

@@ -40,7 +40,7 @@ export default class Sidebar {
     this.images = images;
     this.stats = new Stats(conf, images);
     this.console = new Console(conf);
-    this.mapeditor = new MapEditor(conf, images);
+    this.mapeditor = new MapEditor(conf, images, scaffold);
     this.help = this.initializeHelp();
     this.conf = conf;
     this.onkeydownControls = onkeydownControls
