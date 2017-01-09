@@ -229,12 +229,15 @@ export default class Client {
     // keep around to avoid reallocating
     const nextStep = new NextStep();
 
+    // Last selected robot ID to display extra info
+    const controls = this.controls;
+    let lastSelectedID: number | undefined = undefined;
+    const onRobotSelected = (id: number) => {
+      lastSelectedID = id;
+    }
+
     // Configure renderer for this match
     // (radii, etc. may change between matches)
-    const controls = this.controls;
-    const onRobotSelected = function(id: number): void {
-      console.log(`Robot ${id} selected, do something with it!`);
-    }
     const renderer = new Renderer(this.gamearea.canvas, this.imgs,
       this.conf, meta as Metadata, onRobotSelected);
 
@@ -416,6 +419,22 @@ export default class Client {
       // run simulation
       // this may look innocuous, but it's a large chunk of the run time
       match.compute(5 /* ms */);
+
+      // update the info string in controls
+      if (lastSelectedID !== undefined) {
+        let bodies = match.current.bodies.arrays;
+        let index = bodies.id.indexOf(lastSelectedID)
+        if (index === undefined) {
+          lastSelectedID = undefined;
+        } else {
+          let id = bodies.id[index];
+          let x = bodies.x[index];
+          let y = bodies.y[index];
+          let health = bodies.health[index];
+          let maxHealth = bodies.maxHealth[index];
+          this.controls.setInfoString(id, x, y, health, maxHealth);
+        }
+      }
 
       lastTime = curTime;
 

@@ -28,6 +28,8 @@ export const MED_SPEED_THRESH = (1.5*1.5) - .00001;
 // Map editor canvas parameters
 export const DELTA = .0001;
 export const ARCHON_RADIUS = 2;
+export const MIN_TREE_RADIUS = 0.5;
+export const MAX_TREE_RADIUS = 10;
 export const MIN_DIMENSION = 30;
 export const MAX_DIMENSION = 80;
 

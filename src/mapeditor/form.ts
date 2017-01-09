@@ -86,8 +86,9 @@ export default class MapEditorForm {
         this.setArchonForm(loc);
       } else {
         let radius = this.getMaxRadius(loc.x, loc.y);
-        if (!isNaN(parseFloat(this.radiusT.value))) {
-          radius = Math.min(parseFloat(this.radiusT.value), radius);
+        let formRadius = parseFloat(this.radiusT.value);
+        if (!isNaN(formRadius) && formRadius >= cst.MIN_TREE_RADIUS) {
+          radius = Math.min(formRadius, radius);
         }
         this.setTreeForm(loc, radius);
       }
@@ -442,7 +443,7 @@ export default class MapEditorForm {
       let x: number = parseFloat(this.xT.value);
       let y: number = parseFloat(this.yT.value);
       let id: number = parseInt(this.idT.textContent || "-1");
-      value = Math.max(value, 0);
+      value = Math.max(value, cst.MIN_TREE_RADIUS);
       value = Math.min(value, this.getMaxRadius(x, y));
       this.radiusT.value = isNaN(value) ? "" : String(value);
     };
@@ -559,9 +560,14 @@ export default class MapEditorForm {
     maxRadius = Math.max(0, maxRadius - cst.DELTA);
     if (archon) {
       if (this.onSymmetricLine(new Victor(x, y))) return 0;
-      return maxRadius >= 2 ? 2 : 0;
+      return maxRadius >= cst.ARCHON_RADIUS ? cst.ARCHON_RADIUS : 0;
     } else {
-      return maxRadius;
+      if (maxRadius < cst.MIN_TREE_RADIUS) {
+        // No tree can go here
+        return 0;
+      } else {
+        return Math.min(maxRadius, cst.MAX_TREE_RADIUS);
+      }
     }
   }
 
