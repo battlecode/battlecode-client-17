@@ -82,11 +82,11 @@ form {
     height: 100%;
     margin: 0px;
 }
-      
+
 input[type='file'] {
     display: none;
 }
-      
+
 .custom-button {
     background-color: #bbb;
     border-color: #ddd;
@@ -100,7 +100,7 @@ input[type='file'] {
     margin: .1rem;
     border: 1px solid transparent;
 }
-      
+
 .custom-button:hover {
     background-color: #bbb
 }
@@ -201,4 +201,17 @@ input[type='file'] {
     font-family: "Graduate";
     padding-top: 15px;
     padding-bottom: 15px;
+}
+
+#console {
+    border-radius: 10px;
+    background-color: #333;
+    color: #46ff00;
+    padding: 15px;
+    margin: 0px 5px;
+    font-family: "Lucida Console", monospace;
+    font-size: 14px;
+    height: 70vh; /* HELP: I'd prefer this be calc(100vh - ?px) but I can't get it to work */
+    text-align: left;
+    overflow: scroll;
 }
