@@ -61,10 +61,7 @@ export default class Stats {
    */
   private teamHeaderNode(teamName: string, inGameID: number) {
     let teamHeader: HTMLDivElement = document.createElement("div");
-    teamHeader.style.padding = "14px";
-    teamHeader.style.fontSize = "20px";
-    teamHeader.style.marginTop = "5px";
-    teamHeader.style.marginBottom = "10px";
+    teamHeader.className += ' teamHeader';
 
     let teamNameNode = document.createTextNode(teamName);
     teamHeader.style.backgroundColor = hex[inGameID];
@@ -113,15 +110,12 @@ export default class Stats {
 
       let tdLabel: HTMLTableCellElement = document.createElement("td");
       tdLabel.appendChild(document.createTextNode(stat));
-      tdLabel.style.fontFamily = "Graduate";
+      tdLabel.className += ' tdLabel';
       tdLabel.style.color = hex[inGameID];
-      tdLabel.style.textAlign = "right";
-      tdLabel.style.padding = "5px";
       tr.appendChild(tdLabel);
 
       let tdCount: HTMLTableCellElement = this.statTds[teamID][stat];
-      tdCount.style.paddingLeft = "10px";
-      tdCount.style.textAlign = "left";
+      tdCount.className += ' tdCount';
       tr.appendChild(tdCount);
 
       table.appendChild(tr);
@@ -133,11 +127,8 @@ export default class Stats {
   private matchViewer() {
 
     let div = document.createElement("div");
-    div.style.textAlign = "left";
+    div.id = "matchViewer";
     div.style.fontFamily = "Tahoma, sans serif";
-    div.style.fontSize = "18px";
-    div.style.border = "1px solid #ddd";
-    div.style.padding = "10px";
 
     let title = document.createElement("b");
     title.appendChild(document.createTextNode("Games"));

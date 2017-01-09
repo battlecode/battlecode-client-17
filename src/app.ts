@@ -44,7 +44,6 @@ export default class Client {
   readonly ctx: CanvasRenderingContext2D;
 
   // HTML components
-  style: HTMLStyleElement;
   imgs: imageloader.AllImages;
 
   controls: Controls; // Upper controls bar
@@ -73,8 +72,6 @@ export default class Client {
     this.root.id = "root";
     this.conf = config.defaults(conf);
 
-    this.loadStyles();
-
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
       this.root.appendChild(this.loadControls());
@@ -91,46 +88,6 @@ export default class Client {
         this.conf.pollEvery
       );
     }
-  }
-
-  /**
-   * Sets css of root element and load fonts
-   */
-  loadStyles() {
-    // import fonts
-    let fonts: HTMLLinkElement = document.createElement("link");
-    fonts.setAttribute("href", "https://fonts.googleapis.com/css?family=Graduate");
-    fonts.setAttribute("rel", "stylesheet");
-    this.root.appendChild(fonts);
-
-    // CSS stylesheet
-    this.style = document.createElement("style");
-    let css = "#root {\
-      font-family: tahoma;\
-      font-size: 14px;\
-      width: 100%;\
-      height: 100%;\
-      margin: 0px;}\
-      \
-      input[type='file'] {display: none;}\
-      \
-      .custom-button {\
-      background-color: #bbb;\
-      border-color: #ddd;\
-      display: inline-block;\
-      vertical-align: middle;\
-      cursor: pointer;\
-      white-space: nowrap;\
-      text-align: center;\
-      line-height: 1.25;\
-      padding: .4rem .8rem;\
-      margin: .1rem;\
-      border: 1px solid transparent;}\
-      \
-      .custom-button:hover {background-color: #bbb}\
-      .custom-button:active, button:target {background-color: #999;}";
-    this.style.appendChild(document.createTextNode(css));
-    this.root.appendChild(this.style);
   }
 
   /**

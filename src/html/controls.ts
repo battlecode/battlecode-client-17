@@ -147,27 +147,14 @@ export default class Controls {
    */
   private baseDiv() {
     let div = document.createElement("div");
-
-    // Positioning
-    div.style.width = "100%";
-    div.style.height = "55px";
-    div.style.marginLeft = "310px";
-    div.style.position = "fixed";
-    div.style.zIndex = "0.5";
-    div.style.top = "0";
-    div.style.overflowX = "hidden";
-    div.style.overflowY = "hidden";
-
-    // Inner style and formatting
-    div.style.color = "white";
-    div.style.backgroundColor = "#444";
-    div.style.padding = "10px";
+    div.id = "baseDiv";
 
     return div;
   }
 
   private timeline() {
     let canvas = document.createElement("canvas");
+    canvas.id = "timelineCanvas";
     canvas.width = 400;
     canvas.height = 32;
     canvas.style.backgroundColor = "#222";

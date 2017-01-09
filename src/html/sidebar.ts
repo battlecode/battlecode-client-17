@@ -90,10 +90,8 @@ export default class Sidebar {
     directory of your scaffold.`;
 
     const div = document.createElement("div");
-    div.style.textAlign = "left";
+    div.id = "helpDiv";
     div.style.fontFamily = "Tahoma, sans serif";
-    div.style.fontSize = "12px";
-    div.style.padding = "10px";
 
     div.innerHTML = innerHTML;
     return div;
@@ -103,24 +101,9 @@ export default class Sidebar {
    * Initializes the styles for the sidebar div
    */
   private loadStyles(): void {
-    // Positioning
-    this.div.style.height = "100%";
-    this.div.style.width = "300px";
-    this.div.style.position = "fixed";
-    this.div.style.zIndex = "1";
-    this.div.style.top = "0";
-    this.div.style.left = "0";
-    this.div.style.overflowX = "hidden";
-
-    // Inner style
-    this.div.style.backgroundColor = "#151515";
-    this.div.style.color = "white";
-    this.div.style.textAlign = "center";
-    this.div.style.fontSize = "16px";
-    this.div.style.fontFamily = "Graduate";
-
-    // Inner formatting
-    this.div.style.padding = "10px";
+    
+    this.div.id = "sidebar";
+    
   }
 
   /**
@@ -128,13 +111,7 @@ export default class Sidebar {
    */
   private battlecodeLogo(): HTMLDivElement {
     let logo: HTMLDivElement = document.createElement("div");
-    logo.style.fontWeight = "bold";
-    logo.style.fontSize = "40px";
-    logo.style.textAlign = "center";
-    logo.style.fontFamily = "Graduate";
-
-    logo.style.paddingTop = "15px";
-    logo.style.paddingBottom = "15px";
+    logo.id = "logo";
 
     let text = document.createTextNode("Battlecode");
     logo.appendChild(text);
