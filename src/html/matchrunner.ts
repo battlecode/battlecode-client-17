@@ -11,6 +11,7 @@ export default class MatchRunner {
 
   // The public div
   readonly div: HTMLDivElement;
+  private loading: Text;
 
   // Options
   private readonly conf: Config;
@@ -28,6 +29,7 @@ export default class MatchRunner {
   constructor(conf: Config, scaffold: ScaffoldCommunicator) {
     this.conf = conf;
     this.scaffold = scaffold;
+    this.loading = document.createTextNode("Loading...");
     this.div = this.basediv();
 
     this.startForm();
@@ -71,6 +73,7 @@ export default class MatchRunner {
 
     // Map selector
     this.mapsContainer.appendChild(document.createTextNode("Select a map:"));
+    this.mapsContainer.appendChild(this.loading);
     this.mapsContainer.appendChild(document.createElement("br"));
     this.div.appendChild(this.mapsContainer);
 
@@ -121,6 +124,7 @@ export default class MatchRunner {
     // Found the maps
     if (maps) {
       console.log(maps);
+      this.mapsContainer.removeChild(this.loading);
       this.maps = new Array();
       // Create a checkbox for each map...
       for (let map of maps) {
