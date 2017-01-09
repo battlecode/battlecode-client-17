@@ -74,7 +74,9 @@ export default class Sidebar {
     <i>From the client:</i> Upload a <b>.bc17</b> file from your computer by
     clicking the + button in the top-right corner. Use the control buttons to
     navigate the match.<br>
-    <i>From the scaffold:</i> TODO<br>
+    <i>From the scaffold:</i> Click 'Run Match' above, and select players and 
+    maps to create and view matches. Note that it may take a few seconds for the
+    matches to be run and displayed.<br>
     <br>
     <b class="blue">Keyboard Shortcuts</b><br>
     LEFT - Skip/Seek Backward<br>
