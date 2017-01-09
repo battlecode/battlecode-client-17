@@ -108,7 +108,7 @@ export default class ScaffoldCommunicator {
       fs.mkdirSync(dir);
     }
 
-    fs.writeFile(path.join(this.scaffoldPath, 'maps', `${mapName}.bc17`),
+    fs.writeFile(path.join(this.scaffoldPath, 'maps', `${mapName}.map17`),
                  new Buffer(mapData),
                  cb);
   }
