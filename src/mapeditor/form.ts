@@ -444,7 +444,7 @@ export default class MapEditorForm {
       let y: number = parseFloat(this.yT.value);
       let id: number = parseInt(this.idT.textContent || "-1");
       value = Math.max(value, cst.MIN_TREE_RADIUS);
-      value = Math.min(value, this.getMaxRadius(x, y));
+      value = Math.min(value, this.getMaxRadius(x, y, id));
       this.radiusT.value = isNaN(value) ? "" : String(value);
     };
     // Archon must not overlap with other units
@@ -458,9 +458,9 @@ export default class MapEditorForm {
 
     this.bulletsT.onchange = () => {
       // Bullets must be a number >= 0
-      let value: number = parseFloat(this.yA.value);
+      let value: number = parseFloat(this.bulletsT.value);
       value = Math.max(value, 0);
-      this.yT.value = isNaN(value) ? "" : String(value);
+      this.bulletsT.value = isNaN(value) ? "" : String(value);
     };
 
     this.addbutton.onclick = () => {
