@@ -1,4 +1,4 @@
-import {Config} from '../config';
+import {Config, Mode} from '../config';
 import {AllImages} from '../imageloader';
 
 import {GameWorld} from 'battlecode-playback';
@@ -54,16 +54,21 @@ export default class GameArea {
    * or map editor mode
    */
   setCanvas = () => {
-    // Clear the game area
+    const mode = this.conf.mode;
+
+    // The canvas can be anything in help mode
+    if (mode === Mode.HELP) return;
+
+    // Otherwise clear the canvas area...
     while (this.wrapper.firstChild) {
       this.wrapper.removeChild(this.wrapper.firstChild);
     }
 
-    // Update with the correct canvas
-    if (this.conf.inGameMode) {
-      this.wrapper.appendChild(this.canvas);
-    } else {
+    // ...and add the correct one
+    if (mode === Mode.MAPEDITOR) {
       this.wrapper.appendChild(this.mapEditorCanvas);
+    } else if (mode === Mode.CONSOLE || mode === Mode.GAME) {
+      this.wrapper.appendChild(this.canvas);
     }
   };
 }

@@ -1,4 +1,4 @@
-import {Config} from '../config';
+import {Config, Mode} from '../config';
 import * as imageloader from '../imageloader';
 import * as cst from '../constants';
 
@@ -177,13 +177,18 @@ export default class Controls {
    * or map editor mode
    */
   setControls = () => {
-    // Clear the game area
+    const mode = this.conf.mode;
+
+    // The controls can be anything in help mode
+    if (mode === Mode.HELP) return;
+
+    // Otherwise clear the controls...
     while (this.div.firstChild) {
       this.div.removeChild(this.div.firstChild);
     }
 
-    // Add the controls bar back if we are in game mode
-    if (this.conf.inGameMode) {
+    // ...and add the correct thing
+    if (mode === Mode.CONSOLE || mode === Mode.GAME) {
       this.div.appendChild(this.wrapper);
     }
   };

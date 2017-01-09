@@ -1,7 +1,8 @@
-import {Config} from '../config';
+import {Config, Mode} from '../config';
 import {AllImages} from '../imageloader';
 
 import Stats from './stats';
+import Console from './console';
 import MapEditor from '../mapeditor/main';
 
 export default class Sidebar {
@@ -13,6 +14,7 @@ export default class Sidebar {
 
   // Different modes
   readonly stats: Stats;
+  readonly console: Console;
   readonly mapeditor: MapEditor;
   private readonly help: HTMLDivElement;
 
@@ -32,6 +34,7 @@ export default class Sidebar {
     this.innerDiv = document.createElement("div");
     this.images = images;
     this.stats = new Stats(conf, images);
+    this.console = new Console(conf);
     this.mapeditor = new MapEditor(conf, images);
     this.help = this.initializeHelp();
     this.conf = conf;
@@ -40,8 +43,10 @@ export default class Sidebar {
     // Initialize div structure
     this.loadStyles();
     this.div.appendChild(this.battlecodeLogo());
-    this.div.appendChild(this.modeButton());
-    this.div.appendChild(this.helpButton());
+    this.div.appendChild(this.modeButton(Mode.GAME, "Game"));
+    this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
+    this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
+    this.div.appendChild(this.modeButton(Mode.HELP, "Help"));
     this.div.appendChild(document.createElement("br"));
     this.div.appendChild(document.createElement("br"));
     this.div.appendChild(this.innerDiv);
@@ -106,9 +111,9 @@ export default class Sidebar {
    * Initializes the styles for the sidebar div
    */
   private loadStyles(): void {
-    
+
     this.div.id = "sidebar";
-    
+
   }
 
   /**
@@ -123,23 +128,12 @@ export default class Sidebar {
     return logo;
   }
 
-  private modeButton(): HTMLButtonElement {
+  private modeButton(mode: Mode, text: string): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";
-    button.innerHTML = "Map Editor";
+    button.innerHTML = text;
     button.onclick = () => {
-      this.conf.inGameMode = !this.conf.inGameMode;
-      this.setSidebar();
-    };
-    return button;
-  }
-
-  private helpButton(): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.innerHTML = "Help";
-    button.onclick = () => {
-      this.conf.inHelpMode = !this.conf.inHelpMode;
+      this.conf.mode = mode;
       this.setSidebar();
     };
     return button;
@@ -155,30 +149,39 @@ export default class Sidebar {
     }
 
     // Update the div and set the corret onkeydown events
-    if (this.conf.inHelpMode) {
-      this.innerDiv.appendChild(this.help);
-    } else if (this.conf.inGameMode) {
-      this.innerDiv.appendChild(this.stats.div);
-      document.onkeydown = (event) => {
-        this.onkeydownControls(event);
-        switch (event.keyCode) {
-          case 72: // "h" - Toggle Health Bars
-          this.conf.healthBars = !this.conf.healthBars;
-          break;
-          case 67: // "c" - Toggle Circle Bots
-          this.conf.circleBots = !this.conf.circleBots;
-          break;
-          case 86: // "v" - Toggle Indicator Dots and Lines
-          this.conf.indicators = !this.conf.indicators;
-          break;
-          case 66: // "b" - Toggle Interpolation
-          this.conf.interpolate = !this.conf.interpolate;
-          break;
-        }
-      };
-    } else {
-      this.innerDiv.appendChild(this.mapeditor.div);
-      document.onkeydown = this.mapeditor.onkeydown();
+    switch (this.conf.mode) {
+      case Mode.GAME:
+        this.innerDiv.appendChild(this.stats.div);
+        // Reset the onkeydown event listener
+        document.onkeydown = (event) => {
+          this.onkeydownControls(event);
+          switch (event.keyCode) {
+            case 72: // "h" - Toggle Health Bars
+            this.conf.healthBars = !this.conf.healthBars;
+            break;
+            case 67: // "c" - Toggle Circle Bots
+            this.conf.circleBots = !this.conf.circleBots;
+            break;
+            case 86: // "v" - Toggle Indicator Dots and Lines
+            this.conf.indicators = !this.conf.indicators;
+            break;
+            case 66: // "b" - Toggle Interpolation
+            this.conf.interpolate = !this.conf.interpolate;
+            break;
+          }
+        };
+        break;
+      case Mode.HELP:
+        this.innerDiv.appendChild(this.help);
+        break;
+      case Mode.MAPEDITOR:
+        this.innerDiv.appendChild(this.mapeditor.div);
+        // Reset the onkeydown event listener
+        document.onkeydown = this.mapeditor.onkeydown();
+        break;
+      case Mode.CONSOLE:
+        this.innerDiv.appendChild(this.console.div);
+        break;
     }
 
     this.cb();

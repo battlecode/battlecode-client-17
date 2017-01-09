@@ -20,7 +20,7 @@ export interface Config {
 
   /**
    * Turns per second.
-   * 
+   *
    * (DISTINCT from fps!)
    */
   readonly defaultTPS: number;
@@ -56,14 +56,19 @@ export interface Config {
   indicators: boolean;
 
   /**
-   * True for game mode, false for map editor mode
+   * The mode of the game
    */
-  inGameMode: boolean;
+  mode: Mode;
+}
 
-  /**
-   * Whether to show help information in the stats bar
-   */
-  inHelpMode: boolean;
+/**
+ * Different game modes that determine what is displayed on the client
+ */
+export enum Mode {
+  GAME,
+  HELP,
+  MAPEDITOR,
+  CONSOLE
 }
 
 /**
@@ -83,7 +88,6 @@ export function defaults(supplied?: any): Config {
     healthBars: supplied.healthBars || true,
     circleBots: supplied.circleBots || false,
     indicators: supplied.indicators || true,
-    inGameMode: supplied.inGameMode || true,
-    inHelpMode: supplied.inHelpMode || false
+    mode: supplied.mode || Mode.GAME
   };
 }
