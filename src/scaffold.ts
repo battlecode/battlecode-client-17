@@ -110,21 +110,13 @@ export default class ScaffoldCommunicator {
 
   /**
    * Run a match.
+   *
+   * Don't show the logs to the user unless there's an error; the relevant stuff will be included in the match file.
+   *
+   * TODO what if the server hangs?
    */
-  runMatch(teamA: string, teamB: string, maps: string[], onOut: (data: string) => void, onErr: (data: string) => void, onExit: (code: number) => void) {
-    const process = child_process.spawn(
-      `${this.wrapperPath}`,
-      [
-        `run`,
-        `-PteamA=${teamA}`,
-        `-PteamB=${teamB}`,
-        `-Pmaps=${maps.join(',')}`
-      ],
-      {cwd: this.scaffoldPath}
-    );
-
-    process.stdout.on('data', onOut);
-    process.stderr.on('data', onOut);
-    process.on('exit', onExit);
+  runMatch(teamA: string, teamB: string, maps: string[], cb: (err: Error | null, stdout: string, stderr: string) => void) {
+      child_process.exec(`"${this.wrapperPath}" run -PteamA=${teamA} -PteamB=${teamB} -Pmaps=${maps.join(',')}`,
+                        {cwd: this.scaffoldPath}, cb);
   }
 }
