@@ -11,7 +11,6 @@
     "prod": "webpack",
     "watch": "echo '--- open localhost:8080 in your browser ---' && webpack-dev-server --env.dev",
     "electron": "webpack --env.electron --env.dev && electron .",
-    "prod-electron-test": "webpack --env.electron && build --dir -mwl",
     "prod-electron": "webpack --env.electron && build -mwl"
   },
   "repository": {
@@ -70,14 +69,14 @@
       }
     ],
     "mac": {
-      "target": ["dmg"],
+      "target": ["dir"],
       "category": "public.app-category.games"
     },
     "win": {
-      "target": ["zip"]
+      "target": ["dir"]
     },
     "linux": {
-      "target": ["zip"]
+      "target": ["dir"]
     }
   }
 }
