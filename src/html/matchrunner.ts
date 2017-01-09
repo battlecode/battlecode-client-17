@@ -11,6 +11,8 @@ export default class MatchRunner {
 
   // The public div
   readonly div: HTMLDivElement;
+  private loadingMaps: Text;
+  private loadingMatch: Text;
 
   // Options
   private readonly conf: Config;
@@ -28,6 +30,8 @@ export default class MatchRunner {
   constructor(conf: Config, scaffold: ScaffoldCommunicator) {
     this.conf = conf;
     this.scaffold = scaffold;
+    this.loadingMaps = document.createTextNode("Loading maps... please wait a few seconds.");
+    this.loadingMatch = document.createTextNode("Loading match... please wait a few seconds.");
     this.div = this.basediv();
 
     this.startForm();
@@ -42,7 +46,7 @@ export default class MatchRunner {
    */
   private basediv(): HTMLDivElement {
     let div = document.createElement("div");
-    div.id = "matchrunner";
+    div.id = "matchRunner";
     return div;
   }
 
@@ -70,7 +74,8 @@ export default class MatchRunner {
     this.div.appendChild(divB);
 
     // Map selector
-    this.mapsContainer.appendChild(document.createTextNode("Select a map:"));
+    this.mapsContainer.appendChild(document.createTextNode("Select a map: "));
+    this.mapsContainer.appendChild(this.loadingMaps);
     this.mapsContainer.appendChild(document.createElement("br"));
     this.div.appendChild(this.mapsContainer);
 
@@ -121,6 +126,7 @@ export default class MatchRunner {
     // Found the maps
     if (maps) {
       console.log(maps);
+      this.mapsContainer.removeChild(this.loadingMaps);
       this.maps = new Array();
       // Create a checkbox for each map...
       for (let map of maps) {
@@ -141,7 +147,10 @@ export default class MatchRunner {
    * If the scaffold can run a match, add the functionality to the run button
    */
   private run = () => {
-    const cb = (err: Error | null, stdout: string, stderr: string) => {};
+    this.div.appendChild(this.loadingMatch);
+    const cb = (err: Error | null, stdout: string, stderr: string) => {
+      this.div.removeChild(this.loadingMatch);
+    };
     this.scaffold.runMatch(
       this.getTeamA(),
       this.getTeamB(),

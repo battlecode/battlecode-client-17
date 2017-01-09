@@ -3,6 +3,7 @@ import * as cst from '../constants';
 import {AllImages} from '../imageloader';
 import MapEditorForm from './form';
 import {MapUnit} from './renderer';
+import ScaffoldCommunicator from '../scaffold';
 
 import {schema, flatbuffers} from 'battlecode-playback';
 
@@ -25,6 +26,9 @@ export default class MapEditor {
   // Options
   private readonly conf: Config;
 
+  // Scaffold
+  private readonly scaffold: ScaffoldCommunicator | null;
+
   // For storing map information
   private bodiesArray: {
     robotIDs: number[],
@@ -43,9 +47,10 @@ export default class MapEditor {
     containedBodies: schema.BodyType[]
   };
 
-  constructor(conf: Config, images: AllImages) {
+  constructor(conf: Config, images: AllImages, scaffold: ScaffoldCommunicator | null) {
     this.canvas = document.createElement("canvas");
     this.form = new MapEditorForm(conf, images, this.canvas);
+    this.scaffold = scaffold;
     this.div = this.basediv();
     this.images = images;
     this.conf = conf;
@@ -110,9 +115,27 @@ export default class MapEditor {
     button.id = "export";
     button.type = "button";
     button.appendChild(document.createTextNode("EXPORT!"));
+
     button.onclick = () => {
-      if (this.form.isValid()) this.exportFile();
-    };
+      if (!this.form.isValid()) return;
+
+      let name = this.form.name();
+      let data: Uint8Array | undefined = this.generateMap();
+
+      if (data) {
+        if (process.env.ELECTRON && this.scaffold) {
+          this.scaffold.saveMap(data, name, (err: Error | null) => {
+            if (err) {
+              console.log(err);
+            } else {
+              alert("Good to go!");
+            }
+          });
+        } else {
+          this.exportFile(data, `${name}.map17`);
+        }
+      }
+    }
     return button;
   }
 
@@ -253,10 +276,11 @@ export default class MapEditor {
     return builder.asUint8Array();
   }
 
-  private exportFile() {
-    let fileName = `${this.form.name()}.map17`;
+  /**
+   * When there isn't a scaffold, let the user download the file
+   */
+  private exportFile(data: Uint8Array, fileName: string) {
     let mimeType = "application/octet-stream";
-    let data: Uint8Array | undefined = this.generateMap();
 
     if (data != undefined) {
       let blob = new Blob([data], { type: mimeType });
