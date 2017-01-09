@@ -103,6 +103,11 @@ export default class ScaffoldCommunicator {
    * Saves a map to the scaffold's maps/ folder.
    */
   saveMap(mapData: Uint8Array, mapName: string, cb: (err: Error | null) => void) {
+    const dir = path.join(this.scaffoldPath, 'maps');
+    if (!fs.existsSync(dir)){
+      fs.mkdirSync(dir);
+    }
+
     fs.writeFile(path.join(this.scaffoldPath, 'maps', `${mapName}.bc17`),
                  new Buffer(mapData),
                  cb);
