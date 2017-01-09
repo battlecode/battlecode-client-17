@@ -102,7 +102,6 @@ export default class MapEditorForm {
    */
   private initialDiv(): HTMLDivElement {
     const div: HTMLDivElement = document.createElement("div");
-    div.id = "mapEditor";
 
     div.appendChild(this.createHeaderForm());
     div.appendChild(this.createSymmetryForm());
@@ -113,6 +112,8 @@ export default class MapEditorForm {
 
     div.appendChild(this.treeForm);
     div.appendChild(this.createFormButtons());
+
+    div.appendChild(document.createElement("br"));
     return div;
   }
 
@@ -331,7 +332,8 @@ export default class MapEditorForm {
     bullets.appendChild(bulletsT);
 
     // Tree body
-    const types = [cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT];
+    const types = [cst.NONE, cst.ARCHON, cst.GARDENER, cst.LUMBERJACK,
+      cst.SOLDIER, cst.TANK, cst.SCOUT];
     let bodyT: HTMLSelectElement = document.createElement("select");
     body.appendChild(document.createTextNode("Body:"));
     body.appendChild(bodyT);
@@ -385,17 +387,6 @@ export default class MapEditorForm {
     this.deletebutton = deletebutton;
     this.addbutton = addbutton;
 
-    // Quick add and delete mousedown events
-    document.onkeydown = (event) => {
-      switch (event.keyCode) {
-        case 83: // "s" - Set (Add/Update)c
-        this.addbutton.click();
-        break;
-        case 68: // "d" - Delete
-        this.deletebutton.click();
-        break;
-      }
-    };
     return buttons;
   }
 
@@ -490,7 +481,7 @@ export default class MapEditorForm {
         y = parseFloat(this.yA.value);
         radius = parseFloat(this.radiusA.value);
         bullets = 0;
-        body = cst.ARCHON; // Arbitrary
+        body = cst.NONE;
         type = cst.ARCHON;
       }
 
@@ -612,7 +603,7 @@ export default class MapEditorForm {
   /**
    * Re-renders the canvas based on the parameters of the map editor.
    */
-  private render() {
+  render() {
     this.symmetricBodies = this.getSymmetricBodies();
     this.renderer.render(this.width(), this.height(), this.originalBodies, this.symmetricBodies);
   }
@@ -675,18 +666,44 @@ export default class MapEditorForm {
     return symmetricBodies;
   }
 
+   /**
+   * Adds the current unit to the map
+   */
+  addToMap(): void {
+    return this.addbutton.click();
+  }
+
+  /**
+   * Deletes the current unit from the map
+   */
+  deleteFromMap(): void {
+    return this.deletebutton.click();
+  }
+
+  /**
+   * The name of the map currently in the field
+   */
   name(): string {
     return this.nameGM.value;
   }
 
+  /**
+   * The width of the map currently in the field
+   */
   width(): number {
     return parseFloat(this.widthGM.value);
   }
 
+  /**
+   * The height of the map currently in the field
+   */
   height(): number {
     return parseFloat(this.heightGM.value);
   }
 
+  /**
+   * The bodies (trees and archons) currently on the map
+   */
   bodies(): Map<number, MapUnit> {
     let map = new Map<number, MapUnit>();
 
@@ -703,13 +720,16 @@ export default class MapEditorForm {
     return map;
   }
 
+  /**
+   * The symmetry of the map currently selected
+   */
   symmetry(): Symmetry {
     return parseInt(this.symmetryGM.options[this.symmetryGM.selectedIndex].value);
   }
 
   /**
-   * Whether the status of the map. If isValid() returns MapStatus.VALID, the
-   * map editor is valid and ready to generate a map.
+   * Whether the map is valid. If the map is valid, then the map eidtor is
+   * ready to generate a map.
    */
   isValid(): boolean {
     let errors = new Array();
@@ -732,9 +752,8 @@ export default class MapEditorForm {
     }
 
     // Bodies must be on the map
-    for (let key in this.originalBodies.keys) {
-      console.log(key);
-    }
+    // Invariant: bodies in originalBodies don't overlap with each other, and
+    //            bodies in symmetricBodies don't overlap with each other
     this.originalBodies.forEach((unit: MapUnit, id: number) => {
       let x = unit.loc.x;
       let y = unit.loc.y;
@@ -760,5 +779,64 @@ export default class MapEditorForm {
 
     // It's good :)
     return true;
+  }
+
+  removeInvalidUnits(): void {
+    let actions = new Array();
+
+    // If there are too many archons, remove them until there aren't
+    let archonIDs = new Array<number>();
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.ARCHON) {
+        archonIDs.push(id);
+      }
+    });
+    while (archonIDs.length > cst.MAX_NUMBER_OF_ARCHONS) {
+      let poppedID = archonIDs.pop();
+      if (poppedID) {
+        this.originalBodies.delete(poppedID);
+        this.symmetricBodies.delete(poppedID);
+        actions.push(`Removed archon ID ${poppedID}`);
+      }
+    }
+
+    // If there aren't enough archons, tell them
+    if (archonIDs.length < cst.MIN_NUMBER_OF_ARCHONS) {
+      actions.push(`NOTE: You must manually add ${cst.MIN_NUMBER_OF_ARCHONS - archonIDs.length} archon(s).`);
+    }
+
+    // Remove bodies that are off the map
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      let x = unit.loc.x;
+      let y = unit.loc.y;
+      let distanceToWall = Math.min(x, y, this.width() - x, this.height() - y);
+      if (unit.radius > distanceToWall || x < 0 || y < 0 || x > this.width() || y > this.height()) {
+        this.originalBodies.delete(id);
+        this.symmetricBodies.delete(id);
+        actions.push(`Removed ID ${id}. (off the map)`);
+      }
+    });
+
+    // Remove bodies that overlap
+    // Invariant: bodies in originalBodies don't overlap with each other, and
+    //            bodies in symmetricBodies don't overlap with each other
+    this.originalBodies.forEach((unitA: MapUnit, idA: number) => {
+      this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
+        if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
+          this.originalBodies.delete(idA);
+          this.symmetricBodies.delete(idA);
+          this.originalBodies.delete(idB);
+          this.symmetricBodies.delete(idB);
+          actions.push (`Removed IDs ${idA} and ${idB}. (overlapping)`);
+        }
+      });
+    });
+
+    if (actions.length > 0) {
+      alert(actions.join("\n"));
+      this.render();
+    } else {
+      alert("Congratulations, the map is already valid!");
+    }
   }
 }

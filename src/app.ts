@@ -122,7 +122,23 @@ export default class Client {
    * Loads stats bar with team information
    */
   loadSidebar() {
-    this.sidebar = new Sidebar(this.conf, this.imgs);
+    let onkeydownControls = (event: KeyboardEvent) => {
+      switch (event.keyCode) {
+        case 80: // "p" - Pause/Unpause
+        this.controls.pause();
+        break;
+        case 79: // "o" - Stop
+        this.controls.restart();
+        break;
+        case 37: // "LEFT" - Skip/Seek Backward
+        this.controls.rewind();
+        break;
+        case 39: // "RIGHT" - Skip/Seek Forward
+        this.controls.forward();
+        break;
+      }
+    };
+    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
     this.stats = this.sidebar.stats;
     this.mapeditor = this.sidebar.mapeditor;
     return this.sidebar.div;

@@ -64,7 +64,7 @@ export default class Renderer {
 
     if (lerpAmount != null && nextStep != null) {
       this.renderBullets(world, lerpAmount);
-      this.renderBodiesInterpolated(world, nextStep, lerpAmount);
+      this.renderBodies(world, nextStep, lerpAmount);
     } else {
       this.renderBullets(world, 0);
       this.renderBodies(world);
@@ -101,7 +101,7 @@ export default class Renderer {
     this.ctx.restore();
   }
 
-  private renderBodies(world: GameWorld) {
+  private renderBodies(world: GameWorld, nextStep?: NextStep, lerpAmount?: number) {
     const bodies = world.bodies;
     const length = bodies.length;
     const types = bodies.arrays.type;
@@ -109,24 +109,40 @@ export default class Renderer {
     const xs = bodies.arrays.x;
     const ys = bodies.arrays.y;
     const healths = bodies.arrays.health;
+    const maxHealths = bodies.arrays.maxHealth;
     const radii = bodies.arrays.radius;
 
-    for (let i = 0; i < length; i++) {
-      const x = xs[i];
-      const y = ys[i];
-      const radius = radii[i];
+    let nextXs, nextYs, realXs, realYs;
+    if (nextStep && lerpAmount) {
+      // Interpolated
+      nextXs = nextStep.bodies.arrays.x;
+      nextYs = nextStep.bodies.arrays.y;
+      realXs = new Float32Array(length)
+      realYs = new Float32Array(length)
+    }
 
+    for (let i = 0; i < length; i++) {
+      let x, y;
+      if (nextStep && lerpAmount) {
+        // Interpolated
+        x = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
+        y = ys[i] + (nextYs[i] - ys[i]) * lerpAmount;
+        realXs[i] = x;
+        realYs[i] = y;
+      } else {
+        // Not interpolated
+        x = xs[i];
+        y = ys[i];
+      }
+
+      const radius = radii[i];
       const team = teams[i];
 
       let img;
 
       switch (types[i]) {
         case cst.TREE_NEUTRAL:
-          //if (healths[i] > this.treeMedHealth) {
-            img = this.imgs.tree.fullHealth;
-          //} else {
-          //  img = this.imgs.tree.lowHealth;
-          //}
+          img = this.imgs.tree.fullHealth;
           break;
         case cst.TREE_BULLET:
           img = this.imgs.robot.bulletTree[team];
@@ -153,106 +169,52 @@ export default class Renderer {
           img = this.imgs.unknown;
           break;
       }
-      if (this.conf.circleBots) {
-        this.ctx.beginPath();
-        this.ctx.fillStyle = "#ddd";
-        this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-        this.ctx.fill();
-      }
-      this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
-      this.drawHealthBar(x-cst.HEALTH_BAR_WIDTH_HALF, y+radius, healths[i], types[i]);
+      this.drawCircleBot(x, y, radius);
+      this.drawImage(img, x, y, radius);
+      this.drawHealthBar(x, y, radius, healths[i], maxHealths[i]);
     }
 
-    this.setIndicatorStringEventListener(world, xs, ys);
-  }
-
-  private renderBodiesInterpolated(world: GameWorld,
-                                   nextStep: NextStep,
-                                   lerpAmount: number) {
-    const bodies = world.bodies;
-    const length = bodies.length;
-    const types = bodies.arrays.type;
-    const teams = bodies.arrays.team;
-    const xs = bodies.arrays.x;
-    const ys = bodies.arrays.y;
-    const nextXs = nextStep.bodies.arrays.x;
-    const nextYs = nextStep.bodies.arrays.y;
-    const healths = bodies.arrays.health;
-    const radii = bodies.arrays.radius;
-    let realXs: Float32Array = new Float32Array(length);
-    let realYs: Float32Array = new Float32Array(length);
-
-    for (let i = 0; i < length; i++) {
-      const x = xs[i];
-      const y = ys[i];
-      const nextX = nextXs[i];
-      const nextY = nextYs[i];
-
-      const realX = x + (nextX - x) * lerpAmount;
-      const realY = y + (nextY - y) * lerpAmount;
-      realXs[i] = realX;
-      realYs[i] = realY;
-
-      const radius = radii[i];
-
-      const team = teams[i];
-
-      let img;
-
-      switch (types[i]) {
-        case cst.TREE_NEUTRAL:
-          //if (healths[i] > this.treeMedHealth) {
-            img = this.imgs.tree.fullHealth;
-          //} else {
-          //  img = this.imgs.tree.lowHealth;
-          //}
-          break;
-        case cst.TREE_BULLET:
-          img = this.imgs.robot.bulletTree[team];
-          break;
-        case cst.ARCHON:
-          img = this.imgs.robot.archon[team];
-          break;
-        case cst.GARDENER:
-          img = this.imgs.robot.gardener[team];
-          break;
-        case cst.LUMBERJACK:
-          img = this.imgs.robot.lumberjack[team];
-          break;
-        case cst.SOLDIER:
-          img = this.imgs.robot.soldier[team];
-          break;
-        case cst.TANK:
-          img = this.imgs.robot.tank[team];
-          break;
-        case cst.SCOUT:
-          img = this.imgs.robot.scout[team];
-          break;
-        default:
-          img = this.imgs.unknown;
-          break;
-      }
-      if (this.conf.circleBots) {
-        this.ctx.beginPath();
-        this.ctx.fillStyle = "#ddd";
-        this.ctx.arc(realX, realY, radius, 0, 2 * Math.PI, false);
-        this.ctx.fill();
-      }
-      this.ctx.drawImage(img, realX-radius, realY-radius, radius*2, radius*2);
-      this.drawHealthBar(realX-cst.HEALTH_BAR_WIDTH_HALF, realY+radius, healths[i], types[i]);
+    if (realXs && realYs) {
+      // Interpolated
+      this.setIndicatorStringEventListener(world, realXs, realYs);
+    } else {
+      // Not inteprolated
+      this.setIndicatorStringEventListener(world, xs, ys);
     }
-
-    this.setIndicatorStringEventListener(world, realXs, realYs);
   }
 
-  private drawHealthBar(x: number, y: number, health: number, type: number) {
+  /**
+   * Draws a circle centered at (x, y) with the given radius
+   */
+  private drawCircleBot(x: number, y: number, radius: number) {
+    if (!this.conf.circleBots) return; // skip if the option is turned off
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = "#ddd";
+    this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+    this.ctx.fill();
+  }
+
+  /**
+   * Draws an image centered at (x, y) with the given radius
+   */
+  private drawImage(img: HTMLImageElement, x: number, y: number, radius: number) {
+    this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
+  }
+
+  /**
+   * Draws a health bar for a unit centered at (xRobot, yRobot) with the given
+   * radius, health, and maxHealth
+   */
+  private drawHealthBar(xRobot: number, yRobot: number, radius: number,
+    health: number, maxHealth: number) {
     if (!this.conf.healthBars) return; // skip if the option is turned off
 
-    const bodyType = this.metadata.types[type];
-    if (bodyType == undefined) return;
+    let x = xRobot - cst.HEALTH_BAR_WIDTH_HALF;
+    let y = yRobot + radius;
 
     this.ctx.fillStyle = "green"; // current health
-    this.ctx.fillRect(x, y, cst.HEALTH_BAR_WIDTH * health / bodyType.maxHealth,
+    this.ctx.fillRect(x, y, cst.HEALTH_BAR_WIDTH * health / maxHealth,
       cst.HEALTH_BAR_HEIGHT);
     this.ctx.strokeStyle = "black"; // outline
     this.ctx.lineWidth = .1;
@@ -326,9 +288,7 @@ export default class Renderer {
         img = this.imgs.bullet.slow;
       }
 
-      this.ctx.drawImage(img,
-                         x - cst.BULLET_SIZE_HALF, y - cst.BULLET_SIZE_HALF,
-                         cst.BULLET_SIZE, cst.BULLET_SIZE);
+      this.drawImage(img, x, y, cst.BULLET_SIZE_HALF);
     }
   }
 

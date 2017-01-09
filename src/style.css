@@ -51,8 +51,8 @@
 }
 
 #mapEditor {
-    font-family: "tahoma, sans serif";
-    font-size: 14px;
+  font-family: "Tahoma, sans serif";
+  font-size: 14px;
 }
 
 form {
@@ -69,6 +69,11 @@ form {
 
 .blue {
     color: #0636ac;
+}
+
+#export {
+  font-size: 24px;
+  width: 90%;
 }
 
 #root {

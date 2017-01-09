@@ -39,7 +39,6 @@ export default class MapEditor {
     xs: number[],
     ys: number[],
     radii: number[],
-    healths: number[],
     containedBullets: number[],
     containedBodies: schema.BodyType[]
   };
@@ -47,15 +46,68 @@ export default class MapEditor {
   constructor(conf: Config, images: AllImages) {
     this.canvas = document.createElement("canvas");
     this.form = new MapEditorForm(conf, images, this.canvas);
-    this.div = document.createElement("div");
-    this.div.appendChild(this.form.div);
-    this.div.appendChild(this.exportButton());
+    this.div = this.basediv();
     this.images = images;
     this.conf = conf;
   }
 
+  basediv(): HTMLDivElement {
+    let div = document.createElement("div");
+    div.id = "mapEditor";
+
+    div.appendChild(document.createTextNode(
+      "TIP: \"S\"=quick add, \"D\"=quick delete."));
+    div.appendChild(document.createElement("br"));
+    div.appendChild(document.createElement("br"));
+
+    div.appendChild(this.form.div);
+
+    div.appendChild(this.removeInvalidButton());
+    div.appendChild(document.createElement("br"));
+    div.appendChild(document.createElement("br"));
+
+    div.appendChild(this.exportButton());
+
+    return div;
+  }
+
+  /**
+   * Quick add and delete units in the map editor
+   */
+  onkeydown(): (event: KeyboardEvent) => void {
+    return (event: KeyboardEvent) => {
+      switch (event.keyCode) {
+        case 67: // "c" - Toggle Circle Bots
+        this.conf.circleBots = !this.conf.circleBots;
+        this.form.render();
+        break;
+        case 83: // "s" - Set (Add/Update)c
+        this.form.addToMap();
+        break;
+        case 68: // "d" - Delete
+        this.form.deleteFromMap();
+        break;
+      }
+    };
+  }
+
+  private removeInvalidButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("Remove invalid units"));
+    button.onclick = () => {
+      let youAreSure = confirm(
+        "Are you sure? Continuing will permanently remove invalid units.");
+      if (youAreSure) {
+        this.form.removeInvalidUnits();
+      }
+    };
+    return button;
+  }
+
   private exportButton(): HTMLButtonElement {
     const button = document.createElement("button");
+    button.id = "export";
     button.type = "button";
     button.appendChild(document.createTextNode("EXPORT!"));
     button.onclick = () => {
@@ -89,10 +141,6 @@ export default class MapEditor {
    */
   private addBodies(bodies: Map<number, MapUnit>, minCorner: Victor) {
 
-    function treeHealth(radius: number) {
-      return cst.NEUTRAL_TREE_HEALTH_RATE * radius;
-    }
-
     bodies.forEach((unit: MapUnit, id: number) => {
       if (unit.type === cst.TREE_NEUTRAL) {
         this.addTree(
@@ -100,7 +148,6 @@ export default class MapEditor {
           unit.loc.x + minCorner.x,
           unit.loc.y + minCorner.y,
           unit.radius,
-          treeHealth(unit.radius),
           unit.containedBullets,
           unit.containedBody
         );
@@ -119,13 +166,12 @@ export default class MapEditor {
   /**
    * Adds a tree to internal arrays
    */
-  private addTree(robotID: number, x: number, y: number, radius: number, health: number,
+  private addTree(robotID: number, x: number, y: number, radius: number,
     containedBullets: number, containedBody: schema.BodyType) {
     this.treesArray.robotIDs.push(robotID);
     this.treesArray.xs.push(x);
     this.treesArray.ys.push(y);
     this.treesArray.radii.push(radius);
-    this.treesArray.healths.push(health);
     this.treesArray.containedBullets.push(containedBullets);
     this.treesArray.containedBodies.push(containedBody);
   }
@@ -151,7 +197,6 @@ export default class MapEditor {
       xs: [],
       ys: [],
       radii: [],
-      healths: [],
       containedBullets: [],
       containedBodies: []
     };
