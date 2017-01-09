@@ -166,7 +166,6 @@ export default class Stats {
       this.matches.removeChild(this.matches.childNodes[2]);
     }
 
-    console.log(this.matches.childNodes);
     this.matches.childNodes[0].childNodes[1].textContent = " (" + (activeGame + 1) + "/" + gameList.length + ")";
 
     //for (let game of gameList) {

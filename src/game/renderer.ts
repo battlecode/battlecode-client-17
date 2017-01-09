@@ -177,10 +177,10 @@ export default class Renderer {
 
     if (realXs && realYs) {
       // Interpolated
-      this.setIndicatorStringEventListener(world, realXs, realYs);
+      this.setInfoStringEvent(world, realXs, realYs);
     } else {
       // Not inteprolated
-      this.setIndicatorStringEventListener(world, xs, ys);
+      this.setInfoStringEvent(world, xs, ys);
     }
   }
 
@@ -228,9 +228,9 @@ export default class Renderer {
     this.ctx.strokeRect(x, y, cst.HEALTH_BAR_WIDTH, cst.HEALTH_BAR_HEIGHT);
   }
 
-  private setIndicatorStringEventListener(world: GameWorld,
+  private setInfoStringEvent(world: GameWorld,
     xs: Float32Array, ys: Float32Array) {
-    // indicator strings
+    // world information
     const width = world.maxCorner.x - world.minCorner.x;
     const height = world.maxCorner.y - world.minCorner.y;
     const ids: Int32Array = world.bodies.arrays.id;
@@ -239,8 +239,8 @@ export default class Renderer {
     const onRobotSelected = this.onRobotSelected;
 
     this.canvas.onmousedown = function(event) {
-      const x = width * event.offsetX / this.offsetWidth;
-      const y = height * event.offsetY / this.offsetHeight;
+      const x = width * event.offsetX / this.offsetWidth + world.minCorner.x;
+      const y = height * event.offsetY / this.offsetHeight + world.minCorner.y;
 
       // Get the ID of the selected robot
       let selectedRobotID;
@@ -249,7 +249,6 @@ export default class Renderer {
         let type = types[i];
         let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
         let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
-
         if (type != cst.TREE_NEUTRAL && inXRange && inYRange) {
           selectedRobotID = ids[i];
           break;
@@ -260,8 +259,7 @@ export default class Renderer {
       if (selectedRobotID == undefined) {
         return;
       }
-
-      // Set the indicator strings
+      // Set the info string
       onRobotSelected(selectedRobotID);
     };
   }
