@@ -171,7 +171,8 @@ export default class Renderer {
       }
       this.drawCircleBot(x, y, radius);
       this.drawImage(img, x, y, radius);
-      this.drawHealthBar(x, y, radius, healths[i], maxHealths[i]);
+      this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
+        world.minCorner, world.maxCorner);
     }
 
     if (realXs && realYs) {
@@ -207,11 +208,17 @@ export default class Renderer {
    * radius, health, and maxHealth
    */
   private drawHealthBar(xRobot: number, yRobot: number, radius: number,
-    health: number, maxHealth: number) {
+    health: number, maxHealth: number, minCorner: Victor, maxCorner: Victor) {
     if (!this.conf.healthBars) return; // skip if the option is turned off
 
     let x = xRobot - cst.HEALTH_BAR_WIDTH_HALF;
     let y = yRobot + radius;
+
+    let minX = minCorner.x;
+    let maxX = maxCorner.x - cst.HEALTH_BAR_WIDTH;
+    let maxY = maxCorner.y - cst.HEALTH_BAR_HEIGHT;
+    x = Math.max(minX, Math.min(x, maxX));
+    y = Math.min(maxY, y);
 
     this.ctx.fillStyle = "green"; // current health
     this.ctx.fillRect(x, y, cst.HEALTH_BAR_WIDTH * health / maxHealth,
