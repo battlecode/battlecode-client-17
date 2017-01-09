@@ -43,7 +43,7 @@ export default class ScaffoldCommunicator {
     // scaffold/client/app
     const fromWinLin = path.dirname(path.dirname(appPath));
     // scaffold/Battlecode Client.app/Contents/Resources/app.asar
-    const fromMac = path.dirname(path.dirname(path.dirname(path.dirname(appPath))));
+    const fromMac = path.dirname(path.dirname(path.dirname(path.dirname(path.dirname(appPath)))));
 
     if (fs.existsSync(path.join(fromDev, GRADLE_WRAPPER))) {
       return fromDev;
