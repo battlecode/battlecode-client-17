@@ -68,7 +68,8 @@ export enum Mode {
   GAME,
   HELP,
   MAPEDITOR,
-  CONSOLE
+  CONSOLE,
+  RUNMATCH
 }
 
 /**

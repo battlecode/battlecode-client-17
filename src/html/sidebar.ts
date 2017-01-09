@@ -4,6 +4,8 @@ import {AllImages} from '../imageloader';
 import Stats from './stats';
 import Console from './console';
 import MapEditor from '../mapeditor/main';
+import MatchRunner from './matchrunner';
+import ScaffoldCommunicator from '../scaffold';
 
 export default class Sidebar {
 
@@ -16,6 +18,7 @@ export default class Sidebar {
   readonly stats: Stats;
   readonly console: Console;
   readonly mapeditor: MapEditor;
+  readonly matchrunner: MatchRunner;
   private readonly help: HTMLDivElement;
 
   // Options
@@ -28,7 +31,9 @@ export default class Sidebar {
   cb: () => void;
 
   // onkeydownControls is an onkeydown event that uses the controls depending on the game mode
-  constructor(conf: Config, images: AllImages, onkeydownControls: (event: KeyboardEvent) => void) {
+  constructor(conf: Config, images: AllImages,
+    onkeydownControls: (event: KeyboardEvent) => void,
+    scaffold: ScaffoldCommunicator | null) {
     // Initialize fields
     this.div = document.createElement("div");
     this.innerDiv = document.createElement("div");
@@ -44,7 +49,12 @@ export default class Sidebar {
     this.loadStyles();
     this.div.appendChild(this.battlecodeLogo());
     this.div.appendChild(this.modeButton(Mode.GAME, "Game"));
-    this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
+    if (process.env.ELECTRON && scaffold) {
+      this.matchrunner = new MatchRunner(conf, scaffold);
+      this.div.appendChild(this.modeButton(Mode.RUNMATCH, "Run Match"));
+    }
+    // HIDE THE CONSOLE FOR NOW
+    // this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
     this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
     this.div.appendChild(this.modeButton(Mode.HELP, "Help"));
     this.div.appendChild(document.createElement("br"));
@@ -181,6 +191,11 @@ export default class Sidebar {
         break;
       case Mode.CONSOLE:
         this.innerDiv.appendChild(this.console.div);
+        break;
+      case Mode.RUNMATCH:
+        if (this.matchrunner) {
+          this.innerDiv.appendChild(this.matchrunner.div);
+        }
         break;
     }
 

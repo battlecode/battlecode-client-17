@@ -81,10 +81,10 @@ export default class Client {
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
+      this.loadScaffold();
       this.root.appendChild(this.loadControls());
       this.root.appendChild(this.loadSidebar());
       this.root.appendChild(this.loadGameArea());
-      this.loadScaffold();
       this.ready();
     });
 
@@ -150,7 +150,7 @@ export default class Client {
         break;
       }
     };
-    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
+    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls, this.scaffold);
     this.stats = this.sidebar.stats;
     this.mapeditor = this.sidebar.mapeditor;
     return this.sidebar.div;

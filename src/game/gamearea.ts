@@ -67,7 +67,7 @@ export default class GameArea {
     // ...and add the correct one
     if (mode === Mode.MAPEDITOR) {
       this.wrapper.appendChild(this.mapEditorCanvas);
-    } else if (mode === Mode.CONSOLE || mode === Mode.GAME) {
+    } else {
       this.wrapper.appendChild(this.canvas);
     }
   };

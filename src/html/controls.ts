@@ -171,7 +171,7 @@ export default class Controls {
     }
 
     // ...and add the correct thing
-    if (mode === Mode.CONSOLE || mode === Mode.GAME) {
+    if (mode !== Mode.MAPEDITOR) {
       this.div.appendChild(this.wrapper);
     }
   };
