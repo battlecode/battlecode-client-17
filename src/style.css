@@ -55,10 +55,6 @@
   font-size: 14px;
 }
 
-form {
-    text-align: center;
-}
-
 #gamearea canvas {
     height: calc(100vh - 75px);
 }
@@ -202,4 +198,20 @@ input[type='file'] {
     font-family: "Graduate";
     padding-top: 15px;
     padding-bottom: 15px;
+}
+
+/* Map Editor Supreme Edition Stylings */
+
+.mapInputBox {
+    padding: 8px 8px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.mapInputLabel {
+    text-align: right;
+    margin-right: 12px;
 }

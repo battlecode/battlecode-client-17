@@ -123,26 +123,40 @@ export default class MapEditorForm {
   private createHeaderForm(): HTMLFormElement {
     // HTML structure
     const header: HTMLFormElement = document.createElement("form");
-    const mapname: HTMLDivElement = document.createElement("div");
-    const width: HTMLDivElement = document.createElement("div");
-    const height: HTMLDivElement = document.createElement("div");
+    const container: HTMLTableElement = document.createElement("table");
+    const mapname: HTMLDivElement = document.createElement("tr");
+    const width: HTMLDivElement = document.createElement("tr");
+    const height: HTMLDivElement = document.createElement("tr");
     header.appendChild(mapname);
     header.appendChild(width);
     header.appendChild(height);
     header.appendChild(document.createElement("br"));
 
     // Map name
+    let nameLabelCont = document.createElement("td");
+    let nameLabel = document.createElement("p");
+    nameLabel.innerHTML = "Map name:";
+    nameLabel.className += ' mapInputLabel';
+    
+    let nameInputCont = document.createElement("td");
     this.nameGM = document.createElement("input");
     this.nameGM.type = "text";
-    this.nameGM.value = "map";
+    this.nameGM.value = "Untitled Map";
+    this.nameGM.className += ' mapInputBox';
     this.nameGM.maxLength = 50;
-    mapname.appendChild(document.createTextNode("Map name:"));
-    mapname.appendChild(this.nameGM);
+    
+    nameLabelCont.appendChild(nameLabel);
+    nameInputCont.appendChild(this.nameGM);
+    mapname.appendChild(nameLabelCont);
+    mapname.appendChild(nameInputCont);
 
     // Map width
+    let widthLabelCont = document.createElement("td");
+    let widthInputCont = document.createElement("td");
     this.widthGM = document.createElement("input");
     this.widthGM.type = "text";
     this.widthGM.value = "50";
+    this.widthGM.className += ' mapInputBox';
     this.widthGM.onchange = () => {
       // Width must be in the defined range
       let value: number = parseFloat(this.widthGM.value);
@@ -151,13 +165,23 @@ export default class MapEditorForm {
       this.widthGM.value = isNaN(value) ? "50" : String(value);
       this.setCanvasDimensions();
     };
-    width.appendChild(document.createTextNode("Width:"));
-    width.appendChild(this.widthGM);
+    
+    let widthLabel = document.createElement("p");
+    widthLabel.innerHTML = "Width:";
+    widthLabel.className += ' mapInputLabel';
+    
+    widthLabelCont.appendChild(widthLabel);
+    widthInputCont.appendChild(this.widthGM);
+    width.appendChild(widthLabelCont);
+    width.appendChild(widthInputCont);
 
     // Map width
+    let heightLabelCont = document.createElement("td");
+    let heightInputCont = document.createElement("td");
     this.heightGM = document.createElement("input");
     this.heightGM.type = "text";
     this.heightGM.value = "50";
+    this.heightGM.className += ' mapInputBox';
     this.heightGM.onchange = () => {
       // Height must be in the defined range
       let value: number = parseFloat(this.heightGM.value);
@@ -166,8 +190,14 @@ export default class MapEditorForm {
       this.heightGM.value = isNaN(value) ? "50" : String(value);
       this.setCanvasDimensions();
     };
-    height.appendChild(document.createTextNode("Height:"));
-    height.appendChild(this.heightGM);
+    
+    let heightLabel = document.createElement("p");
+    heightLabel.innerHTML = "Height:";
+    heightLabel.className += ' mapInputLabel';
+    heightLabelCont.appendChild(heightLabel);
+    heightInputCont.appendChild(this.heightGM);
+    height.appendChild(heightLabelCont);
+    height.appendChild(heightInputCont);
 
     return header;
   }
