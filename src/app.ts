@@ -13,6 +13,10 @@ import Renderer from './game/renderer';
 import TickCounter from './game/fps';
 import WebSocketListener from './websocket';
 
+import ScaffoldCommunicator from './scaffold';
+
+import {electron} from './electron-modules';
+
 // webpack magic
 // this loads the stylesheet and injects it into the dom
 require('./style.css');
@@ -65,6 +69,9 @@ export default class Client {
   // used to cancel the main loop
   loopID: number | null;
 
+  // Allow us to run matches
+  scaffold: ScaffoldCommunicator | null;
+
   constructor(root: HTMLElement, conf?: any) {
     console.log('Battlecode client loading...');
 
@@ -77,6 +84,7 @@ export default class Client {
       this.root.appendChild(this.loadControls());
       this.root.appendChild(this.loadSidebar());
       this.root.appendChild(this.loadGameArea());
+      this.loadScaffold();
       this.ready();
     });
 
@@ -158,6 +166,39 @@ export default class Client {
       this.controls.setControls();
     };
     return this.gamearea.div;
+  }
+
+  /**
+   * Find a scaffold to run matches with.
+   */
+  loadScaffold() {
+    console.log('ELECTRON: '+process.env.ELECTRON);
+    if (process.env.ELECTRON) {
+      const scaffoldPath = ScaffoldCommunicator.findDefaultScaffoldPath();
+
+      if (scaffoldPath != null) {
+        this.scaffold = new ScaffoldCommunicator(scaffoldPath);
+      } else {
+        console.log("Couldn't load scaffold: ");
+        // This is how to get a file path in electron:
+        /*
+        electron.remote.dialog.showOpenDialog(
+          {
+            title: 'Please select your battlecode-scaffold directory (the one you downloaded that has all those files in it and lets you run matches)',
+            properties: ['openDirectory']
+          },
+          (filePaths) => {
+            if (filePaths.length > 0) {
+              this.scaffold = new ScaffoldCommunicator(filePaths[0]);
+            } else {
+              console.log('No scaffold found or provided');
+            }
+          }
+        );
+        */
+      }
+    }
+
   }
 
   /**
