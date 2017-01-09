@@ -95,6 +95,11 @@ export default class ScaffoldCommunicator {
         }
       }
 
+      if (maps.length === 0) {
+        console.log(stdout);
+        console.log(stderr);
+      }
+
       cb(null, maps);
     });
   }

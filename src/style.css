@@ -28,6 +28,10 @@
     margin-bottom: 16px;
 }
 
+#matchRunner {
+    font-family: Tahoma;
+}
+
 .removeButton {
     float: right;
 }
