@@ -57,3 +57,5 @@ dist/
 
 # who even uses macs i mean god
 **/.DS_Store
+
+.gradle
