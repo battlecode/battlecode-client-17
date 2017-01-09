@@ -35,7 +35,8 @@
 .gameNum {
     display: inline-block;
     margin-left: 16px;
-    min-width: 100px;
+    margin-right: 16px;
+    min-width: 80px;
 }
 
 .active-match {
