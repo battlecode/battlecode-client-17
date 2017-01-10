@@ -232,6 +232,9 @@ export default class MatchRunner {
     this.divScaffold.appendChild(this.loadingMatch);
     const cb = (err: Error | null, stdout: string, stderr: string) => {
       this.divScaffold.removeChild(this.loadingMatch);
+      if (err) {
+        console.log(err);
+      }
     };
     this.scaffold.runMatch(
       this.getTeamA(),
