@@ -198,6 +198,16 @@ export default class Controls {
     reader.readAsArrayBuffer(file);
 
     // Reset buttons
+    this.imgs["playbackStart"].style.display = "unset";
+    this.imgs["playbackPause"].style.display = "none";
+    this.imgs["seekBackward"].style.display = "none";
+    this.imgs["skipBackward"].style.display = "unset";
+    this.imgs["seekForward"].style.display = "none";
+    this.imgs["skipForward"].style.display = "unset";
+  }
+  
+  resetButtons() {
+    // Reset buttons
     this.imgs["playbackStart"].style.display = "none";
     this.imgs["playbackPause"].style.display = "unset";
     this.imgs["seekBackward"].style.display = "none";

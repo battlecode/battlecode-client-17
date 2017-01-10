@@ -15,6 +15,7 @@ export default class WebSocketListener {
    */
   firstMatch: boolean;
   onFirstMatch: () => void;
+  onOtherMatch: () => void;
 
   constructor(url: string, pollEvery: number) {
     this.url = url;
@@ -22,9 +23,10 @@ export default class WebSocketListener {
     this.firstMatch = true;
   }
 
-  start(onGameReceived: (game: Game) => void, onFirstMatch: () => void) {
+  start(onGameReceived: (game: Game) => void, onFirstMatch: () => void, onOtherMatch: () => void) {
     this.onGameReceived = onGameReceived;
     this.onFirstMatch = onFirstMatch;
+    this.onOtherMatch = onOtherMatch;
     this.poll();
   }
 
@@ -70,9 +72,15 @@ export default class WebSocketListener {
 
       this.currentGame.applyEvent(event);
 
-      if (event.eType() === schema.Event.MatchHeader && this.firstMatch) {
-        this.firstMatch = false;
-        this.onFirstMatch();
+      if (event.eType() === schema.Event.MatchHeader || event.eType() === schema.Event.MatchFooter) {
+        
+        if(this.firstMatch && event.eType() === schema.Event.MatchHeader) {
+          this.firstMatch = false;
+          this.onFirstMatch();
+        } else {
+          this.onOtherMatch();
+        }
+        
       } else if (event.eType() === schema.Event.GameFooter) {
         this.currentGame = null;
       }
