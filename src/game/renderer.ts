@@ -255,11 +255,7 @@ export default class Renderer {
         }
       }
 
-      // A robot was not selected, return
-      if (selectedRobotID == undefined) {
-        return;
-      }
-      // Set the info string
+      // Set the info string even if the robot is undefined
       onRobotSelected(selectedRobotID);
     };
   }

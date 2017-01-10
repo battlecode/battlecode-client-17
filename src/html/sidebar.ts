@@ -3,9 +3,12 @@ import {AllImages} from '../imageloader';
 
 import Stats from './stats';
 import Console from './console';
-import MapEditor from '../mapeditor/main';
-import MatchRunner from './matchrunner';
+import MapEditor from '../mapeditor/mapeditor';
+import MatchRunner from '../matchrunner/matchrunner';
+import MatchQueue from '../matchrunner/matchqueue';
 import ScaffoldCommunicator from '../scaffold';
+
+import {electron} from '../electron-modules';
 
 export default class Sidebar {
 
@@ -19,10 +22,14 @@ export default class Sidebar {
   readonly console: Console;
   readonly mapeditor: MapEditor;
   readonly matchrunner: MatchRunner;
+  readonly matchqueue: MatchQueue;
   private readonly help: HTMLDivElement;
 
   // Options
   private readonly conf: Config;
+
+  // Scaffold
+  private scaffold: ScaffoldCommunicator;
 
   // onkeydown event that uses the controls depending on the game mode
   private readonly onkeydownControls: (event: KeyboardEvent) => void;
@@ -32,15 +39,31 @@ export default class Sidebar {
 
   // onkeydownControls is an onkeydown event that uses the controls depending on the game mode
   constructor(conf: Config, images: AllImages,
-    onkeydownControls: (event: KeyboardEvent) => void,
-    scaffold: ScaffoldCommunicator | null) {
+    onkeydownControls: (event: KeyboardEvent) => void) {
     // Initialize fields
     this.div = document.createElement("div");
     this.innerDiv = document.createElement("div");
     this.images = images;
     this.stats = new Stats(conf, images);
     this.console = new Console(conf);
-    this.mapeditor = new MapEditor(conf, images, scaffold);
+    this.mapeditor = new MapEditor(conf, images);
+    this.matchrunner = new MatchRunner(conf, () => {
+      // Set callback for matchrunner in case the scaffold is loaded later
+      electron.remote.dialog.showOpenDialog(
+      {
+        title: 'Please select your battlecode-scaffold directory.',
+        properties: ['openDirectory']
+      },
+      (filePaths) => {
+        if (filePaths.length > 0) {
+          this.scaffold = new ScaffoldCommunicator(filePaths[0]);
+          this.addScaffold(this.scaffold);
+        } else {
+          console.log('No scaffold found or provided');
+        }
+      })
+    });
+    this.matchqueue = new MatchQueue(conf, images);
     this.help = this.initializeHelp();
     this.conf = conf;
     this.onkeydownControls = onkeydownControls
@@ -49,18 +72,22 @@ export default class Sidebar {
     this.loadStyles();
     this.div.appendChild(this.battlecodeLogo());
     this.div.appendChild(this.modeButton(Mode.GAME, "Game"));
-    if (process.env.ELECTRON && scaffold) {
-      this.matchrunner = new MatchRunner(conf, scaffold);
-      this.div.appendChild(this.modeButton(Mode.RUNMATCH, "Run Match"));
-    }
-    // HIDE THE CONSOLE FOR NOW
-    // this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
+    this.div.appendChild(this.modeButton(Mode.QUEUE, "Queue"));
+    this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
     this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
     this.div.appendChild(this.modeButton(Mode.HELP, "Help"));
     this.div.appendChild(document.createElement("br"));
     this.div.appendChild(document.createElement("br"));
     this.div.appendChild(this.innerDiv);
     this.innerDiv.appendChild(this.stats.div);
+  }
+
+  /**
+   * Sets a scaffold if a scaffold directory is found after everything is loaded
+   */
+  addScaffold(scaffold: ScaffoldCommunicator): void {
+    this.mapeditor.addScaffold(scaffold);
+    this.matchrunner.addScaffold(scaffold);
   }
 
   /**
@@ -74,7 +101,7 @@ export default class Sidebar {
     <i>From the client:</i> Upload a <b>.bc17</b> file from your computer by
     clicking the + button in the top-right corner. Use the control buttons to
     navigate the match.<br>
-    <i>From the scaffold:</i> Click 'Run Match' above, and select players and 
+    <i>From the scaffold:</i> Click 'Run Match' above, and select players and
     maps to create and view matches. Note that it may take a few seconds for the
     matches to be run and displayed.<br>
     <br>
@@ -109,7 +136,7 @@ export default class Sidebar {
     When you are happy with your map, click “EXPORT!”. (Note: the name of your
     .map17 file must be the same as the name of your map.) If you are running
     this application from the client/ directory, restart the client to see your
-    exported map. Otherwise, save the .map17 file to 
+    exported map. Otherwise, save the .map17 file to
     <b>battlecode-scaffold-2017/maps/</b> directory of your scaffold.`;
 
     const div = document.createElement("div");
@@ -195,10 +222,9 @@ export default class Sidebar {
       case Mode.CONSOLE:
         this.innerDiv.appendChild(this.console.div);
         break;
-      case Mode.RUNMATCH:
-        if (this.matchrunner) {
-          this.innerDiv.appendChild(this.matchrunner.div);
-        }
+      case Mode.QUEUE:
+        this.innerDiv.appendChild(this.matchrunner.div);
+        this.innerDiv.appendChild(this.matchqueue.div);
         break;
     }
 

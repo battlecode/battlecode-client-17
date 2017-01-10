@@ -1,6 +1,6 @@
 /* Global stylings here */
 
-.gameDiv {
+.gameWrapper {
     background: #e0e0e0;
     color: black;
     border-radius: 4px;
@@ -21,11 +21,12 @@
     color: red;
 }
 
-#matchViewer {
+#matchQueue {
     text-align: left;
     font-size: 18px;
     padding: 10px;
     margin-bottom: 16px;
+    font-family: Tahoma, sans-serif;
 }
 
 #matchRunner {
@@ -226,8 +227,8 @@ input[type='file'] {
     color: #46ff00;
     padding: 15px;
     margin: 0px 5px;
-    font-family: "Lucida Console", monospace;
-    font-size: 14px;
+    font-family: Tahoma, sans-serif;
+    font-size: 11px;
     height: 70vh; /* HELP: I'd prefer this be calc(100vh - ?px) but I can't get it to work */
     text-align: left;
     overflow: scroll;

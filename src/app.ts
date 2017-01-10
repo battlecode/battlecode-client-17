@@ -5,7 +5,9 @@ import * as imageloader from './imageloader';
 import Sidebar from './html/sidebar';
 import Stats from './html/stats';
 import Controls from './html/controls';
-import MapEditor from './mapeditor/main';
+import Console from './html/console';
+import MapEditor from './mapeditor/mapeditor';
+import MatchQueue from './matchrunner/matchqueue';
 
 import GameArea from './game/gamearea';
 import NextStep from './game/nextstep';
@@ -62,8 +64,10 @@ export default class Client {
   stats: Stats;
   mapeditor: MapEditor;
   gamearea: GameArea; // Inner game area
+  console: Console; // Console to display logs
   gamecanvas: HTMLCanvasElement;
   mapcanvas: HTMLCanvasElement;
+  matchqueue: MatchQueue; // Match queue
 
   // Match logic
   listener: WebSocketListener | null;
@@ -88,10 +92,10 @@ export default class Client {
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
-      this.loadScaffold();
       this.root.appendChild(this.loadControls());
       this.root.appendChild(this.loadSidebar());
       this.root.appendChild(this.loadGameArea());
+      this.loadScaffold();
       this.ready();
     });
 
@@ -126,7 +130,7 @@ export default class Client {
 
     // Restart game loop
     this.runMatch();
-    this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
+    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
   }
 
   /**
@@ -157,9 +161,11 @@ export default class Client {
         break;
       }
     };
-    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls, this.scaffold);
+    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
     this.stats = this.sidebar.stats;
+    this.console = this.sidebar.console;
     this.mapeditor = this.sidebar.mapeditor;
+    this.matchqueue = this.sidebar.matchqueue;
     return this.sidebar.div;
   }
 
@@ -185,27 +191,11 @@ export default class Client {
 
       if (scaffoldPath != null) {
         this.scaffold = new ScaffoldCommunicator(scaffoldPath);
+        this.sidebar.addScaffold(this.scaffold);
       } else {
-        console.log("Couldn't load scaffold: ");
-        // This is how to get a file path in electron:
-        /*
-        electron.remote.dialog.showOpenDialog(
-          {
-            title: 'Please select your battlecode-scaffold directory (the one you downloaded that has all those files in it and lets you run matches)',
-            properties: ['openDirectory']
-          },
-          (filePaths) => {
-            if (filePaths.length > 0) {
-              this.scaffold = new ScaffoldCommunicator(filePaths[0]);
-            } else {
-              console.log('No scaffold found or provided');
-            }
-          }
-        );
-        */
+        console.log("Couldn't load scaffold: click \"Run Match\" to learn more.");
       }
     }
-
   }
 
   /**
@@ -222,14 +212,14 @@ export default class Client {
         this.setGame(0);
         this.setMatch(0);
       }
-      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
     }
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
         (game) => {
           this.games.push(game);
-          this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         },
         // What to do with the websocket's first game's first match
         () => {
@@ -273,6 +263,7 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
+    this.console.setLogs(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
@@ -280,7 +271,7 @@ export default class Client {
     // Last selected robot ID to display extra info
     const controls = this.controls;
     let lastSelectedID: number | undefined = undefined;
-    const onRobotSelected = (id: number) => {
+    const onRobotSelected = (id: number | undefined) => {
       lastSelectedID = id;
     }
 
@@ -303,6 +294,7 @@ export default class Client {
     let interpGameTime = 0;
     // The time of the last frame
     let lastTime: number | null = null;
+    let lastTurn: number | null = null;
     // whether we're seeking
     let externalSeek = false;
 
@@ -323,7 +315,7 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     };
-    this.stats.onNextMatch = () => {
+    this.matchqueue.onNextMatch = () => {
       console.log("NEXT MATCH");
 
       if(this.currentGame < 0) {
@@ -343,7 +335,7 @@ export default class Client {
       }
 
     };
-    this.stats.onPreviousMatch = () => {
+    this.matchqueue.onPreviousMatch = () => {
       console.log("PREV MATCH");
 
       if(this.currentMatch > 0) {
@@ -358,7 +350,7 @@ export default class Client {
       }
 
     };
-    this.stats.removeGame = (game: number) => {
+    this.matchqueue.removeGame = (game: number) => {
 
       if (game > this.currentGame) {
         this.games.splice(game, 1);
@@ -386,9 +378,9 @@ export default class Client {
         this.currentGame = game - 1;
       }
 
-      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
+      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
     };
-    this.stats.gotoMatch = (game: number, match: number) => {
+    this.matchqueue.gotoMatch = (game: number, match: number) => {
       this.setGame(game);
       this.setMatch(match);
     };
@@ -436,7 +428,7 @@ export default class Client {
     // The main update loop
     const loop = (curTime) => {
       let delta = 0;
-      if (lastTime === null) {
+      if (lastTime === null && lastTurn === null) {
         // first simulation step
         // do initial stuff?
       } else if (externalSeek) {
@@ -483,6 +475,11 @@ export default class Client {
           let maxHealth = bodies.maxHealth[index];
           this.controls.setInfoString(id, x, y, health, maxHealth);
         }
+      }
+
+      if (lastTurn != match.current.turn) {
+        this.console.pushRound(match.current.turn, lastSelectedID);
+        lastTurn = match.current.turn;
       }
 
       lastTime = curTime;
