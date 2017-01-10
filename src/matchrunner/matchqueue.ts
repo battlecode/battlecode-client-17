@@ -8,8 +8,11 @@ export default class MatchQueue {
   // The public div
   readonly div: HTMLDivElement;
 
+  // Other HTML elements
+  private gameNum: HTMLSpanElement;
+
   // Options
-  private conf: Config;
+  private readonly conf: Config;
 
   // Callbacks initialized from outside Stats
   onNextMatch: () => void;
@@ -28,29 +31,31 @@ export default class MatchQueue {
 
   private basediv(): HTMLDivElement {
     let div = document.createElement("div");
-    div.id = "matchViewer";
-    div.style.fontFamily = "Tahoma, sans serif";
+    div.id = "matchQueue";
 
     let title = document.createElement("b");
     title.appendChild(document.createTextNode("Games"));
 
-    // Add buttons
-    let next = document.createElement("button");
-    next.setAttribute("class", "custom-button");
-    next.setAttribute("type", "button");
-    next.onclick = () => this.onNextMatch();
-    next.appendChild(this.images.controls.matchForward);
+    // Games (currentGame / numberOfGames)
+    this.gameNum = document.createElement("span");
+    this.gameNum.className += " gameNum";
 
+    // Go to the previous match/round
     let back = document.createElement("button");
     back.setAttribute("class", "custom-button");
     back.setAttribute("type", "button");
     back.onclick = () => this.onPreviousMatch();
     back.appendChild(this.images.controls.matchBackward);
 
-    let gameNum = document.createElement("span");
-    gameNum.className += " gameNum";
+    // Go the next match/round
+    let next = document.createElement("button");
+    next.setAttribute("class", "custom-button");
+    next.setAttribute("type", "button");
+    next.onclick = () => this.onNextMatch();
+    next.appendChild(this.images.controls.matchForward);
 
-    title.appendChild(gameNum);
+    // Append all the HTML elements
+    title.appendChild(this.gameNum);
     title.appendChild(back);
     title.appendChild(next);
     div.appendChild(title);
@@ -62,107 +67,142 @@ export default class MatchQueue {
   refreshGameList(gameList: Array<Game>, activeGame: number, activeMatch: number) {
 
     // Remove all games from the list
-    while(this.div.childNodes[2]){
+    while (this.div.childNodes[2]) {
       this.div.removeChild(this.div.childNodes[2]);
     }
 
-    this.div.childNodes[0].childNodes[1].textContent = " (" + (activeGame + 1) + "/" + gameList.length + ")";
+    // Update the content of the active game tracker
+    this.gameNum.textContent = `(${activeGame + 1}/${gameList.length})`;
 
-    //for (let game of gameList) {
-    for (var j = 0; j < gameList.length; j++) {
-      let game = gameList[j];
-      if(game != null) {
+    // Add a div for each game
+    for (let gameIndex = 0; gameIndex < gameList.length; gameIndex++) {
 
-        var metaData = game.meta;
-        var matchCount = game.matchCount;
-        var winner = game.winner;
+      const game = gameList[gameIndex];
+      if (game != null) {
 
-        // Construct a team vs. team string
-        var vsString = document.createElement("div");
-        var winnerString: HTMLSpanElement;
-        if(metaData != null) {
+        const meta = game.meta;
+        const matchCount = game.matchCount;
+        if (meta != null) {
+          const gameWrapper = document.createElement("div");
+          gameWrapper.className += " gameWrapper";
 
-          for (let team in metaData.teams) {
-              var teamName = document.createElement("span");
-              teamName.className += team === "1" ? " red" : " blue";
-              teamName.innerHTML = metaData.teams[team].name;
-              vsString.appendChild(teamName)
-              vsString.appendChild(document.createTextNode(" vs. "));
-              if(metaData.teams[team].teamID == winner) {
-                winnerString = teamName;
-              }
+          // teamA vs. teamB title node
+          const title = document.createElement("b");
+          const teamVsTeam = this.teamVsTeam(meta.teams);
+          title.appendChild(teamVsTeam);
+          gameWrapper.appendChild(title);
+
+          // Add class if an active game
+          if (game === gameList[activeGame]) {
+            gameWrapper.appendChild(document.createTextNode(
+              `Playing match ${(activeMatch + 1)}/${matchCount}`));
           }
+          gameWrapper.appendChild(document.createElement("br"));
 
-          if(vsString.lastChild != null) {
-            vsString.removeChild(vsString.lastChild);
-          }
+          // Add a div for each match in the game
+          for (let matchIndex = 0; matchIndex < matchCount; matchIndex++) {
+            const match = game.getMatch(matchIndex);
 
-          var gameDiv = document.createElement("div");
-          gameDiv.className += " gameDiv";
-          var title = document.createElement("b");
-          title.appendChild(vsString);
-          //title.appendChild(document.createTextNode(" on " + game.matchCount + " matches"))
-          // INSTEAD, Show i.e. Playing 1/3 << >>
-          gameDiv.appendChild(title);
-          if(game == gameList[activeGame]) {
-            gameDiv.appendChild(document.createTextNode("Playing match " + (activeMatch + 1) + "/" + matchCount));
-          }
+            const mapName = match.current.mapName;
+            const matchWinner = this.winnerTeam(meta.teams, match.winner);
+            const rounds = match.lastTurn + 1;
+            const active = gameIndex === activeGame && matchIndex === activeMatch;
+            const cb = () => { this.gotoMatch(gameIndex, matchIndex) };
 
-          gameDiv.appendChild(document.createElement("br"));
-
-          for (var i = 0; i < matchCount; i++) {
-            var match = game.getMatch(i);
-            var mapName = match.current.mapName;
-
-            var matchWinner = document.createElement("span");
-            for (let team in metaData.teams) {
-                if(metaData.teams[team].teamID == match.winner) {
-                  matchWinner.className += team === "1" ? " red" : " blue";
-                  matchWinner.innerHTML = metaData.teams[team].name;
-                  break;
-                }
-            }
-
-            // Add the information to the list
-            let matchEntry = document.createTextNode(" wins after " + (match.lastTurn + 1) + " rounds" );
-            let matchPrefix = document.createTextNode(mapName + " - ");
-            var matchWrapper = document.createElement("div");
-            matchWrapper.appendChild(matchPrefix);
-            matchWrapper.appendChild(matchWinner);
-            matchWrapper.appendChild(matchEntry);
-            matchWrapper.appendChild(document.createElement("br"));
-
-            if(j == activeGame && i == activeMatch) {
-              matchWrapper.className = 'active-match';
-            } else {
-              matchWrapper.className = 'inactive-match';
-
-              matchWrapper.onclick = (function(game, match, gotoMatch) {
-                  return function(){ gotoMatch(game, match); }
-              })(j,i, this.gotoMatch);
-
-            }
-
-            gameDiv.appendChild(matchWrapper);
-
+            gameWrapper.appendChild(this.matchWrapper(
+              mapName, matchWinner, rounds, active, cb));
           }
 
           // Create remove button
-          let remove = document.createElement("button");
-          remove.setAttribute("class", "custom-button");
-          remove.setAttribute("type", "button");
-          remove.textContent = "Remove";
-
-          remove.onclick = (function(game, removeGame) {
-                  return function(){ removeGame(game); }
-          })(j, this.removeGame);
-
-          gameDiv.appendChild(remove);
-
-          this.div.appendChild(gameDiv);
-
+          gameWrapper.appendChild(this.removeButton(gameIndex));
+          this.div.appendChild(gameWrapper);
         }
       }
     }
+  }
+
+  /**
+   * Returns the string of "$TEAMA vs. $TEAMB" in the corresponding team colors
+   */
+  private teamVsTeam(teams): HTMLDivElement {
+    const div = document.createElement("div");
+
+    let teamNumber: number = 1;
+    for (let team in teams) {
+      // Create the team name span
+      const teamName = document.createElement("span");
+      teamName.className += teamNumber === 1 ? " red" : " blue";
+      teamName.innerHTML = teams[team].name;
+
+      // Add it to the div
+      div.appendChild(teamName)
+      div.appendChild(document.createTextNode(" vs. "));
+      teamNumber += 1
+    }
+
+    // Remove the last " vs. " because that's how it works
+    if (div.lastChild != null) {
+      div.removeChild(div.lastChild);
+    }
+
+    return div;
+  }
+
+  /**
+   * Returns the name of the winning team in the team's color
+   */
+  private winnerTeam(teams, winnerID: number | null): HTMLSpanElement {
+    const span = document.createElement("span");
+    if (winnerID === null) {
+      // There was a tie
+      span.appendChild(document.createTextNode("Neither team"));
+    } else {
+      // Find the winner
+      let teamNumber = 1;
+      for (let team in teams) {
+        if (teams[team].teamID === winnerID) {
+          span.className += team === "1" ? " red" : " blue";
+          span.innerHTML = teams[team].name;
+          break;
+        }
+      }
+    }
+    return span;
+  }
+
+  /**
+   * On click, the match wrapper will start playing the selected game/match.
+   * Returns the match wrapper in the form:
+   *   $MAPNAME - $WINNERTEAM wins after $ROUNDS rounds
+   */
+  private matchWrapper(mapName: string, winner: HTMLSpanElement, rounds: number,
+    active: boolean, onclick: () => void): HTMLDivElement {
+    // $MAPNAME - $WINNERTEAM wins after $ROUNDS rounds
+    const div = document.createElement("div");
+    div.appendChild(document.createTextNode(`${mapName} - `));
+    div.appendChild(winner);
+    div.appendChild(document.createTextNode(` wins after ${rounds} rounds`));
+    div.appendChild(document.createElement("br"));
+
+    // Set the CSS of the box
+    if (active) {
+      div.className = 'active-match';
+    } else {
+      div.className = 'inactive-match';
+      div.onclick = onclick;
+    }
+    return div;
+  }
+
+  /**
+   * Returns a button to remove a certain game
+   */
+  private removeButton(gameNumber: number): HTMLButtonElement {
+    let remove = document.createElement("button");
+    remove.setAttribute("class", "custom-button");
+    remove.setAttribute("type", "button");
+    remove.textContent = "Remove";
+    remove.onclick = () => {this.removeGame(gameNumber)};
+    return remove;
   }
 }
