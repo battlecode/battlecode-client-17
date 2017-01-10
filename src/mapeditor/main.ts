@@ -67,6 +67,7 @@ export default class MapEditor {
 
     div.appendChild(this.form.div);
 
+    div.appendChild(this.validateButton());
     div.appendChild(this.removeInvalidButton());
     div.appendChild(this.resetButton());
     div.appendChild(document.createElement("br"));
@@ -95,6 +96,18 @@ export default class MapEditor {
         break;
       }
     };
+  }
+
+  private validateButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("Validate"));
+    button.onclick = () => {
+      if (this.form.isValid()) {
+        alert("Congratulations! Your map is valid. :)")
+      }
+    };
+    return button;
   }
 
   private removeInvalidButton(): HTMLButtonElement {

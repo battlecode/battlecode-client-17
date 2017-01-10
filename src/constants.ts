@@ -60,3 +60,17 @@ export function symmetryToString(symmetry: Symmetry) {
     default:         throw new Error("invalid symmetry");
   }
 }
+
+export function radiusFromBodyType(bodyType: schema.BodyType) {
+  switch(bodyType) {
+    case ARCHON:       return 2;
+    case GARDENER:     return 1;
+    case LUMBERJACK:   return 1;
+    case SOLDIER:      return 1;
+    case TANK:         return 2;
+    case SCOUT:        return 1;
+    case TREE_BULLET:  return 1;
+    case NONE:         return 0;
+    default:           throw new Error("invalid body type");
+  }
+}

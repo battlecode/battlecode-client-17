@@ -778,6 +778,17 @@ export default class MapEditorForm {
       });
     });
 
+    // Neutral trees cannot have a smaller radius than the body they contain
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.TREE_NEUTRAL) {
+        const treeRadius = unit.radius;
+        const bodyRadius = cst.radiusFromBodyType(unit.containedBody);
+        if (treeRadius < bodyRadius) {
+          errors.push(`Tree ID ${id} with radius ${treeRadius.toFixed(2)} contains a body with radius ${bodyRadius}`);
+        }
+      }
+    });
+
     if (errors.length > 0) {
       alert(errors.join("\n"));
       return false;
@@ -788,6 +799,8 @@ export default class MapEditorForm {
   }
 
   removeInvalidUnits(): void {
+    // NOTE: All changes that are made to originalBodies are reflected in
+    // symmetricBodies when calling this.render()
     let actions = new Array();
 
     // If there are too many archons, remove them until there aren't
@@ -801,7 +814,6 @@ export default class MapEditorForm {
       let poppedID = archonIDs.pop();
       if (poppedID) {
         this.originalBodies.delete(poppedID);
-        this.symmetricBodies.delete(poppedID);
         actions.push(`Removed archon ID ${poppedID}`);
       }
     }
@@ -818,7 +830,6 @@ export default class MapEditorForm {
       let distanceToWall = Math.min(x, y, this.width() - x, this.height() - y);
       if (unit.radius > distanceToWall || x < 0 || y < 0 || x > this.width() || y > this.height()) {
         this.originalBodies.delete(id);
-        this.symmetricBodies.delete(id);
         actions.push(`Removed ID ${id}. (off the map)`);
       }
     });
@@ -830,12 +841,22 @@ export default class MapEditorForm {
       this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
         if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
           this.originalBodies.delete(idA);
-          this.symmetricBodies.delete(idA);
           this.originalBodies.delete(idB);
-          this.symmetricBodies.delete(idB);
           actions.push (`Removed IDs ${idA} and ${idB}. (overlapping)`);
         }
       });
+    });
+
+    // Remove the body from neutral trees with a smaller radius than the contained body
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.TREE_NEUTRAL) {
+        const treeRadius = unit.radius;
+        const bodyRadius = cst.radiusFromBodyType(unit.containedBody);
+        if (treeRadius < bodyRadius) {
+          this.originalBodies.get(id).containedBody = cst.NONE;
+          actions.push(`Removed a body from tree ID ${id}`);
+        }
+      }
     });
 
     if (actions.length > 0) {
