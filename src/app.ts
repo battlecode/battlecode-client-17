@@ -475,7 +475,7 @@ export default class Client {
           let health = bodies.health[index];
           let maxHealth = bodies.maxHealth[index];
           let type = bodies.type[index];
-          let bytecodes = bodies.bytecodesLeft[index];
+          let bytecodes = bodies.bytecodesUsed[index];
           if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
             this.controls.setInfoString(id, x, y, health, maxHealth);
           } else {
