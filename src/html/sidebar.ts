@@ -5,6 +5,7 @@ import Stats from './stats';
 import Console from './console';
 import MapEditor from '../mapeditor/mapeditor';
 import MatchRunner from '../matchrunner/matchrunner';
+import MatchQueue from '../matchrunner/matchqueue';
 import ScaffoldCommunicator from '../scaffold';
 
 import {electron} from '../electron-modules';
@@ -21,6 +22,7 @@ export default class Sidebar {
   readonly console: Console;
   readonly mapeditor: MapEditor;
   readonly matchrunner: MatchRunner;
+  readonly matchqueue: MatchQueue;
   private readonly help: HTMLDivElement;
 
   // Options
@@ -61,7 +63,7 @@ export default class Sidebar {
         }
       })
     });
-
+    this.matchqueue = new MatchQueue(conf, images);
     this.help = this.initializeHelp();
     this.conf = conf;
     this.onkeydownControls = onkeydownControls
@@ -70,7 +72,7 @@ export default class Sidebar {
     this.loadStyles();
     this.div.appendChild(this.battlecodeLogo());
     this.div.appendChild(this.modeButton(Mode.GAME, "Game"));
-    this.div.appendChild(this.modeButton(Mode.RUNMATCH, "Run Match"));
+    this.div.appendChild(this.modeButton(Mode.QUEUE, "Queue"));
     // HIDE THE CONSOLE FOR NOW
     // this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
     this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
@@ -221,10 +223,9 @@ export default class Sidebar {
       case Mode.CONSOLE:
         this.innerDiv.appendChild(this.console.div);
         break;
-      case Mode.RUNMATCH:
-        if (this.matchrunner) {
-          this.innerDiv.appendChild(this.matchrunner.div);
-        }
+      case Mode.QUEUE:
+        this.innerDiv.appendChild(this.matchrunner.div);
+        this.innerDiv.appendChild(this.matchqueue.div);
         break;
     }
 

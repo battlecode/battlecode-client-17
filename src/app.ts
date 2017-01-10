@@ -6,6 +6,7 @@ import Sidebar from './html/sidebar';
 import Stats from './html/stats';
 import Controls from './html/controls';
 import MapEditor from './mapeditor/mapeditor';
+import MatchQueue from './matchrunner/matchqueue';
 
 import GameArea from './game/gamearea';
 import NextStep from './game/nextstep';
@@ -64,6 +65,7 @@ export default class Client {
   gamearea: GameArea; // Inner game area
   gamecanvas: HTMLCanvasElement;
   mapcanvas: HTMLCanvasElement;
+  matchqueue: MatchQueue; // Match queue
 
   // Match logic
   listener: WebSocketListener | null;
@@ -126,7 +128,7 @@ export default class Client {
 
     // Restart game loop
     this.runMatch();
-    this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
+    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
   }
 
   /**
@@ -160,6 +162,7 @@ export default class Client {
     this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
     this.stats = this.sidebar.stats;
     this.mapeditor = this.sidebar.mapeditor;
+    this.matchqueue = this.sidebar.matchqueue;
     return this.sidebar.div;
   }
 
@@ -206,14 +209,14 @@ export default class Client {
         this.setGame(0);
         this.setMatch(0);
       }
-      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
     }
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
         (game) => {
           this.games.push(game);
-          this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         },
         // What to do with the websocket's first game's first match
         () => {
@@ -307,7 +310,7 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     };
-    this.stats.onNextMatch = () => {
+    this.matchqueue.onNextMatch = () => {
       console.log("NEXT MATCH");
 
       if(this.currentGame < 0) {
@@ -327,7 +330,7 @@ export default class Client {
       }
 
     };
-    this.stats.onPreviousMatch = () => {
+    this.matchqueue.onPreviousMatch = () => {
       console.log("PREV MATCH");
 
       if(this.currentMatch > 0) {
@@ -342,7 +345,7 @@ export default class Client {
       }
 
     };
-    this.stats.removeGame = (game: number) => {
+    this.matchqueue.removeGame = (game: number) => {
 
       if (game > this.currentGame) {
         this.games.splice(game, 1);
@@ -370,9 +373,9 @@ export default class Client {
         this.currentGame = game - 1;
       }
 
-      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
+      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
     };
-    this.stats.gotoMatch = (game: number, match: number) => {
+    this.matchqueue.gotoMatch = (game: number, match: number) => {
       this.setGame(game);
       this.setMatch(match);
     };
