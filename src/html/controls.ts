@@ -326,13 +326,22 @@ export default class Controls {
    * Display an info string in the controls bar
    * "Robot ID id
    * Location: (x, y)
-   * Health: health/maxHealth"
+   * Health: health/maxHealth
+   * Bytecodes Used: bytecodes"
    */
-  setInfoString(id, x, y, health, maxHealth, bytecodes?): void {
-    this.infoString.innerHTML = `Robot ID ${id}<br>
-                                 Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
-                                 Health: ${health.toFixed(3)}/${maxHealth}`;
-                                 // Bytecode Usage: ${bytecodes}`;
+  setInfoString(id, x, y, health, maxHealth, bytecodes?: number): void {
+    if (bytecodes !== undefined) {
+      // Not a neutral tree or bullet tree
+      this.infoString.innerHTML = `Robot ID ${id}<br>
+        Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
+        Health: ${health.toFixed(3)}/${maxHealth.toFixed(3)}<br>
+        Bytecodes Used: ${bytecodes}`;
+    } else {
+      // Neutral tree or bullet tree, no bytecode information
+      this.infoString.innerHTML = `Robot ID ${id}<br>
+        Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
+        Health: ${health.toFixed(3)}/${maxHealth.toFixed(3)}`;
+    }
   }
 
   /**

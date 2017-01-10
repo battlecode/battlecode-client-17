@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/battlecode/battlecode-client-17#readme",
   "dependencies": {
-    "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#d8ed175b158265f82e72392db49bc62045761fb1",
+    "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#f287b374a32268ebbc5984ae22aa6286c259d0f0",
     "victor": "^1.1.0"
   },
   "devDependencies": {

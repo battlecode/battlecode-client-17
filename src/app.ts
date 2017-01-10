@@ -1,4 +1,5 @@
 import {Game, GameWorld, Match, Metadata, schema, flatbuffers} from 'battlecode-playback';
+import * as cst from './constants';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
@@ -499,7 +500,13 @@ export default class Client {
           let y = bodies.y[index];
           let health = bodies.health[index];
           let maxHealth = bodies.maxHealth[index];
-          this.controls.setInfoString(id, x, y, health, maxHealth);
+          let type = bodies.type[index];
+          let bytecodes = bodies.bytecodesUsed[index];
+          if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
+            this.controls.setInfoString(id, x, y, health, maxHealth);
+          } else {
+            this.controls.setInfoString(id, x, y, health, maxHealth, bytecodes);
+          }
         }
       }
 
