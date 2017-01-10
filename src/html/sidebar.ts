@@ -53,8 +53,7 @@ export default class Sidebar {
       this.matchrunner = new MatchRunner(conf, scaffold);
       this.div.appendChild(this.modeButton(Mode.RUNMATCH, "Run Match"));
     }
-    // HIDE THE CONSOLE FOR NOW
-    // this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
+    this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
     this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
     this.div.appendChild(this.modeButton(Mode.HELP, "Help"));
     this.div.appendChild(document.createElement("br"));
