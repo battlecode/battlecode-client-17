@@ -14,11 +14,11 @@
 }
 
 .blue {
-    color: blue;
+    color: #4f7ee6;
 }
 
 .red {
-    color: red;
+    color: #a62014;
 }
 
 #matchQueue {
@@ -187,7 +187,8 @@ input[type='file'] {
 
 #helpDiv {
     text-align: left;
-    font-size: 12px;
+    font-family: Tahoma, sans-serif;
+    font-size: 14px;
     padding: 10px;
 }
 

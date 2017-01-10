@@ -95,17 +95,12 @@ export default class Sidebar {
    */
   private initializeHelp(): HTMLDivElement {
     const innerHTML: string =
-    `This is the client for Battlecode 2017.<br>
+    `This is the client for Battlecode 2017. If you run into any issues,
+    make a post in the <a href="www.battlecodeforum.org">Battlecode forum</a>.
+    Be sure to attach a screenshot of your console output (F12 in the app) and
+    any other relevant information.<br>
     <br>
-    <b class="red">How to Play a Match</b><br>
-    <i>From the client:</i> Upload a <b>.bc17</b> file from your computer by
-    clicking the + button in the top-right corner. Use the control buttons to
-    navigate the match.<br>
-    <i>From the scaffold:</i> Click 'Run Match' above, and select players and
-    maps to create and view matches. Note that it may take a few seconds for the
-    matches to be run and displayed.<br>
-    <br>
-    <b class="blue">Keyboard Shortcuts</b><br>
+    <b class="red">Keyboard Shortcuts</b><br>
     LEFT - Skip/Seek Backward<br>
     RIGHT - Skip/Seek Forward<br>
     P - Pause/Unpause<br>
@@ -117,31 +112,43 @@ export default class Sidebar {
     S - Add/Update (map editor mode)<br>
     D - Delete (map editor mode)<br>
     <br>
-    <b class="red">How to Use the Map Editor</b><br>
-    Select the initial map settings: name, width, height, symmetry. If you
-    later change these settings and the map becomes invalid, you can click
-    “EXPORT!” to see what modifications need to be made. You can also click
-    “Clear invalid units” to automatically remove overlapping or off-map units,
-    but data may be lost.<br>
+    <b class="blue">How to Play a Match</b><br>
+    <i>From the application:</i> Click <b>'Queue'</b> and follow the
+    instructions in the sidebar. Note that it may take a few seconds for
+    matches to be displayed.<br>
+    <i>From the web client:</i> If you are not running the client as a
+    stand-alone application, you can always upload a <b>.bc17</b> file by
+    clicking the + button in the top-right corner.<br>
     <br>
-    Add trees and archons to the map by setting the coordinates and radius. The
-    coordinates can also be set by clicking on the map. The tree radius will
-    automatically adjust to the maximum valid radius if the input is too large,
-    and the archon radius is always 2. If the radius is 0, no unit of that type
-    can be placed there.<br>
+    Use the control buttons in <b>'Queue'</b> and the top of the screen to
+    navigate the match.<br>
+    <br>
+    <b class="red">How to Use the Console</b><br>
+    The console displays all System.out.println() data run by your robots.
+    You can filter by team by checking the boxes, by robot ID by clicking the
+    robot, and by round by going to that time and replaying the match.<br>
+    <br>
+    <b class="blue">How to Use the Map Editor</b><br>
+    Select the initial map settings: name, width, height, symmetry. Add trees
+    and archons by setting the coordinates and radius, and clicking
+    <b>"Add/Update."</b> The coordinates can also be set by clicking the map.
+    The radius will automatically adjust to the maximum valid radius if the
+    input is too large, and an archon always has radius 2. If the radius is 0,
+    no unit of that type can be placed there.<br>
     <br>
     Modify or delete existing units by clicking on them, making changes, then
-    clicking “Add/Update.”<br>
+    clicking <b>“Add/Update."</b><br>
     <br>
-    When you are happy with your map, click “EXPORT!”. (Note: the name of your
-    .map17 file must be the same as the name of your map.) If you are running
-    this application from the client/ directory, restart the client to see your
-    exported map. Otherwise, save the .map17 file to
-    <b>battlecode-scaffold-2017/maps/</b> directory of your scaffold.`;
+    Before exporting, click <b>"Validate"</b> to see if any changes need to be
+    made, and <b>"Remove Invalid Units"</b> to automatically remove off-map or
+    overlapping units. When you are happy with your map, click <b>“EXPORT!”</b>.
+    If you are directed to save your map, save it in the
+    <b>/battlecode-scaffold-2017-master/maps</b> directory of your scaffold.
+    (Note: the name of your .map17 file must be the same as the name of your
+    map.)`;
 
     const div = document.createElement("div");
     div.id = "helpDiv";
-    div.style.fontFamily = "Tahoma, sans serif";
 
     div.innerHTML = innerHTML;
     return div;
