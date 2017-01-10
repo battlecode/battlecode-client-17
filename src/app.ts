@@ -315,6 +315,18 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     };
+    this.controls.onStepForward = () => {
+      if(!(goalUPS == 0)) {
+        this.controls.pause();
+      }
+      this.controls.onSeek(match.current.turn + 1);
+    };
+    this.controls.onStepBackward = () => {
+      if(!(goalUPS == 0)) {
+        this.controls.pause();
+      }
+      this.controls.onSeek(match.current.turn - 1);
+    };
     this.matchqueue.onNextMatch = () => {
       console.log("NEXT MATCH");
 
@@ -404,17 +416,23 @@ export default class Client {
         case 79: // "o" - Stop
           controls.restart();
           break;
-        case 37: // "LEFT" - Skip/Seek Backward
-          controls.rewind();
+        case 37: // "LEFT" - Step Backward
+          controls.stepBackward();
           break;
-        case 39: // "RIGHT" - Skip/Seek Forward
-          controls.forward();
+        case 39: // "RIGHT" - Step Forward
+          controls.stepForward();
           break;
         case 72: // "h" - Toggle Health Bars
           conf.healthBars = !conf.healthBars;
           break;
         case 67: // "c" - Toggle Circle Bots
           conf.circleBots = !conf.circleBots;
+          break;
+        case 70: // "f" - Skip/Seek Forward
+          controls.forward();
+          break;
+        case 82: // "r" - Skip/Seek Backward
+          controls.rewind();
           break;
         case 86: // "v" - Toggle Indicator Dots and Lines
           conf.indicators = !conf.indicators;
