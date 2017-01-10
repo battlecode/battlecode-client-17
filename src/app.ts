@@ -22,6 +22,13 @@ import {electron} from './electron-modules';
 // this loads the stylesheet and injects it into the dom
 require('./style.css');
 
+// open devtools on f12
+document.addEventListener("keydown", function (e) {
+  if (e.which === 123) {
+    electron.remote.getCurrentWindow().webContents.openDevTools();
+  }
+});
+
 /**
  * The entrypoint to the battlecode client.
  *
@@ -470,7 +477,8 @@ export default class Client {
       if (lastSelectedID !== undefined) {
         let bodies = match.current.bodies.arrays;
         let index = bodies.id.indexOf(lastSelectedID)
-        if (index === undefined) {
+        if (index === -1) {
+          // The body doesn't exist anymore so indexOf returns -1
           lastSelectedID = undefined;
         } else {
           let id = bodies.id[index];

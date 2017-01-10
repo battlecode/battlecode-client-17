@@ -28,6 +28,10 @@
     margin-bottom: 16px;
 }
 
+#matchRunner {
+    font-family: Tahoma;
+}
+
 .removeButton {
     float: right;
 }
@@ -59,7 +63,20 @@ form {
 }
 
 #gamearea canvas {
-    height: calc(100vh - 75px);
+    max-height: calc(100vh - 75px);
+    max-width: calc(100vw - 320px);
+    margin-top:auto;
+    margin-bottom:auto;
+}
+
+#gamearea {
+  display:flex;
+  align-items: center; /* Vertical center alignment */
+  justify-content: center; /* Horizontal center alignment */
+}
+
+#canvas-wrapper {
+    margin-top: -75px;
 }
 
 .red {

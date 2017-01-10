@@ -249,7 +249,7 @@ export default class Renderer {
         let type = types[i];
         let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
         let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
-        if (type != cst.TREE_NEUTRAL && inXRange && inYRange) {
+        if (inXRange && inYRange) {
           selectedRobotID = ids[i];
           break;
         }

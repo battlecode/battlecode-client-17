@@ -40,7 +40,7 @@ export default class Sidebar {
     this.images = images;
     this.stats = new Stats(conf, images);
     this.console = new Console(conf);
-    this.mapeditor = new MapEditor(conf, images);
+    this.mapeditor = new MapEditor(conf, images, scaffold);
     this.help = this.initializeHelp();
     this.conf = conf;
     this.onkeydownControls = onkeydownControls
@@ -73,7 +73,9 @@ export default class Sidebar {
     <i>From the client:</i> Upload a <b>.bc17</b> file from your computer by
     clicking the + button in the top-right corner. Use the control buttons to
     navigate the match.<br>
-    <i>From the scaffold:</i> TODO<br>
+    <i>From the scaffold:</i> Click 'Run Match' above, and select players and 
+    maps to create and view matches. Note that it may take a few seconds for the
+    matches to be run and displayed.<br>
     <br>
     <b class="blue">Keyboard Shortcuts</b><br>
     LEFT - Skip/Seek Backward<br>
@@ -104,9 +106,10 @@ export default class Sidebar {
     clicking “Add/Update.”<br>
     <br>
     When you are happy with your map, click “EXPORT!”. (Note: the name of your
-    .map17 file must be the same as the name of your map.) Save the .map17
-    file to <b>battlecode-server/src/main/battlecode/world/resources</b>
-    directory of your scaffold.`;
+    .map17 file must be the same as the name of your map.) If you are running
+    this application from the client/ directory, restart the client to see your
+    exported map. Otherwise, save the .map17 file to 
+    <b>battlecode-scaffold-2017/maps/</b> directory of your scaffold.`;
 
     const div = document.createElement("div");
     div.id = "helpDiv";

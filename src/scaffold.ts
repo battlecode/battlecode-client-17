@@ -41,14 +41,19 @@ export default class ScaffoldCommunicator {
     // release/client
     const fromDev = path.join(path.dirname(appPath), 'battlecode-scaffold-2017');
     // scaffold/client/app
-    const fromWinLin = path.dirname(path.dirname(appPath));
+    const fromWin = path.dirname(path.dirname(appPath));
+
+    const from3 = path.dirname(path.dirname(path.dirname(appPath)));
+
     // scaffold/Battlecode Client.app/Contents/Resources/app.asar
-    const fromMac = path.dirname(path.dirname(path.dirname(path.dirname(appPath))));
+    const fromMac = path.dirname(path.dirname(path.dirname(path.dirname(path.dirname(appPath)))));
 
     if (fs.existsSync(path.join(fromDev, GRADLE_WRAPPER))) {
       return fromDev;
-    } else if (fs.existsSync(path.join(fromWinLin, GRADLE_WRAPPER))) {
-      return fromWinLin;
+    } else if (fs.existsSync(path.join(from3, GRADLE_WRAPPER))) {
+      return from3;
+    } else if (fs.existsSync(path.join(fromWin, GRADLE_WRAPPER))) {
+      return fromWin;
     } else if (fs.existsSync(path.join(fromMac, GRADLE_WRAPPER))) {
       return fromMac;
     }
@@ -95,6 +100,11 @@ export default class ScaffoldCommunicator {
         }
       }
 
+      if (maps.length === 0) {
+        console.log(stdout);
+        console.log(stderr);
+      }
+
       cb(null, maps);
     });
   }
@@ -103,7 +113,12 @@ export default class ScaffoldCommunicator {
    * Saves a map to the scaffold's maps/ folder.
    */
   saveMap(mapData: Uint8Array, mapName: string, cb: (err: Error | null) => void) {
-    fs.writeFile(path.join(this.scaffoldPath, 'maps', `${mapName}.bc17`),
+    const dir = path.join(this.scaffoldPath, 'maps');
+    if (!fs.existsSync(dir)){
+      fs.mkdirSync(dir);
+    }
+
+    fs.writeFile(path.join(this.scaffoldPath, 'maps', `${mapName}.map17`),
                  new Buffer(mapData),
                  cb);
   }
