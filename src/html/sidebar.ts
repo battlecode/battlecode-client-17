@@ -4,7 +4,7 @@ import {AllImages} from '../imageloader';
 import Stats from './stats';
 import Console from './console';
 import MapEditor from '../mapeditor/mapeditor';
-import MatchRunner from './matchrunner';
+import MatchRunner from '../matchrunner/matchrunner';
 import ScaffoldCommunicator from '../scaffold';
 
 import {electron} from '../electron-modules';
