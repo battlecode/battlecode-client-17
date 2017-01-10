@@ -68,6 +68,7 @@ export default class MapEditor {
     div.appendChild(this.form.div);
 
     div.appendChild(this.removeInvalidButton());
+    div.appendChild(this.resetButton());
     div.appendChild(document.createElement("br"));
     div.appendChild(document.createElement("br"));
 
@@ -102,9 +103,23 @@ export default class MapEditor {
     button.appendChild(document.createTextNode("Remove invalid units"));
     button.onclick = () => {
       let youAreSure = confirm(
-        "Are you sure? Continuing will permanently remove invalid units.");
+        "WARNING: you will permanently lose all invalid units. Click OK to continue anyway.");
       if (youAreSure) {
         this.form.removeInvalidUnits();
+      }
+    };
+    return button;
+  }
+
+  private resetButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("RESET"));
+    button.onclick = () => {
+      let youAreSure = confirm(
+        "WARNING: you will lose all your data. Click OK to continue anyway.");
+      if (youAreSure) {
+        this.form.reset();
       }
     };
     return button;

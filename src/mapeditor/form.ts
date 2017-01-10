@@ -135,7 +135,7 @@ export default class MapEditorForm {
     // Map name
     this.nameGM = document.createElement("input");
     this.nameGM.type = "text";
-    this.nameGM.value = "map";
+    this.nameGM.value = "coolmap";
     this.nameGM.maxLength = 50;
     mapname.appendChild(document.createTextNode("Map name:"));
     mapname.appendChild(this.nameGM);
@@ -844,5 +844,12 @@ export default class MapEditorForm {
     } else {
       alert("Congratulations, the map is already valid!");
     }
+  }
+
+  reset(): void {
+    this.lastID = 1;
+    this.originalBodies = new Map<number, MapUnit>();
+    this.symmetricBodies = new Map<number, MapUnit>();
+    this.render();
   }
 }
