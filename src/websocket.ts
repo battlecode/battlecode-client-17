@@ -72,9 +72,9 @@ export default class WebSocketListener {
 
       this.currentGame.applyEvent(event);
 
-      if (event.eType() === schema.Event.MatchHeader) {
+      if (event.eType() === schema.Event.MatchHeader || event.eType() === schema.Event.MatchFooter) {
         
-        if(this.firstMatch) {
+        if(this.firstMatch && event.eType() === schema.Event.MatchHeader) {
           this.firstMatch = false;
           this.onFirstMatch();
         } else {
