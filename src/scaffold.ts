@@ -41,14 +41,19 @@ export default class ScaffoldCommunicator {
     // release/client
     const fromDev = path.join(path.dirname(appPath), 'battlecode-scaffold-2017');
     // scaffold/client/app
-    const fromWinLin = path.dirname(path.dirname(appPath));
+    const fromWin = path.dirname(path.dirname(appPath));
+
+    const from3 = path.dirname(path.dirname(path.dirname(appPath)));
+
     // scaffold/Battlecode Client.app/Contents/Resources/app.asar
     const fromMac = path.dirname(path.dirname(path.dirname(path.dirname(path.dirname(appPath)))));
 
     if (fs.existsSync(path.join(fromDev, GRADLE_WRAPPER))) {
       return fromDev;
-    } else if (fs.existsSync(path.join(fromWinLin, GRADLE_WRAPPER))) {
-      return fromWinLin;
+    } else if (fs.existsSync(path.join(from3, GRADLE_WRAPPER))) {
+      return from3;
+    } else if (fs.existsSync(path.join(fromWin, GRADLE_WRAPPER))) {
+      return fromWin;
     } else if (fs.existsSync(path.join(fromMac, GRADLE_WRAPPER))) {
       return fromMac;
     }
