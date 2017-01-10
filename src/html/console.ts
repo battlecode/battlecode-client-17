@@ -37,15 +37,8 @@ export default class Console {
   private basediv(): HTMLDivElement {
     let div = document.createElement("div");
 
-    this.teamA = document.createElement("input");
-    this.teamA.type = "checkbox";
-    this.teamA.value = "A";
-    this.teamA.checked = true;
-
-    this.teamB = document.createElement("input");
-    this.teamB.type = "checkbox";
-    this.teamB.value = "B";
-    this.teamB.checked = true;
+    this.teamA = this.checkBox("A");
+    this.teamB = this.checkBox("B");
 
     div.appendChild(this.teamA);
     div.appendChild(document.createTextNode("Team A"));
@@ -56,6 +49,15 @@ export default class Console {
     div.appendChild(this.console);
     this.console.id = "console";
     return div;
+  }
+
+  // team is A or B
+  private checkBox(team: string): HTMLInputElement {
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = team;
+    checkbox.checked = true;
+    return checkbox;
   }
 
   setLogs(logs: Array<Log>): void {

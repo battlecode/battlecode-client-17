@@ -278,7 +278,6 @@ export default class Client {
     const controls = this.controls;
     let lastSelectedID: number | undefined = undefined;
     const onRobotSelected = (id: number | undefined) => {
-      this.console.clear();
       lastSelectedID = id;
     }
 
