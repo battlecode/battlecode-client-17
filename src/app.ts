@@ -118,6 +118,7 @@ export default class Client {
     }
     this.clearScreen();
     this.currentGame = game;
+    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
   }
 
   setMatch(match: number) {
@@ -227,7 +228,12 @@ export default class Client {
           if (this.games.length === 1) {
             this.setGame(0);
             this.setMatch(0);
+            this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
           }
+        },
+        // What to do with any other match
+        () => {
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         }
       );
     }
