@@ -44,9 +44,7 @@ export default class GameArea {
 
     this.canvas.width = world.minCorner.absDistanceX(world.maxCorner) * scale;
     this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
-
-    // looks weird if the window is tall and skinny instead of short and fat
-    this.canvas.style.height = "calc(100vh - 75px)";
+    
   }
 
   /**
