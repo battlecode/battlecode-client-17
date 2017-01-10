@@ -46,7 +46,30 @@ export default class GameArea {
     this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
 
     // looks weird if the window is tall and skinny instead of short and fat
-    this.canvas.style.height = "calc(100vh - 75px)";
+    //this.canvas.style.height = "calc(100vh - 75px)";
+    
+    /*
+    // Resize canvas on resize window
+    window.onresize = function(event) {
+      
+      var canvas : HTMLCanvasElement = document.getElementById('battlecode-canvas');
+      var area = document.getElementById('gamearea');
+      
+      if(canvas && area) {
+        var offsetHeight = area.offsetHeight;
+        var offsetWidth = area.offsetWidth;
+
+        if(offsetHeight/offsetWidth > canvas.height/canvas.width) {
+            canvas.style.height = "calc(100vh - 75px)";
+            canvas.style.width = "";
+        } else {
+            canvas.style.height = "";
+            canvas.style.width = "calc(100vw - 320px)";
+        }
+      }
+      
+    };*/
+    
   }
 
   /**
