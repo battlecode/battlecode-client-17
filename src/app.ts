@@ -5,6 +5,7 @@ import * as imageloader from './imageloader';
 import Sidebar from './html/sidebar';
 import Stats from './html/stats';
 import Controls from './html/controls';
+import Console from './html/console';
 import MapEditor from './mapeditor/mapeditor';
 import MatchQueue from './matchrunner/matchqueue';
 
@@ -63,6 +64,7 @@ export default class Client {
   stats: Stats;
   mapeditor: MapEditor;
   gamearea: GameArea; // Inner game area
+  console: Console; // Console to display logs
   gamecanvas: HTMLCanvasElement;
   mapcanvas: HTMLCanvasElement;
   matchqueue: MatchQueue; // Match queue
@@ -161,6 +163,7 @@ export default class Client {
     };
     this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
     this.stats = this.sidebar.stats;
+    this.console = this.sidebar.console;
     this.mapeditor = this.sidebar.mapeditor;
     this.matchqueue = this.sidebar.matchqueue;
     return this.sidebar.div;
@@ -260,6 +263,7 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
+    this.console.setLogs(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
@@ -267,7 +271,7 @@ export default class Client {
     // Last selected robot ID to display extra info
     const controls = this.controls;
     let lastSelectedID: number | undefined = undefined;
-    const onRobotSelected = (id: number) => {
+    const onRobotSelected = (id: number | undefined) => {
       lastSelectedID = id;
     }
 
@@ -290,6 +294,7 @@ export default class Client {
     let interpGameTime = 0;
     // The time of the last frame
     let lastTime: number | null = null;
+    let lastTurn: number | null = null;
     // whether we're seeking
     let externalSeek = false;
 
@@ -423,7 +428,7 @@ export default class Client {
     // The main update loop
     const loop = (curTime) => {
       let delta = 0;
-      if (lastTime === null) {
+      if (lastTime === null && lastTurn === null) {
         // first simulation step
         // do initial stuff?
       } else if (externalSeek) {
@@ -470,6 +475,11 @@ export default class Client {
           let maxHealth = bodies.maxHealth[index];
           this.controls.setInfoString(id, x, y, health, maxHealth);
         }
+      }
+
+      if (lastTurn != match.current.turn) {
+        this.console.pushRound(match.current.turn, lastSelectedID);
+        lastTurn = match.current.turn;
       }
 
       lastTime = curTime;
