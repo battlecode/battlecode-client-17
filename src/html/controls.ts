@@ -18,6 +18,8 @@ export default class Controls {
   onTogglePause: () => void;
   onToggleForward: () => void;
   onToggleRewind: () => void;
+  onStepForward: () => void;
+  onStepBackward: () => void;
   onSeek: (frame: number) => void;
 
   // qualities of progress bar
@@ -35,6 +37,8 @@ export default class Controls {
     skipForward: HTMLImageElement,
     seekBackward: HTMLImageElement,
     skipBackward: HTMLImageElement,
+    goNext: HTMLImageElement,
+    goPrevious: HTMLImageElement,
     upload: HTMLImageElement
   };
 
@@ -52,6 +56,8 @@ export default class Controls {
       skipForward: images.controls.skipForward,
       seekBackward: images.controls.seekBackward,
       skipBackward: images.controls.skipBackward,
+      goNext: images.controls.goNext,
+      goPrevious: images.controls.goPrevious,
       upload: images.controls.upload
     }
 
@@ -71,6 +77,8 @@ export default class Controls {
     buttons.appendChild(this.createButton("playbackStop", () => this.restart()));
     buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
     buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
+    buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
+    buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
 
     // create the info string display
@@ -275,6 +283,20 @@ export default class Controls {
    */
   restart() {
     this.onSeek(0);
+  }
+  
+  /**
+   * Steps forward one turn in the simulation
+   */
+  stepForward() {
+    this.onStepForward();
+  }
+  
+  /**
+   * Steps backward one turn in the simulation
+   */
+  stepBackward() {
+    this.onStepBackward();
   }
 
   /**
