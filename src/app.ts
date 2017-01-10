@@ -131,7 +131,9 @@ export default class Client {
 
     // Restart game loop
     this.runMatch();
+    this.controls.resetButtons();
     this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
+    this.games[this.currentGame ? this.currentGame: 0].getMatch(this.currentMatch).seek(0);
   }
 
   /**
