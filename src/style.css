@@ -1,6 +1,6 @@
 /* Global stylings here */
 
-.gameDiv {
+.gameWrapper {
     background: #e0e0e0;
     color: black;
     border-radius: 4px;
@@ -21,11 +21,12 @@
     color: red;
 }
 
-#matchViewer {
+#matchQueue {
     text-align: left;
     font-size: 18px;
     padding: 10px;
     margin-bottom: 16px;
+    font-family: Tahoma, sans-serif;
 }
 
 #matchRunner {
