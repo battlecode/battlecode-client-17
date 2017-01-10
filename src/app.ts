@@ -5,7 +5,7 @@ import * as imageloader from './imageloader';
 import Sidebar from './html/sidebar';
 import Stats from './html/stats';
 import Controls from './html/controls';
-import MapEditor from './mapeditor/main';
+import MapEditor from './mapeditor/mapeditor';
 
 import GameArea from './game/gamearea';
 import NextStep from './game/nextstep';
@@ -88,10 +88,10 @@ export default class Client {
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
-      this.loadScaffold();
       this.root.appendChild(this.loadControls());
       this.root.appendChild(this.loadSidebar());
       this.root.appendChild(this.loadGameArea());
+      this.loadScaffold();
       this.ready();
     });
 
@@ -157,7 +157,7 @@ export default class Client {
         break;
       }
     };
-    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls, this.scaffold);
+    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
     this.stats = this.sidebar.stats;
     this.mapeditor = this.sidebar.mapeditor;
     return this.sidebar.div;
@@ -185,27 +185,11 @@ export default class Client {
 
       if (scaffoldPath != null) {
         this.scaffold = new ScaffoldCommunicator(scaffoldPath);
+        this.sidebar.addScaffold(this.scaffold);
       } else {
-        console.log("Couldn't load scaffold: ");
-        // This is how to get a file path in electron:
-        /*
-        electron.remote.dialog.showOpenDialog(
-          {
-            title: 'Please select your battlecode-scaffold directory (the one you downloaded that has all those files in it and lets you run matches)',
-            properties: ['openDirectory']
-          },
-          (filePaths) => {
-            if (filePaths.length > 0) {
-              this.scaffold = new ScaffoldCommunicator(filePaths[0]);
-            } else {
-              console.log('No scaffold found or provided');
-            }
-          }
-        );
-        */
+        console.log("Couldn't load scaffold: click \"Run Match\" to learn more.");
       }
     }
-
   }
 
   /**

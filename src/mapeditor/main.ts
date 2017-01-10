@@ -27,7 +27,7 @@ export default class MapEditor {
   private readonly conf: Config;
 
   // Scaffold
-  private readonly scaffold: ScaffoldCommunicator | null;
+  private scaffold: ScaffoldCommunicator | null;
 
   // For storing map information
   private bodiesArray: {
@@ -47,10 +47,10 @@ export default class MapEditor {
     containedBodies: schema.BodyType[]
   };
 
-  constructor(conf: Config, images: AllImages, scaffold: ScaffoldCommunicator | null) {
+  constructor(conf: Config, images: AllImages) {
     this.canvas = document.createElement("canvas");
     this.form = new MapEditorForm(conf, images, this.canvas);
-    this.scaffold = scaffold;
+    this.scaffold = null;
     this.div = this.basediv();
     this.images = images;
     this.conf = conf;
@@ -96,6 +96,13 @@ export default class MapEditor {
     };
   }
 
+  /**
+   * Sets a scaffold if a scaffold directory is found after everything is loaded
+   */
+  addScaffold(scaffold: ScaffoldCommunicator): void {
+    this.scaffold = scaffold;
+  }
+
   private removeInvalidButton(): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";
@@ -128,7 +135,7 @@ export default class MapEditor {
             if (err) {
               console.log(err);
             } else {
-              alert("Good to go!");
+              alert("Good to go! Restart the client to use your new map.");
             }
           });
         } else {
