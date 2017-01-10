@@ -2,6 +2,7 @@ import {Config} from '../config';
 
 import ScaffoldCommunicator from '../scaffold';
 
+
 /**
  * The interface to run matches from the scaffold.
  *
@@ -11,6 +12,13 @@ export default class MatchRunner {
 
   // The public div
   readonly div: HTMLDivElement;
+
+  // The div displayed depending on whether the scaffold is loaded
+  private divNoElectron: HTMLDivElement;
+  private divNoScaffold: HTMLDivElement;
+  private divScaffold: HTMLDivElement;
+
+  // Because Gradle is slow
   private loadingMaps: Text;
   private loadingMatch: Text;
 
@@ -18,7 +26,8 @@ export default class MatchRunner {
   private readonly conf: Config;
 
   // The scaffold
-  private readonly scaffold: ScaffoldCommunicator;
+  private scaffold: ScaffoldCommunicator;
+  private cb: () => void; // callback for loading the scaffold
 
   // Match information
   private teamA: HTMLSelectElement;
@@ -27,18 +36,34 @@ export default class MatchRunner {
   private maps: Array<HTMLInputElement>;
   private runMatch: HTMLButtonElement;
 
-  constructor(conf: Config, scaffold: ScaffoldCommunicator) {
+  constructor(conf: Config, cb: () => void) {
     this.conf = conf;
-    this.scaffold = scaffold;
+    this.cb = cb;
     this.loadingMaps = document.createTextNode("Loading maps... please wait a few seconds.");
     this.loadingMatch = document.createTextNode("Loading match... please wait a few seconds.");
-    this.div = this.basediv();
 
-    this.startForm();
+    // The scaffold is loaded...
+    this.divScaffold = this.loadDivScaffold();
+
+    // ...but in case it's not
+    this.divNoElectron = this.loadDivNoElectron();
+    this.divNoScaffold = this.loadDivNoScaffold();
+
+    // And finally
+    this.div = this.basediv();
+  }
+
+  addScaffold(scaffold: ScaffoldCommunicator): void {
+    this.scaffold = scaffold;
 
     // Populate the form
     this.scaffold.getPlayers(this.teamCallback);
     this.scaffold.getMaps(this.mapCallback);
+
+    // Hide existing elements and show divScaffold
+    this.divNoElectron.style.display = "none";
+    this.divNoScaffold.style.display = "none";
+    this.divScaffold.style.display = "unset";
   }
 
   /**
@@ -47,13 +72,36 @@ export default class MatchRunner {
   private basediv(): HTMLDivElement {
     let div = document.createElement("div");
     div.id = "matchRunner";
+
+    // Add the potential divs
+    div.appendChild(this.divNoElectron);
+    div.appendChild(this.divNoScaffold);
+    div.appendChild(this.divScaffold);
+
+    // Show the correct div
+    if (!process.env.ELECTRON) {
+      // We're not even in electron
+      this.divNoElectron.style.display = "unset";
+    } else if (this.scaffold) {
+      // We have the scaffold!
+      this.divScaffold.style.display = "unset";
+    } else {
+      // Nope, no scaffold yet
+      this.divNoScaffold.style.display = "unset";
+    }
+
+    // TODO: Add the match queue below
+
     return div;
   }
 
   /**
-   * Creates the form elements and puts them in the UI.
+   * When there is electron and the scaffold is located - create the UI elements
    */
-  private startForm(): void {
+  private loadDivScaffold(): HTMLDivElement {
+    let div = document.createElement("div");
+    div.style.display = "none";
+
     this.teamA = document.createElement("select");
     this.teamB = document.createElement("select");
     this.mapsContainer = document.createElement("div");
@@ -64,26 +112,60 @@ export default class MatchRunner {
     divA.appendChild(document.createTextNode("Team A: "));
     divA.appendChild(this.teamA);
     divA.appendChild(document.createElement("br"));
-    this.div.appendChild(divA);
+    div.appendChild(divA);
 
     // Team B selector
     const divB = document.createElement("div");
     divB.appendChild(document.createTextNode("Team B: "));
     divB.appendChild(this.teamB);
     divB.appendChild(document.createElement("br"));
-    this.div.appendChild(divB);
+    div.appendChild(divB);
 
     // Map selector
     this.mapsContainer.appendChild(document.createTextNode("Select a map: "));
     this.mapsContainer.appendChild(this.loadingMaps);
     this.mapsContainer.appendChild(document.createElement("br"));
-    this.div.appendChild(this.mapsContainer);
+    div.appendChild(this.mapsContainer);
 
     // Run match button
     this.runMatch.type = "button";
     this.runMatch.appendChild(document.createTextNode("Run Match"));
     this.runMatch.onclick = this.run;
-    this.div.appendChild(this.runMatch);
+    div.appendChild(this.runMatch);
+
+    return div;
+  }
+
+  /**
+   * When there isn't electron at all so you can only upload files
+   */
+  private loadDivNoElectron(): HTMLDivElement {
+    const div = document.createElement("div");
+    div.style.display = "none";
+    div.appendChild(document.createTextNode(`You aren’t running the client as an
+      application, so you can’t load matches directly from your scaffold. :(`));
+    return div;
+  }
+
+  /**
+   * When you're in electron but we can't find the scaffold directory automatically
+   */
+  private loadDivNoScaffold(): HTMLDivElement {
+    const div = document.createElement("div");
+    div.style.display = "none";
+    div.appendChild(document.createTextNode(`Please select your battlecode-scaffold
+      directory (the one you downloaded that has all those files in it) to run
+      matches directly from the client.`))
+
+    // Add a button to load the directory
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("Find Directory"));
+    div.appendChild(button);
+
+    // Open a dialog when it's clicked
+    button.onclick = this.cb;
+    return div;
   }
 
   /**
@@ -147,9 +229,9 @@ export default class MatchRunner {
    * If the scaffold can run a match, add the functionality to the run button
    */
   private run = () => {
-    this.div.appendChild(this.loadingMatch);
+    this.divScaffold.appendChild(this.loadingMatch);
     const cb = (err: Error | null, stdout: string, stderr: string) => {
-      this.div.removeChild(this.loadingMatch);
+      this.divScaffold.removeChild(this.loadingMatch);
     };
     this.scaffold.runMatch(
       this.getTeamA(),
