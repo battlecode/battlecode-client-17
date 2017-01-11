@@ -1,4 +1,4 @@
-import {Config} from '../config';
+import {Config, Mode} from '../config';
 import * as imageloader from '../imageloader';
 import * as cst from '../constants';
 
@@ -10,8 +10,7 @@ export default class Controls {
   wrapper: HTMLDivElement;
 
   readonly speedReadout: Text;
-  readonly indicatorStrings: Array<Text>;
-  indicatorStringIDNode: Text;
+  readonly infoString: HTMLTableDataCellElement;
 
   // Callbacks initialized from outside Controls
   // Yeah, it's pretty gross :/
@@ -19,6 +18,8 @@ export default class Controls {
   onTogglePause: () => void;
   onToggleForward: () => void;
   onToggleRewind: () => void;
+  onStepForward: () => void;
+  onStepBackward: () => void;
   onSeek: (frame: number) => void;
 
   // qualities of progress bar
@@ -36,6 +37,8 @@ export default class Controls {
     skipForward: HTMLImageElement,
     seekBackward: HTMLImageElement,
     skipBackward: HTMLImageElement,
+    goNext: HTMLImageElement,
+    goPrevious: HTMLImageElement,
     upload: HTMLImageElement
   };
 
@@ -53,6 +56,8 @@ export default class Controls {
       skipForward: images.controls.skipForward,
       seekBackward: images.controls.seekBackward,
       skipBackward: images.controls.skipBackward,
+      goNext: images.controls.goNext,
+      goPrevious: images.controls.goPrevious,
       upload: images.controls.upload
     }
 
@@ -72,29 +77,20 @@ export default class Controls {
     buttons.appendChild(this.createButton("playbackStop", () => this.restart()));
     buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
     buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
+    buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
+    buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
 
-    // create the indicator string display
-    let indicators = document.createElement("td");
-    indicators.vAlign = "top";
-    indicators.style.fontSize = "11px";
-
-    this.indicatorStringIDNode = document.createTextNode("");
-    indicators.appendChild(this.indicatorStringIDNode);
-    indicators.appendChild(document.createElement("br"));
-
-    this.indicatorStrings = new Array();
-    for (let i = 0; i < cst.NUMBER_OF_INDICATOR_STRINGS; i++) {
-      let textNode = document.createTextNode("");
-      this.indicatorStrings.push(textNode);
-      indicators.appendChild(textNode);
-      indicators.appendChild(document.createElement("br"));
-    }
+    // create the info string display
+    let infoString = document.createElement("td");
+    infoString.vAlign = "top";
+    infoString.style.fontSize = "11px";
+    this.infoString = infoString;
 
     table.appendChild(tr);
     tr.appendChild(timeline);
     tr.appendChild(buttons);
-    tr.appendChild(indicators);
+    tr.appendChild(infoString);
 
     this.wrapper = document.createElement("div");
     this.wrapper.appendChild(table);
@@ -167,23 +163,23 @@ export default class Controls {
     return canvas;
   }
 
-  drawProgress(frame: number, maxFrame: number) {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-    this.ctx.fillRect(0, 0, this.canvas.width * frame / maxFrame, this.canvas.height)
-  }
-
   /**
    * Displays the correct controls depending on whether we are in game mode
    * or map editor mode
    */
   setControls = () => {
-    // Clear the game area
+    const mode = this.conf.mode;
+
+    // The controls can be anything in help mode
+    if (mode === Mode.HELP) return;
+
+    // Otherwise clear the controls...
     while (this.div.firstChild) {
       this.div.removeChild(this.div.firstChild);
     }
 
-    // Add the controls bar back if we are in game mode
-    if (this.conf.inGameMode) {
+    // ...and add the correct thing
+    if (mode !== Mode.MAPEDITOR) {
       this.div.appendChild(this.wrapper);
     }
   };
@@ -202,6 +198,16 @@ export default class Controls {
     reader.readAsArrayBuffer(file);
 
     // Reset buttons
+    this.imgs["playbackStart"].style.display = "unset";
+    this.imgs["playbackPause"].style.display = "none";
+    this.imgs["seekBackward"].style.display = "none";
+    this.imgs["skipBackward"].style.display = "unset";
+    this.imgs["seekForward"].style.display = "none";
+    this.imgs["skipForward"].style.display = "unset";
+  }
+  
+  resetButtons() {
+    // Reset buttons
     this.imgs["playbackStart"].style.display = "none";
     this.imgs["playbackPause"].style.display = "unset";
     this.imgs["seekBackward"].style.display = "none";
@@ -215,7 +221,6 @@ export default class Controls {
    */
   pause() {
     this.onTogglePause();
-    console.log('PAUSE');
 
     // toggle the play/pause button
     if (this.imgs["playbackStart"].style.display == "none") {
@@ -287,26 +292,55 @@ export default class Controls {
    * Restart simulation.
    */
   restart() {
-    console.log('RESTART');
     this.onSeek(0);
   }
+  
+  /**
+   * Steps forward one turn in the simulation
+   */
+  stepForward() {
+    this.onStepForward();
+  }
+  
+  /**
+   * Steps backward one turn in the simulation
+   */
+  stepBackward() {
+    this.onStepBackward();
+  }
 
+  /**
+   * Redraws the timeline and sets the current round displayed in the controls.
+   */
   setTime(time: number, loadedTime: number, ups: number, fps: number) {
-    this.drawProgress(time, loadedTime);
+    // Redraw the timeline
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.ctx.fillRect(0, 0, this.canvas.width * time / loadedTime, this.canvas.height)
+
+    // Edit the text
     this.speedReadout.textContent =
       ` TIME: ${time}/${loadedTime} UPS: ${ups | 0} FPS: ${fps | 0}`;
-
   }
 
-  setIndicatorID(id: number) {
-    this.indicatorStringIDNode.textContent = `Robot ID is ${id}`;
-  }
-
-  setIndicatorString(index: number, value: string) {
-    if (value === "") {
-      this.indicatorStrings[index].textContent = "";
+  /**
+   * Display an info string in the controls bar
+   * "Robot ID id
+   * Location: (x, y)
+   * Health: health/maxHealth
+   * Bytecodes Used: bytecodes"
+   */
+  setInfoString(id, x, y, health, maxHealth, bytecodes?: number): void {
+    if (bytecodes !== undefined) {
+      // Not a neutral tree or bullet tree
+      this.infoString.innerHTML = `Robot ID ${id}<br>
+        Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
+        Health: ${health.toFixed(3)}/${maxHealth.toFixed(3)}<br>
+        Bytecodes Used: ${bytecodes}`;
     } else {
-      this.indicatorStrings[index].textContent = `${index}, ${value}`;
+      // Neutral tree or bullet tree, no bytecode information
+      this.infoString.innerHTML = `Robot ID ${id}<br>
+        Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
+        Health: ${health.toFixed(3)}/${maxHealth.toFixed(3)}`;
     }
   }
 
@@ -314,6 +348,6 @@ export default class Controls {
    * Stop running the simulation, release all resources.
    */
   destroy() {
-    console.log('DESTROY');
+    // TODO? Not that important.
   }
 }

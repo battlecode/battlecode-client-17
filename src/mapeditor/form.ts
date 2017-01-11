@@ -86,8 +86,9 @@ export default class MapEditorForm {
         this.setArchonForm(loc);
       } else {
         let radius = this.getMaxRadius(loc.x, loc.y);
-        if (!isNaN(parseFloat(this.radiusT.value))) {
-          radius = Math.min(parseFloat(this.radiusT.value), radius);
+        let formRadius = parseFloat(this.radiusT.value);
+        if (!isNaN(formRadius) && formRadius >= cst.MIN_TREE_RADIUS) {
+          radius = Math.min(formRadius, radius);
         }
         this.setTreeForm(loc, radius);
       }
@@ -124,9 +125,9 @@ export default class MapEditorForm {
     // HTML structure
     const header: HTMLFormElement = document.createElement("form");
     const container: HTMLTableElement = document.createElement("table");
-    const mapname: HTMLDivElement = document.createElement("tr");
-    const width: HTMLDivElement = document.createElement("tr");
-    const height: HTMLDivElement = document.createElement("tr");
+    const mapname: HTMLTableRowElement = document.createElement("tr");
+    const width: HTMLTableRowElement = document.createElement("tr");
+    const height: HTMLTableRowElement = document.createElement("tr");
     header.appendChild(mapname);
     header.appendChild(width);
     header.appendChild(height);
@@ -472,8 +473,8 @@ export default class MapEditorForm {
       let x: number = parseFloat(this.xT.value);
       let y: number = parseFloat(this.yT.value);
       let id: number = parseInt(this.idT.textContent || "-1");
-      value = Math.max(value, 0);
-      value = Math.min(value, this.getMaxRadius(x, y));
+      value = Math.max(value, cst.MIN_TREE_RADIUS);
+      value = Math.min(value, this.getMaxRadius(x, y, id));
       this.radiusT.value = isNaN(value) ? "" : String(value);
     };
     // Archon must not overlap with other units
@@ -487,9 +488,9 @@ export default class MapEditorForm {
 
     this.bulletsT.onchange = () => {
       // Bullets must be a number >= 0
-      let value: number = parseFloat(this.yA.value);
+      let value: number = parseFloat(this.bulletsT.value);
       value = Math.max(value, 0);
-      this.yT.value = isNaN(value) ? "" : String(value);
+      this.bulletsT.value = isNaN(value) ? "" : String(value);
     };
 
     this.addbutton.onclick = () => {
@@ -589,9 +590,14 @@ export default class MapEditorForm {
     maxRadius = Math.max(0, maxRadius - cst.DELTA);
     if (archon) {
       if (this.onSymmetricLine(new Victor(x, y))) return 0;
-      return maxRadius >= 2 ? 2 : 0;
+      return maxRadius >= cst.ARCHON_RADIUS ? cst.ARCHON_RADIUS : 0;
     } else {
-      return maxRadius;
+      if (maxRadius < cst.MIN_TREE_RADIUS) {
+        // No tree can go here
+        return 0;
+      } else {
+        return Math.min(maxRadius, cst.MAX_TREE_RADIUS);
+      }
     }
   }
 
@@ -802,6 +808,17 @@ export default class MapEditorForm {
       });
     });
 
+    // Neutral trees cannot have a smaller radius than the body they contain
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.TREE_NEUTRAL) {
+        const treeRadius = unit.radius;
+        const bodyRadius = cst.radiusFromBodyType(unit.containedBody);
+        if (treeRadius < bodyRadius) {
+          errors.push(`Tree ID ${id} with radius ${treeRadius.toFixed(2)} contains a body with radius ${bodyRadius}`);
+        }
+      }
+    });
+
     if (errors.length > 0) {
       alert(errors.join("\n"));
       return false;
@@ -812,6 +829,8 @@ export default class MapEditorForm {
   }
 
   removeInvalidUnits(): void {
+    // NOTE: All changes that are made to originalBodies are reflected in
+    // symmetricBodies when calling this.render()
     let actions = new Array();
 
     // If there are too many archons, remove them until there aren't
@@ -825,7 +844,6 @@ export default class MapEditorForm {
       let poppedID = archonIDs.pop();
       if (poppedID) {
         this.originalBodies.delete(poppedID);
-        this.symmetricBodies.delete(poppedID);
         actions.push(`Removed archon ID ${poppedID}`);
       }
     }
@@ -842,7 +860,6 @@ export default class MapEditorForm {
       let distanceToWall = Math.min(x, y, this.width() - x, this.height() - y);
       if (unit.radius > distanceToWall || x < 0 || y < 0 || x > this.width() || y > this.height()) {
         this.originalBodies.delete(id);
-        this.symmetricBodies.delete(id);
         actions.push(`Removed ID ${id}. (off the map)`);
       }
     });
@@ -854,12 +871,22 @@ export default class MapEditorForm {
       this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
         if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
           this.originalBodies.delete(idA);
-          this.symmetricBodies.delete(idA);
           this.originalBodies.delete(idB);
-          this.symmetricBodies.delete(idB);
           actions.push (`Removed IDs ${idA} and ${idB}. (overlapping)`);
         }
       });
+    });
+
+    // Remove the body from neutral trees with a smaller radius than the contained body
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.TREE_NEUTRAL) {
+        const treeRadius = unit.radius;
+        const bodyRadius = cst.radiusFromBodyType(unit.containedBody);
+        if (treeRadius < bodyRadius) {
+          this.originalBodies.get(id).containedBody = cst.NONE;
+          actions.push(`Removed a body from tree ID ${id}`);
+        }
+      }
     });
 
     if (actions.length > 0) {
@@ -868,5 +895,12 @@ export default class MapEditorForm {
     } else {
       alert("Congratulations, the map is already valid!");
     }
+  }
+
+  reset(): void {
+    this.lastID = 1;
+    this.originalBodies = new Map<number, MapUnit>();
+    this.symmetricBodies = new Map<number, MapUnit>();
+    this.render();
   }
 }

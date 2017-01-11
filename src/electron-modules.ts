@@ -16,6 +16,7 @@ if (!process.env.ELECTRON) {
   define('electron', [], () => null);
   define('os', [], () => null);
   define('fs', [], () => null);
+  define('path', [], () => null);
   define('child_process', [], () => null);
 }
 
@@ -24,16 +25,19 @@ if (!process.env.ELECTRON) {
 import * as _electron from 'electron';
 import * as _os from 'os';
 import * as _fs from 'fs';
+import * as _path from 'path';
 import * as _child_process from 'child_process';
 
 export var electron = _electron;
 export var os = _os;
 export var fs = _fs;
+export var path = _path;
 export var child_process = _child_process;
 
 export default {
   electron: _electron,
   os: _os,
   fs: _fs,
+  path: _path,
   child_process: _child_process
 }

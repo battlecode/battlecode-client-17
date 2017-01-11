@@ -3,6 +3,7 @@ import * as cst from '../constants';
 import {AllImages} from '../imageloader';
 import MapEditorForm from './form';
 import {MapUnit} from './renderer';
+import ScaffoldCommunicator from '../scaffold';
 
 import {schema, flatbuffers} from 'battlecode-playback';
 
@@ -25,6 +26,9 @@ export default class MapEditor {
   // Options
   private readonly conf: Config;
 
+  // Scaffold
+  private scaffold: ScaffoldCommunicator | null;
+
   // For storing map information
   private bodiesArray: {
     robotIDs: number[],
@@ -46,6 +50,7 @@ export default class MapEditor {
   constructor(conf: Config, images: AllImages) {
     this.canvas = document.createElement("canvas");
     this.form = new MapEditorForm(conf, images, this.canvas);
+    this.scaffold = null;
     this.div = this.basediv();
     this.images = images;
     this.conf = conf;
@@ -62,7 +67,9 @@ export default class MapEditor {
 
     div.appendChild(this.form.div);
 
+    div.appendChild(this.validateButton());
     div.appendChild(this.removeInvalidButton());
+    div.appendChild(this.resetButton());
     div.appendChild(document.createElement("br"));
     div.appendChild(document.createElement("br"));
 
@@ -91,15 +98,48 @@ export default class MapEditor {
     };
   }
 
+  private validateButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("Validate"));
+    button.onclick = () => {
+      if (this.form.isValid()) {
+        alert("Congratulations! Your map is valid. :)")
+      }
+    };
+    return button;
+  }
+
+  /**
+   * Sets a scaffold if a scaffold directory is found after everything is loaded
+   */
+  addScaffold(scaffold: ScaffoldCommunicator): void {
+    this.scaffold = scaffold;
+  }
+
   private removeInvalidButton(): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";
     button.appendChild(document.createTextNode("Remove invalid units"));
     button.onclick = () => {
       let youAreSure = confirm(
-        "Are you sure? Continuing will permanently remove invalid units.");
+        "WARNING: you will permanently lose all invalid units. Click OK to continue anyway.");
       if (youAreSure) {
         this.form.removeInvalidUnits();
+      }
+    };
+    return button;
+  }
+
+  private resetButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("RESET"));
+    button.onclick = () => {
+      let youAreSure = confirm(
+        "WARNING: you will lose all your data. Click OK to continue anyway.");
+      if (youAreSure) {
+        this.form.reset();
       }
     };
     return button;
@@ -110,9 +150,27 @@ export default class MapEditor {
     button.id = "export";
     button.type = "button";
     button.appendChild(document.createTextNode("EXPORT!"));
+
     button.onclick = () => {
-      if (this.form.isValid()) this.exportFile();
-    };
+      if (!this.form.isValid()) return;
+
+      let name = this.form.name();
+      let data: Uint8Array | undefined = this.generateMap();
+
+      if (data) {
+        if (process.env.ELECTRON && this.scaffold) {
+          this.scaffold.saveMap(data, name, (err: Error | null) => {
+            if (err) {
+              console.log(err);
+            } else {
+              alert("Good to go! Restart the client to use your new map.");
+            }
+          });
+        } else {
+          this.exportFile(data, `${name}.map17`);
+        }
+      }
+    }
     return button;
   }
 
@@ -253,10 +311,11 @@ export default class MapEditor {
     return builder.asUint8Array();
   }
 
-  private exportFile() {
-    let fileName = `${this.form.name()}.map17`;
+  /**
+   * When there isn't a scaffold, let the user download the file
+   */
+  private exportFile(data: Uint8Array, fileName: string) {
     let mimeType = "application/octet-stream";
-    let data: Uint8Array | undefined = this.generateMap();
 
     if (data != undefined) {
       let blob = new Blob([data], { type: mimeType });

@@ -1,6 +1,6 @@
 /* Global stylings here */
 
-.gameDiv {
+.gameWrapper {
     background: #e0e0e0;
     color: black;
     border-radius: 4px;
@@ -14,19 +14,23 @@
 }
 
 .blue {
-    color: blue;
+    color: #4f7ee6;
 }
 
 .red {
-    color: red;
+    color: #a62014;
 }
 
-#matchViewer {
+#matchQueue {
     text-align: left;
     font-size: 18px;
-    border: 1px solid #ddd;
     padding: 10px;
     margin-bottom: 16px;
+    font-family: Tahoma, sans-serif;
+}
+
+#matchRunner {
+    font-family: Tahoma;
 }
 
 .removeButton {
@@ -36,7 +40,8 @@
 .gameNum {
     display: inline-block;
     margin-left: 16px;
-    min-width: 100px;
+    margin-right: 16px;
+    min-width: 80px;
 }
 
 .active-match {
@@ -56,7 +61,20 @@
 }
 
 #gamearea canvas {
-    height: calc(100vh - 75px);
+    max-height: calc(100vh - 75px);
+    max-width: calc(100vw - 320px);
+    margin-top:auto;
+    margin-bottom:auto;
+}
+
+#gamearea {
+  display:flex;
+  align-items: center; /* Vertical center alignment */
+  justify-content: center; /* Horizontal center alignment */
+}
+
+#canvas-wrapper {
+    margin-top: -75px;
 }
 
 .red {
@@ -79,11 +97,11 @@
     height: 100%;
     margin: 0px;
 }
-      
+
 input[type='file'] {
     display: none;
 }
-      
+
 .custom-button {
     background-color: #bbb;
     border-color: #ddd;
@@ -97,7 +115,7 @@ input[type='file'] {
     margin: .1rem;
     border: 1px solid transparent;
 }
-      
+
 .custom-button:hover {
     background-color: #bbb
 }
@@ -166,7 +184,8 @@ input[type='file'] {
 
 #helpDiv {
     text-align: left;
-    font-size: 12px;
+    font-family: Tahoma, sans-serif;
+    font-size: 14px;
     padding: 10px;
 }
 
@@ -200,6 +219,19 @@ input[type='file'] {
     padding-bottom: 15px;
 }
 
+#console {
+    border-radius: 10px;
+    background-color: #333;
+    color: #46ff00;
+    padding: 15px;
+    margin: 0px 5px;
+    font-family: Tahoma, sans-serif;
+    font-size: 11px;
+    height: 70vh; /* HELP: I'd prefer this be calc(100vh - ?px) but I can't get it to work */
+    text-align: left;
+    overflow: scroll;
+}
+
 /* Map Editor Supreme Edition Stylings */
 
 .mapInputBox {
@@ -214,4 +246,5 @@ input[type='file'] {
 .mapInputLabel {
     text-align: right;
     margin-right: 12px;
+  
 }

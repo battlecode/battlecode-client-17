@@ -20,7 +20,7 @@ export interface Config {
 
   /**
    * Turns per second.
-   * 
+   *
    * (DISTINCT from fps!)
    */
   readonly defaultTPS: number;
@@ -56,14 +56,20 @@ export interface Config {
   indicators: boolean;
 
   /**
-   * True for game mode, false for map editor mode
+   * The mode of the game
    */
-  inGameMode: boolean;
+  mode: Mode;
+}
 
-  /**
-   * Whether to show help information in the stats bar
-   */
-  inHelpMode: boolean;
+/**
+ * Different game modes that determine what is displayed on the client
+ */
+export enum Mode {
+  GAME,
+  HELP,
+  MAPEDITOR,
+  CONSOLE,
+  QUEUE
 }
 
 /**
@@ -79,11 +85,10 @@ export function defaults(supplied?: any): Config {
     defaultTPS: supplied.defaultTPS || 20,
     websocketURL: supplied.websocketURL || null,
     pollEvery: supplied.pollEvery || 500,
-    interpolate: true,
-    healthBars: true,
-    circleBots: false,
-    indicators: true,
-    inGameMode: true,
-    inHelpMode: false
+    interpolate: supplied.interpolate || true,
+    healthBars: supplied.healthBars || true,
+    circleBots: supplied.circleBots || false,
+    indicators: supplied.indicators || true,
+    mode: supplied.mode || Mode.GAME
   };
 }

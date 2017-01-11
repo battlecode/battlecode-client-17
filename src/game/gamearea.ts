@@ -1,4 +1,4 @@
-import {Config} from '../config';
+import {Config, Mode} from '../config';
 import {AllImages} from '../imageloader';
 
 import {GameWorld} from 'battlecode-playback';
@@ -44,9 +44,7 @@ export default class GameArea {
 
     this.canvas.width = world.minCorner.absDistanceX(world.maxCorner) * scale;
     this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
-
-    // looks weird if the window is tall and skinny instead of short and fat
-    this.canvas.style.height = "calc(100vh - 75px)";
+    
   }
 
   /**
@@ -54,16 +52,21 @@ export default class GameArea {
    * or map editor mode
    */
   setCanvas = () => {
-    // Clear the game area
+    const mode = this.conf.mode;
+
+    // The canvas can be anything in help mode
+    if (mode === Mode.HELP) return;
+
+    // Otherwise clear the canvas area...
     while (this.wrapper.firstChild) {
       this.wrapper.removeChild(this.wrapper.firstChild);
     }
 
-    // Update with the correct canvas
-    if (this.conf.inGameMode) {
-      this.wrapper.appendChild(this.canvas);
-    } else {
+    // ...and add the correct one
+    if (mode === Mode.MAPEDITOR) {
       this.wrapper.appendChild(this.mapEditorCanvas);
+    } else {
+      this.wrapper.appendChild(this.canvas);
     }
   };
 }

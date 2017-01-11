@@ -171,15 +171,16 @@ export default class Renderer {
       }
       this.drawCircleBot(x, y, radius);
       this.drawImage(img, x, y, radius);
-      this.drawHealthBar(x, y, radius, healths[i], maxHealths[i]);
+      this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
+        world.minCorner, world.maxCorner);
     }
 
     if (realXs && realYs) {
       // Interpolated
-      this.setIndicatorStringEventListener(world, realXs, realYs);
+      this.setInfoStringEvent(world, realXs, realYs);
     } else {
       // Not inteprolated
-      this.setIndicatorStringEventListener(world, xs, ys);
+      this.setInfoStringEvent(world, xs, ys);
     }
   }
 
@@ -207,11 +208,17 @@ export default class Renderer {
    * radius, health, and maxHealth
    */
   private drawHealthBar(xRobot: number, yRobot: number, radius: number,
-    health: number, maxHealth: number) {
+    health: number, maxHealth: number, minCorner: Victor, maxCorner: Victor) {
     if (!this.conf.healthBars) return; // skip if the option is turned off
 
     let x = xRobot - cst.HEALTH_BAR_WIDTH_HALF;
     let y = yRobot + radius;
+
+    let minX = minCorner.x;
+    let maxX = maxCorner.x - cst.HEALTH_BAR_WIDTH;
+    let maxY = maxCorner.y - cst.HEALTH_BAR_HEIGHT;
+    x = Math.max(minX, Math.min(x, maxX));
+    y = Math.min(maxY, y);
 
     this.ctx.fillStyle = "green"; // current health
     this.ctx.fillRect(x, y, cst.HEALTH_BAR_WIDTH * health / maxHealth,
@@ -221,9 +228,9 @@ export default class Renderer {
     this.ctx.strokeRect(x, y, cst.HEALTH_BAR_WIDTH, cst.HEALTH_BAR_HEIGHT);
   }
 
-  private setIndicatorStringEventListener(world: GameWorld,
+  private setInfoStringEvent(world: GameWorld,
     xs: Float32Array, ys: Float32Array) {
-    // indicator strings
+    // world information
     const width = world.maxCorner.x - world.minCorner.x;
     const height = world.maxCorner.y - world.minCorner.y;
     const ids: Int32Array = world.bodies.arrays.id;
@@ -232,8 +239,8 @@ export default class Renderer {
     const onRobotSelected = this.onRobotSelected;
 
     this.canvas.onmousedown = function(event) {
-      const x = width * event.offsetX / this.offsetWidth;
-      const y = height * event.offsetY / this.offsetHeight;
+      const x = width * event.offsetX / this.offsetWidth + world.minCorner.x;
+      const y = height * event.offsetY / this.offsetHeight + world.minCorner.y;
 
       // Get the ID of the selected robot
       let selectedRobotID;
@@ -242,19 +249,13 @@ export default class Renderer {
         let type = types[i];
         let inXRange: boolean = xs[i] - radius <= x && x <= xs[i] + radius;
         let inYRange: boolean = ys[i] - radius <= y && y <= ys[i] + radius;
-
-        if (type != cst.TREE_NEUTRAL && inXRange && inYRange) {
+        if (inXRange && inYRange) {
           selectedRobotID = ids[i];
           break;
         }
       }
 
-      // A robot was not selected, return
-      if (selectedRobotID == undefined) {
-        return;
-      }
-
-      // Set the indicator strings
+      // Set the info string even if the robot is undefined
       onRobotSelected(selectedRobotID);
     };
   }

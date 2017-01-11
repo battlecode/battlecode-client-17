@@ -1,17 +1,35 @@
 import {Game, GameWorld, Match, Metadata, schema, flatbuffers} from 'battlecode-playback';
+import * as cst from './constants';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
 import Sidebar from './html/sidebar';
 import Stats from './html/stats';
 import Controls from './html/controls';
-import MapEditor from './mapeditor/main';
+import Console from './html/console';
+import MapEditor from './mapeditor/mapeditor';
+import MatchQueue from './matchrunner/matchqueue';
 
 import GameArea from './game/gamearea';
 import NextStep from './game/nextstep';
 import Renderer from './game/renderer';
 import TickCounter from './game/fps';
 import WebSocketListener from './websocket';
+
+import ScaffoldCommunicator from './scaffold';
+
+import {electron} from './electron-modules';
+
+// webpack magic
+// this loads the stylesheet and injects it into the dom
+require('./style.css');
+
+// open devtools on f12
+document.addEventListener("keydown", function (e) {
+  if (e.which === 123) {
+    electron.remote.getCurrentWindow().webContents.openDevTools();
+  }
+});
 
 /**
  * The entrypoint to the battlecode client.
@@ -47,8 +65,10 @@ export default class Client {
   stats: Stats;
   mapeditor: MapEditor;
   gamearea: GameArea; // Inner game area
+  console: Console; // Console to display logs
   gamecanvas: HTMLCanvasElement;
   mapcanvas: HTMLCanvasElement;
+  matchqueue: MatchQueue; // Match queue
 
   // Match logic
   listener: WebSocketListener | null;
@@ -60,6 +80,9 @@ export default class Client {
 
   // used to cancel the main loop
   loopID: number | null;
+
+  // Allow us to run matches
+  scaffold: ScaffoldCommunicator | null;
 
   constructor(root: HTMLElement, conf?: any) {
     console.log('Battlecode client loading...');
@@ -73,6 +96,7 @@ export default class Client {
       this.root.appendChild(this.loadControls());
       this.root.appendChild(this.loadSidebar());
       this.root.appendChild(this.loadGameArea());
+      this.loadScaffold();
       this.ready();
     });
 
@@ -95,6 +119,7 @@ export default class Client {
     }
     this.clearScreen();
     this.currentGame = game;
+    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
   }
 
   setMatch(match: number) {
@@ -107,7 +132,9 @@ export default class Client {
 
     // Restart game loop
     this.runMatch();
-    this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
+    this.controls.resetButtons();
+    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
+    this.games[this.currentGame ? this.currentGame: 0].getMatch(this.currentMatch).seek(0);
   }
 
   /**
@@ -140,7 +167,9 @@ export default class Client {
     };
     this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
     this.stats = this.sidebar.stats;
+    this.console = this.sidebar.console;
     this.mapeditor = this.sidebar.mapeditor;
+    this.matchqueue = this.sidebar.matchqueue;
     return this.sidebar.div;
   }
 
@@ -157,6 +186,23 @@ export default class Client {
   }
 
   /**
+   * Find a scaffold to run matches with.
+   */
+  loadScaffold() {
+    console.log('ELECTRON: '+process.env.ELECTRON);
+    if (process.env.ELECTRON) {
+      const scaffoldPath = ScaffoldCommunicator.findDefaultScaffoldPath();
+
+      if (scaffoldPath != null) {
+        this.scaffold = new ScaffoldCommunicator(scaffoldPath);
+        this.sidebar.addScaffold(this.scaffold);
+      } else {
+        console.log("Couldn't load scaffold: click \"Run Match\" to learn more.");
+      }
+    }
+  }
+
+  /**
    * Marks the client as fully loaded.
    */
   ready() {
@@ -170,14 +216,14 @@ export default class Client {
         this.setGame(0);
         this.setMatch(0);
       }
-      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
     }
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
         (game) => {
           this.games.push(game);
-          this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         },
         // What to do with the websocket's first game's first match
         () => {
@@ -185,7 +231,12 @@ export default class Client {
           if (this.games.length === 1) {
             this.setGame(0);
             this.setMatch(0);
+            this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
           }
+        },
+        // What to do with any other match
+        () => {
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         }
       );
     }
@@ -221,16 +272,20 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
+    this.console.setLogs(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
 
+    // Last selected robot ID to display extra info
+    const controls = this.controls;
+    let lastSelectedID: number | undefined = undefined;
+    const onRobotSelected = (id: number | undefined) => {
+      lastSelectedID = id;
+    }
+
     // Configure renderer for this match
     // (radii, etc. may change between matches)
-    const controls = this.controls;
-    const onRobotSelected = function(id: number): void {
-      console.log(`Robot ${id} selected, do something with it!`);
-    }
     const renderer = new Renderer(this.gamearea.canvas, this.imgs,
       this.conf, meta as Metadata, onRobotSelected);
 
@@ -248,6 +303,7 @@ export default class Client {
     let interpGameTime = 0;
     // The time of the last frame
     let lastTime: number | null = null;
+    let lastTurn: number | null = null;
     // whether we're seeking
     let externalSeek = false;
 
@@ -268,7 +324,19 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     };
-    this.stats.onNextMatch = () => {
+    this.controls.onStepForward = () => {
+      if(!(goalUPS == 0)) {
+        this.controls.pause();
+      }
+      this.controls.onSeek(match.current.turn + 1);
+    };
+    this.controls.onStepBackward = () => {
+      if(!(goalUPS == 0)) {
+        this.controls.pause();
+      }
+      this.controls.onSeek(match.current.turn - 1);
+    };
+    this.matchqueue.onNextMatch = () => {
       console.log("NEXT MATCH");
 
       if(this.currentGame < 0) {
@@ -288,7 +356,7 @@ export default class Client {
       }
 
     };
-    this.stats.onPreviousMatch = () => {
+    this.matchqueue.onPreviousMatch = () => {
       console.log("PREV MATCH");
 
       if(this.currentMatch > 0) {
@@ -303,7 +371,7 @@ export default class Client {
       }
 
     };
-    this.stats.removeGame = (game: number) => {
+    this.matchqueue.removeGame = (game: number) => {
 
       if (game > this.currentGame) {
         this.games.splice(game, 1);
@@ -331,9 +399,9 @@ export default class Client {
         this.currentGame = game - 1;
       }
 
-      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
+      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
     };
-    this.stats.gotoMatch = (game: number, match: number) => {
+    this.matchqueue.gotoMatch = (game: number, match: number) => {
       this.setGame(game);
       this.setMatch(match);
     };
@@ -357,17 +425,23 @@ export default class Client {
         case 79: // "o" - Stop
           controls.restart();
           break;
-        case 37: // "LEFT" - Skip/Seek Backward
-          controls.rewind();
+        case 37: // "LEFT" - Step Backward
+          controls.stepBackward();
           break;
-        case 39: // "RIGHT" - Skip/Seek Forward
-          controls.forward();
+        case 39: // "RIGHT" - Step Forward
+          controls.stepForward();
           break;
         case 72: // "h" - Toggle Health Bars
           conf.healthBars = !conf.healthBars;
           break;
         case 67: // "c" - Toggle Circle Bots
           conf.circleBots = !conf.circleBots;
+          break;
+        case 70: // "f" - Skip/Seek Forward
+          controls.forward();
+          break;
+        case 82: // "r" - Skip/Seek Backward
+          controls.rewind();
           break;
         case 86: // "v" - Toggle Indicator Dots and Lines
           conf.indicators = !conf.indicators;
@@ -381,7 +455,7 @@ export default class Client {
     // The main update loop
     const loop = (curTime) => {
       let delta = 0;
-      if (lastTime === null) {
+      if (lastTime === null && lastTurn === null) {
         // first simulation step
         // do initial stuff?
       } else if (externalSeek) {
@@ -412,6 +486,34 @@ export default class Client {
       // run simulation
       // this may look innocuous, but it's a large chunk of the run time
       match.compute(5 /* ms */);
+
+      // update the info string in controls
+      if (lastSelectedID !== undefined) {
+        let bodies = match.current.bodies.arrays;
+        let index = bodies.id.indexOf(lastSelectedID)
+        if (index === -1) {
+          // The body doesn't exist anymore so indexOf returns -1
+          lastSelectedID = undefined;
+        } else {
+          let id = bodies.id[index];
+          let x = bodies.x[index];
+          let y = bodies.y[index];
+          let health = bodies.health[index];
+          let maxHealth = bodies.maxHealth[index];
+          let type = bodies.type[index];
+          let bytecodes = bodies.bytecodesUsed[index];
+          if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
+            this.controls.setInfoString(id, x, y, health, maxHealth);
+          } else {
+            this.controls.setInfoString(id, x, y, health, maxHealth, bytecodes);
+          }
+        }
+      }
+
+      if (lastTurn != match.current.turn) {
+        this.console.pushRound(match.current.turn, lastSelectedID);
+        lastTurn = match.current.turn;
+      }
 
       lastTime = curTime;
 

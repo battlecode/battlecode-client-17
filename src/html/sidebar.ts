@@ -1,8 +1,14 @@
-import {Config} from '../config';
+import {Config, Mode} from '../config';
 import {AllImages} from '../imageloader';
 
 import Stats from './stats';
-import MapEditor from '../mapeditor/main';
+import Console from './console';
+import MapEditor from '../mapeditor/mapeditor';
+import MatchRunner from '../matchrunner/matchrunner';
+import MatchQueue from '../matchrunner/matchqueue';
+import ScaffoldCommunicator from '../scaffold';
+
+import {electron} from '../electron-modules';
 
 export default class Sidebar {
 
@@ -13,11 +19,17 @@ export default class Sidebar {
 
   // Different modes
   readonly stats: Stats;
+  readonly console: Console;
   readonly mapeditor: MapEditor;
+  readonly matchrunner: MatchRunner;
+  readonly matchqueue: MatchQueue;
   private readonly help: HTMLDivElement;
 
   // Options
   private readonly conf: Config;
+
+  // Scaffold
+  private scaffold: ScaffoldCommunicator;
 
   // onkeydown event that uses the controls depending on the game mode
   private readonly onkeydownControls: (event: KeyboardEvent) => void;
@@ -26,13 +38,32 @@ export default class Sidebar {
   cb: () => void;
 
   // onkeydownControls is an onkeydown event that uses the controls depending on the game mode
-  constructor(conf: Config, images: AllImages, onkeydownControls: (event: KeyboardEvent) => void) {
+  constructor(conf: Config, images: AllImages,
+    onkeydownControls: (event: KeyboardEvent) => void) {
     // Initialize fields
     this.div = document.createElement("div");
     this.innerDiv = document.createElement("div");
     this.images = images;
     this.stats = new Stats(conf, images);
+    this.console = new Console(conf);
     this.mapeditor = new MapEditor(conf, images);
+    this.matchrunner = new MatchRunner(conf, () => {
+      // Set callback for matchrunner in case the scaffold is loaded later
+      electron.remote.dialog.showOpenDialog(
+      {
+        title: 'Please select your battlecode-scaffold directory.',
+        properties: ['openDirectory']
+      },
+      (filePaths) => {
+        if (filePaths.length > 0) {
+          this.scaffold = new ScaffoldCommunicator(filePaths[0]);
+          this.addScaffold(this.scaffold);
+        } else {
+          console.log('No scaffold found or provided');
+        }
+      })
+    });
+    this.matchqueue = new MatchQueue(conf, images);
     this.help = this.initializeHelp();
     this.conf = conf;
     this.onkeydownControls = onkeydownControls
@@ -40,8 +71,11 @@ export default class Sidebar {
     // Initialize div structure
     this.loadStyles();
     this.div.appendChild(this.battlecodeLogo());
-    this.div.appendChild(this.modeButton());
-    this.div.appendChild(this.helpButton());
+    this.div.appendChild(this.modeButton(Mode.GAME, "Game"));
+    this.div.appendChild(this.modeButton(Mode.QUEUE, "Queue"));
+    this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
+    this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
+    this.div.appendChild(this.modeButton(Mode.HELP, "Help"));
     this.div.appendChild(document.createElement("br"));
     this.div.appendChild(document.createElement("br"));
     this.div.appendChild(this.innerDiv);
@@ -49,21 +83,28 @@ export default class Sidebar {
   }
 
   /**
+   * Sets a scaffold if a scaffold directory is found after everything is loaded
+   */
+  addScaffold(scaffold: ScaffoldCommunicator): void {
+    this.mapeditor.addScaffold(scaffold);
+    this.matchrunner.addScaffold(scaffold);
+  }
+
+  /**
    * Initializes the help div
    */
   private initializeHelp(): HTMLDivElement {
     const innerHTML: string =
-    `This is the client for Battlecode 2017.<br>
+    `This is the client for Battlecode 2017. If you run into any issues,
+    make a post in the <a href="www.battlecodeforum.org">Battlecode forum</a>.
+    Be sure to attach a screenshot of your console output (F12 in the app) and
+    any other relevant information.<br>
     <br>
-    <b class="red">How to Play a Match</b><br>
-    <i>From the client:</i> Upload a <b>.bc17</b> file from your computer by
-    clicking the + button in the top-right corner. Use the control buttons to
-    navigate the match.<br>
-    <i>From the scaffold:</i> TODO<br>
-    <br>
-    <b class="blue">Keyboard Shortcuts</b><br>
-    LEFT - Skip/Seek Backward<br>
-    RIGHT - Skip/Seek Forward<br>
+    <b class="red">Keyboard Shortcuts</b><br>
+    LEFT - Step Back One Turn<br>
+    RIGHT - Step Forward One Turn<br>
+    R - Skip/Seek Backward<br>
+    F - Skip/Seek Forward<br>
     P - Pause/Unpause<br>
     O - Stop<br>
     H - Toggle Health Bars<br>
@@ -73,30 +114,43 @@ export default class Sidebar {
     S - Add/Update (map editor mode)<br>
     D - Delete (map editor mode)<br>
     <br>
-    <b class="red">How to Use the Map Editor</b><br>
-    Select the initial map settings: name, width, height, symmetry. If you
-    later change these settings and the map becomes invalid, you can click
-    “EXPORT!” to see what modifications need to be made. You can also click
-    “Clear invalid units” to automatically remove overlapping or off-map units,
-    but data may be lost.<br>
+    <b class="blue">How to Play a Match</b><br>
+    <i>From the application:</i> Click <b>'Queue'</b> and follow the
+    instructions in the sidebar. Note that it may take a few seconds for
+    matches to be displayed.<br>
+    <i>From the web client:</i> If you are not running the client as a
+    stand-alone application, you can always upload a <b>.bc17</b> file by
+    clicking the + button in the top-right corner.<br>
     <br>
-    Add trees and archons to the map by setting the coordinates and radius. The
-    coordinates can also be set by clicking on the map. The tree radius will
-    automatically adjust to the maximum valid radius if the input is too large,
-    and the archon radius is always 2. If the radius is 0, no unit of that type
-    can be placed there.<br>
+    Use the control buttons in <b>'Queue'</b> and the top of the screen to
+    navigate the match.<br>
+    <br>
+    <b class="red">How to Use the Console</b><br>
+    The console displays all System.out.println() data run by your robots.
+    You can filter by team by checking the boxes, by robot ID by clicking the
+    robot, and by round by going to that time and replaying the match.<br>
+    <br>
+    <b class="blue">How to Use the Map Editor</b><br>
+    Select the initial map settings: name, width, height, symmetry. Add trees
+    and archons by setting the coordinates and radius, and clicking
+    <b>"Add/Update."</b> The coordinates can also be set by clicking the map.
+    The radius will automatically adjust to the maximum valid radius if the
+    input is too large, and an archon always has radius 2. If the radius is 0,
+    no unit of that type can be placed there.<br>
     <br>
     Modify or delete existing units by clicking on them, making changes, then
-    clicking “Add/Update.”<br>
+    clicking <b>“Add/Update."</b><br>
     <br>
-    When you are happy with your map, click “EXPORT!”. (Note: the name of your
-    .map17 file must be the same as the name of your map.) Save the .map17
-    file to <b>battlecode-server/src/main/battlecode/world/resources</b>
-    directory of your scaffold.`;
+    Before exporting, click <b>"Validate"</b> to see if any changes need to be
+    made, and <b>"Remove Invalid Units"</b> to automatically remove off-map or
+    overlapping units. When you are happy with your map, click <b>“EXPORT!”</b>.
+    If you are directed to save your map, save it in the
+    <b>/battlecode-scaffold-2017-master/maps</b> directory of your scaffold.
+    (Note: the name of your .map17 file must be the same as the name of your
+    map.)`;
 
     const div = document.createElement("div");
     div.id = "helpDiv";
-    div.style.fontFamily = "Tahoma, sans serif";
 
     div.innerHTML = innerHTML;
     return div;
@@ -106,9 +160,9 @@ export default class Sidebar {
    * Initializes the styles for the sidebar div
    */
   private loadStyles(): void {
-    
+
     this.div.id = "sidebar";
-    
+
   }
 
   /**
@@ -123,23 +177,12 @@ export default class Sidebar {
     return logo;
   }
 
-  private modeButton(): HTMLButtonElement {
+  private modeButton(mode: Mode, text: string): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";
-    button.innerHTML = "Map Editor";
+    button.innerHTML = text;
     button.onclick = () => {
-      this.conf.inGameMode = !this.conf.inGameMode;
-      this.setSidebar();
-    };
-    return button;
-  }
-
-  private helpButton(): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.innerHTML = "Help";
-    button.onclick = () => {
-      this.conf.inHelpMode = !this.conf.inHelpMode;
+      this.conf.mode = mode;
       this.setSidebar();
     };
     return button;
@@ -155,30 +198,43 @@ export default class Sidebar {
     }
 
     // Update the div and set the corret onkeydown events
-    if (this.conf.inHelpMode) {
-      this.innerDiv.appendChild(this.help);
-    } else if (this.conf.inGameMode) {
-      this.innerDiv.appendChild(this.stats.div);
-      document.onkeydown = (event) => {
-        this.onkeydownControls(event);
-        switch (event.keyCode) {
-          case 72: // "h" - Toggle Health Bars
-          this.conf.healthBars = !this.conf.healthBars;
-          break;
-          case 67: // "c" - Toggle Circle Bots
-          this.conf.circleBots = !this.conf.circleBots;
-          break;
-          case 86: // "v" - Toggle Indicator Dots and Lines
-          this.conf.indicators = !this.conf.indicators;
-          break;
-          case 66: // "b" - Toggle Interpolation
-          this.conf.interpolate = !this.conf.interpolate;
-          break;
-        }
-      };
-    } else {
-      this.innerDiv.appendChild(this.mapeditor.div);
-      document.onkeydown = this.mapeditor.onkeydown();
+    switch (this.conf.mode) {
+      case Mode.GAME:
+        this.innerDiv.appendChild(this.stats.div);
+        // Reset the onkeydown event listener
+        document.onkeydown = (event) => {
+          this.onkeydownControls(event);
+          switch (event.keyCode) {
+            case 72: // "h" - Toggle Health Bars
+            this.conf.healthBars = !this.conf.healthBars;
+            break;
+            case 67: // "c" - Toggle Circle Bots
+            this.conf.circleBots = !this.conf.circleBots;
+            break;
+            case 86: // "v" - Toggle Indicator Dots and Lines
+            this.conf.indicators = !this.conf.indicators;
+            break;
+            case 66: // "b" - Toggle Interpolation
+            this.conf.interpolate = !this.conf.interpolate;
+            break;
+          }
+        };
+        break;
+      case Mode.HELP:
+        this.innerDiv.appendChild(this.help);
+        break;
+      case Mode.MAPEDITOR:
+        this.innerDiv.appendChild(this.mapeditor.div);
+        // Reset the onkeydown event listener
+        document.onkeydown = this.mapeditor.onkeydown();
+        break;
+      case Mode.CONSOLE:
+        this.innerDiv.appendChild(this.console.div);
+        break;
+      case Mode.QUEUE:
+        this.innerDiv.appendChild(this.matchrunner.div);
+        this.innerDiv.appendChild(this.matchqueue.div);
+        break;
     }
 
     this.cb();
