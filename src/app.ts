@@ -544,9 +544,9 @@ export default class Client {
           this.stats.setVPs(teamID, teamStats.vps);
 
           // Update each robot count
-          for(var i = 0; i < 6; i++) { // TODO: We need a way to get the number of robot types that are robots
-            this.stats.setRobotCount(teamID, i, teamStats.robots[i]);
-          }
+          this.stats.robots.forEach((type: schema.BodyType) => {
+            this.stats.setRobotCount(teamID, type, teamStats.robots[type]);
+          });
         }
 
       } else {

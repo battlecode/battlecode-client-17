@@ -30,8 +30,8 @@ export default class Stats {
   // match info. Keep in mind if we ever change these, or implement this less
   // statically.
 
-  private readonly stats: string[] = ["Bullets", "Victory Points"];
-  private readonly robots: schema.BodyType[] = [
+  readonly stats: string[] = ["Bullets", "Victory Points"];
+  readonly robots: schema.BodyType[] = [
     cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT
   ];
 

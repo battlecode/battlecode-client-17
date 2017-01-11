@@ -90,8 +90,6 @@ export default class MatchRunner {
       this.divNoScaffold.style.display = "unset";
     }
 
-    // TODO: Add the match queue below
-
     return div;
   }
 
