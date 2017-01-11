@@ -92,10 +92,12 @@ export default class ScaffoldCommunicator {
       return cb(
         null,
         files
-          .filter((file) => file.endsWith(path.sep + 'RobotPlayer.java') || file.endsWith(path.sep + 'RobotPlayer.scala'))
+          .filter((file) => file.endsWith(path.sep + 'RobotPlayer.java')
+            || file.endsWith(path.sep + 'RobotPlayer.kt')
+            || file.endsWith(path.sep + 'RobotPlayer.scala'))
           .map((file) => {
             const relPath = path.relative(this.sourcePath, file);
-            return relPath.substring(0, relPath.length - (path.sep + 'RobotPlayer.java').length)
+            return relPath.replace(/.RobotPlayer\.[^/.]+$/, '')
                           .replace(new RegExp(WINDOWS? '\\\\' : '/', 'g'), '.');
           })
       );
