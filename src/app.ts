@@ -309,12 +309,15 @@ export default class Client {
     const onRobotSelected = (id: number | undefined) => {
       lastSelectedID = id;
       this.console.setIDFilter(id);
-    }
+    };
+    const onMouseover = (x: number, y: number) => {
+      this.controls.setLocation(x, y);
+    };
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
     const renderer = new Renderer(this.gamearea.canvas, this.imgs,
-      this.conf, meta as Metadata, onRobotSelected);
+      this.conf, meta as Metadata, onRobotSelected, onMouseover);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -330,6 +333,7 @@ export default class Client {
     let interpGameTime = 0;
     // The time of the last frame
     let lastTime: number | null = null;
+    let lastTurn: number | null = null;
     // whether we're seeking
     let externalSeek = false;
 
@@ -476,31 +480,35 @@ export default class Client {
       // this may look innocuous, but it's a large chunk of the run time
       match.compute(5 /* ms */);
 
-      // update the info string in controls
-      if (lastSelectedID !== undefined) {
-        let bodies = match.current.bodies.arrays;
-        let index = bodies.id.indexOf(lastSelectedID)
-        if (index === -1) {
-          // The body doesn't exist anymore so indexOf returns -1
-          lastSelectedID = undefined;
-        } else {
-          let id = bodies.id[index];
-          let x = bodies.x[index];
-          let y = bodies.y[index];
-          let health = bodies.health[index];
-          let maxHealth = bodies.maxHealth[index];
-          let type = bodies.type[index];
-          let bytecodes = bodies.bytecodesUsed[index];
-          if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
-            this.controls.setInfoString(id, x, y, health, maxHealth);
+      // Updates that happen every turn instead of every time to save on computation
+      if (lastTurn != match.current.turn) {
+        // update the info string in controls
+        if (lastSelectedID !== undefined) {
+          let bodies = match.current.bodies.arrays;
+          let index = bodies.id.indexOf(lastSelectedID)
+          if (index === -1) {
+            // The body doesn't exist anymore so indexOf returns -1
+            lastSelectedID = undefined;
           } else {
-            this.controls.setInfoString(id, x, y, health, maxHealth, bytecodes);
+            let id = bodies.id[index];
+            let x = bodies.x[index];
+            let y = bodies.y[index];
+            let health = bodies.health[index];
+            let maxHealth = bodies.maxHealth[index];
+            let type = bodies.type[index];
+            let bytecodes = bodies.bytecodesUsed[index];
+            if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
+              this.controls.setInfoString(id, x, y, health, maxHealth);
+            } else {
+              this.controls.setInfoString(id, x, y, health, maxHealth, bytecodes);
+            }
           }
         }
       }
 
       this.console.seekRound(match.current.turn);
       lastTime = curTime;
+      lastTurn = match.current.turn;
 
       // only interpolate if:
       // - we want to
