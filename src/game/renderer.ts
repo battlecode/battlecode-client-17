@@ -19,19 +19,23 @@ export default class Renderer {
   readonly imgs: AllImages;
   readonly metadata: Metadata;
 
+  // Callbacks
   readonly onRobotSelected: (id: number) => void;
+  readonly onMouseover: (x: number, y: number) => void;
 
   // other cached useful values
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
-  constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config,
-    metadata: Metadata, onRobotSelected: (id: number) => void) {
+  constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config, metadata: Metadata,
+    onRobotSelected: (id: number) => void,
+    onMouseover: (x: number, y: number) => void) {
     this.canvas = canvas;
     this.conf = conf;
     this.imgs = imgs;
     this.metadata = metadata;
     this.onRobotSelected = onRobotSelected;
+    this.onMouseover = onMouseover;
 
     let ctx = canvas.getContext("2d");
     if (ctx === null) {
@@ -71,6 +75,7 @@ export default class Renderer {
     }
 
     this.renderIndicatorDotsLines(world);
+    this.setMouseoverEvent(world);
 
     // restore default rendering
     this.ctx.restore();
@@ -257,6 +262,21 @@ export default class Renderer {
 
       // Set the info string even if the robot is undefined
       onRobotSelected(selectedRobotID);
+    };
+  }
+
+  private setMouseoverEvent(world: GameWorld) {
+    // world information
+    const width = world.maxCorner.x - world.minCorner.x;
+    const height = world.maxCorner.y - world.minCorner.y;
+    const onMouseover = this.onMouseover;
+
+    this.canvas.onmousemove = function(event) {
+      const x = width * event.offsetX / this.offsetWidth + world.minCorner.x;
+      const y = height * event.offsetY / this.offsetHeight + world.minCorner.y;
+
+      // Set the location of the mouseover
+      onMouseover(x, y);
     };
   }
 
