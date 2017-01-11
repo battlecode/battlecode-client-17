@@ -19,8 +19,10 @@ export default class MatchRunner {
   private divScaffold: HTMLDivElement;
 
   // Because Gradle is slow
+  private loading: HTMLDivElement;
   private loadingMaps: Text;
   private loadingMatch: Text;
+  private isLoadingMatch: boolean;
 
   // Options
   private readonly conf: Config;
@@ -35,12 +37,14 @@ export default class MatchRunner {
   private mapsContainer: HTMLDivElement;
   private maps: Array<HTMLInputElement>;
   private runMatch: HTMLButtonElement;
+  private refreshButton: HTMLButtonElement
 
   constructor(conf: Config, cb: () => void) {
     this.conf = conf;
     this.cb = cb;
-    this.loadingMaps = document.createTextNode("Loading maps... please wait a few seconds.");
-    this.loadingMatch = document.createTextNode("Loading match... please wait a few seconds.");
+    this.loadingMaps = document.createTextNode("Loading maps...please wait.");
+    this.loadingMatch = document.createTextNode("Loading match...please wait.");
+    this.isLoadingMatch = false;
 
     // The scaffold is loaded...
     this.divScaffold = this.loadDivScaffold();
@@ -90,8 +94,6 @@ export default class MatchRunner {
       this.divNoScaffold.style.display = "unset";
     }
 
-    // TODO: Add the match queue below
-
     return div;
   }
 
@@ -102,10 +104,17 @@ export default class MatchRunner {
     let div = document.createElement("div");
     div.style.display = "none";
 
+    this.loading = document.createElement("div");
     this.teamA = document.createElement("select");
     this.teamB = document.createElement("select");
     this.mapsContainer = document.createElement("div");
     this.runMatch = document.createElement("button");
+    this.refreshButton = document.createElement("button");
+
+    // Loading messages area
+    this.loading.appendChild(this.loadingMaps);
+    this.loading.style.fontStyle = "italic";
+    div.appendChild(this.loading);
 
     // Team A selector
     const divA = document.createElement("div");
@@ -122,10 +131,15 @@ export default class MatchRunner {
     div.appendChild(divB);
 
     // Map selector
-    this.mapsContainer.appendChild(document.createTextNode("Select a map: "));
-    this.mapsContainer.appendChild(this.loadingMaps);
-    this.mapsContainer.appendChild(document.createElement("br"));
+    div.appendChild(document.createTextNode("Select a map: "));
+    div.appendChild(document.createElement("br"));
     div.appendChild(this.mapsContainer);
+
+    // Refresh Button
+    this.refreshButton.type = "button";
+    this.refreshButton.appendChild(document.createTextNode("Refresh"));
+    this.refreshButton.onclick = this.refresh;
+    div.appendChild(this.refreshButton);
 
     // Run match button
     this.runMatch.type = "button";
@@ -207,8 +221,7 @@ export default class MatchRunner {
 
     // Found the maps
     if (maps) {
-      console.log(maps);
-      this.mapsContainer.removeChild(this.loadingMaps);
+      this.loadingMaps.remove();
       this.maps = new Array();
       // Create a checkbox for each map...
       for (let map of maps) {
@@ -229,12 +242,19 @@ export default class MatchRunner {
    * If the scaffold can run a match, add the functionality to the run button
    */
   private run = () => {
-    this.divScaffold.appendChild(this.loadingMatch);
+    // Already loading a match, don't run again
+    if (this.isLoadingMatch) {
+      return;
+    }
+
+    this.loading.appendChild(this.loadingMatch);
+    this.isLoadingMatch = true;
     const cb = (err: Error | null, stdout: string, stderr: string) => {
-      this.divScaffold.removeChild(this.loadingMatch);
+      this.loadingMatch.remove();
       if (err) {
         console.log(err);
       }
+      this.isLoadingMatch = false;
     };
     this.scaffold.runMatch(
       this.getTeamA(),
@@ -242,6 +262,29 @@ export default class MatchRunner {
       this.getMaps(),
       cb
     );
+  }
+
+  /**
+   * Refresh the player list and maps
+   */
+  private refresh = () => {
+    // Clear player and maps options
+    while (this.teamA.firstChild) {
+      this.teamA.removeChild(this.teamA.firstChild);
+    }
+    while (this.teamB.firstChild) {
+      this.teamB.removeChild(this.teamB.firstChild);
+    }
+    while (this.mapsContainer.firstChild) {
+      this.mapsContainer.removeChild(this.mapsContainer.firstChild);
+    }
+
+    // Add loading message
+    this.loading.appendChild(this.loadingMaps);
+
+    // Refresh
+    this.scaffold.getPlayers(this.teamCallback);
+    this.scaffold.getMaps(this.mapCallback);
   }
 
   /**********************************

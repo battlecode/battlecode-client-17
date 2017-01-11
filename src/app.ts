@@ -152,17 +152,23 @@ export default class Client {
     let onkeydownControls = (event: KeyboardEvent) => {
       switch (event.keyCode) {
         case 80: // "p" - Pause/Unpause
-        this.controls.pause();
-        break;
+          this.controls.pause();
+          break;
         case 79: // "o" - Stop
-        this.controls.restart();
-        break;
-        case 37: // "LEFT" - Skip/Seek Backward
-        this.controls.rewind();
-        break;
-        case 39: // "RIGHT" - Skip/Seek Forward
-        this.controls.forward();
-        break;
+          this.controls.restart();
+          break;
+        case 37: // "LEFT" - Step Backward
+          this.controls.stepBackward();
+          break;
+        case 39: // "RIGHT" - Step Forward
+          this.controls.stepForward();
+          break;
+        case 70: // "f" - Skip/Seek Forward
+          this.controls.forward();
+          break;
+        case 82: // "r" - Skip/Seek Backward
+          this.controls.rewind();
+          break;
       }
     };
     this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
@@ -250,6 +256,26 @@ export default class Client {
     }
   }
 
+  /**
+   * Updates the stats bar displaying VP, bullets, and robot counts for each
+   * team in the current game world.
+   */
+  private updateStats(world: GameWorld, meta: Metadata) {
+    for (let team in meta.teams) {
+      let teamID = meta.teams[team].teamID;
+      let teamStats = world.stats.get(teamID);
+
+      // Update the bullets and victory points
+      this.stats.setBullets(teamID, teamStats.bullets);
+      this.stats.setVPs(teamID, teamStats.vps);
+
+      // Update each robot count
+      this.stats.robots.forEach((type: schema.BodyType) => {
+        this.stats.setRobotCount(teamID, type, teamStats.robots[type]);
+      });
+    }
+  }
+
   private runMatch() {
     console.log('Running match.');
 
@@ -272,7 +298,7 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
-    this.console.setLogs(match.logs);
+    this.console.indexLogs(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
@@ -282,6 +308,7 @@ export default class Client {
     let lastSelectedID: number | undefined = undefined;
     const onRobotSelected = (id: number | undefined) => {
       lastSelectedID = id;
+      this.console.setIDFilter(id);
     };
     const onMouseover = (x: number, y: number) => {
       this.controls.setLocation(x, y);
@@ -418,47 +445,10 @@ export default class Client {
       interpGameTime = turn;
     }, false);
 
-    // set key options
-    const conf = this.conf;
-    document.onkeydown = function(event) {
-      switch (event.keyCode) {
-        case 80: // "p" - Pause/Unpause
-          controls.pause();
-          break;
-        case 79: // "o" - Stop
-          controls.restart();
-          break;
-        case 37: // "LEFT" - Step Backward
-          controls.stepBackward();
-          break;
-        case 39: // "RIGHT" - Step Forward
-          controls.stepForward();
-          break;
-        case 72: // "h" - Toggle Health Bars
-          conf.healthBars = !conf.healthBars;
-          break;
-        case 67: // "c" - Toggle Circle Bots
-          conf.circleBots = !conf.circleBots;
-          break;
-        case 70: // "f" - Skip/Seek Forward
-          controls.forward();
-          break;
-        case 82: // "r" - Skip/Seek Backward
-          controls.rewind();
-          break;
-        case 86: // "v" - Toggle Indicator Dots and Lines
-          conf.indicators = !conf.indicators;
-          break;
-        case 66: // "b" - Toggle Interpolation
-          conf.interpolate = !conf.interpolate;
-          break;
-      }
-    };
-
     // The main update loop
     const loop = (curTime) => {
       let delta = 0;
-      if (lastTime === null && lastTurn === null) {
+      if (lastTime === null) {
         // first simulation step
         // do initial stuff?
       } else if (externalSeek) {
@@ -514,12 +504,11 @@ export default class Client {
             }
           }
         }
-
-        this.console.pushRound(match.current.turn, lastSelectedID);
-        lastTurn = match.current.turn;
       }
 
+      this.console.seekRound(match.current.turn);
       lastTime = curTime;
+      lastTurn = match.current.turn;
 
       // only interpolate if:
       // - we want to
@@ -539,27 +528,13 @@ export default class Client {
         renderer.render(match.current,
                         match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
                         nextStep, lerp);
-
-        // UPDATE STATS HERE
-        for (let team in meta.teams) {
-          var teamID = meta.teams[team].teamID;
-          var teamStats = match.current.stats.get(teamID);
-          this.stats.setBullets(teamID, teamStats.bullets);
-          this.stats.setVPs(teamID, teamStats.vps);
-
-          // Update each robot count
-          for(var i = 0; i < 6; i++) { // TODO: We need a way to get the number of robot types that are robots
-            this.stats.setRobotCount(teamID, i, teamStats.robots[i]);
-          }
-        }
-
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
         renderer.render(match.current,
                         match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
-
       }
 
+      this.updateStats(match.current, meta);
       this.loopID = window.requestAnimationFrame(loop);
 
     };
