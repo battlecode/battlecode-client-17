@@ -254,6 +254,7 @@ export default class MatchRunner {
       if (err) {
         console.log(err);
       }
+      console.log(stderr);
       this.isLoadingMatch = false;
     };
     this.scaffold.runMatch(
