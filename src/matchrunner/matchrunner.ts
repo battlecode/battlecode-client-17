@@ -21,6 +21,7 @@ export default class MatchRunner {
   // Because Gradle is slow
   private loadingMaps: Text;
   private loadingMatch: Text;
+  private isLoadingMatch: boolean;
 
   // Options
   private readonly conf: Config;
@@ -41,6 +42,7 @@ export default class MatchRunner {
     this.cb = cb;
     this.loadingMaps = document.createTextNode("Loading maps... please wait a few seconds.");
     this.loadingMatch = document.createTextNode("Loading match... please wait a few seconds.");
+    this.isLoadingMatch = false;
 
     // The scaffold is loaded...
     this.divScaffold = this.loadDivScaffold();
@@ -226,12 +228,19 @@ export default class MatchRunner {
    * If the scaffold can run a match, add the functionality to the run button
    */
   private run = () => {
+    // Already loading a match, don't run again
+    if (this.isLoadingMatch) {
+      return;
+    }
+
     this.divScaffold.appendChild(this.loadingMatch);
+    this.isLoadingMatch = true;
     const cb = (err: Error | null, stdout: string, stderr: string) => {
       this.loadingMatch.remove();
       if (err) {
         console.log(err);
       }
+      this.isLoadingMatch = false;
     };
     this.scaffold.runMatch(
       this.getTeamA(),
