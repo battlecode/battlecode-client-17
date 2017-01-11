@@ -28,6 +28,9 @@ export default class WebSocketListener {
     this.onFirstMatch = onFirstMatch;
     this.onOtherMatch = onOtherMatch;
     this.poll();
+    window.setInterval(() => {
+      this.poll()
+    }, this.pollEvery);
   }
 
   private poll() {
@@ -42,9 +45,6 @@ export default class WebSocketListener {
     ws.onerror = (event) => {
     };
     ws.onclose = (event) => {
-      window.setTimeout(() => {
-        this.poll()
-      }, this.pollEvery);
     };
   }
 
