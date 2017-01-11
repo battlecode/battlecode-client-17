@@ -30,6 +30,7 @@ export default class GameArea {
     const canvas: HTMLCanvasElement = document.createElement('canvas');
     canvas.id = "battlecode-canvas";
     this.canvas = canvas;
+    this.loadSplashScreenInto(this.canvas);
 
     // Add elements to the main div
     this.div.appendChild(this.wrapper);
@@ -45,6 +46,29 @@ export default class GameArea {
     this.canvas.width = world.minCorner.absDistanceX(world.maxCorner) * scale;
     this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
     
+  }
+  
+  /**
+   * Displays the splash screen
+   */
+  loadSplashScreenInto(splashCanvas : HTMLCanvasElement) {
+    
+    let ctx = splashCanvas.getContext("2d");
+    if (ctx === null) {
+        throw new Error("Couldn't load canvas2d context");
+    } else {
+      
+      ctx['imageSmoothingEnabled'] = false;
+      ctx.font = '48px Graduate';
+      ctx.fillStyle = 'white';
+      ctx.fillText("Battlecode Client", 0, 48, 300);
+      ctx.font = '32px "Graduate"';
+      ctx.fillText("v1.1.0", 110, 88);
+      
+    }
+
+    this.wrapper.appendChild(splashCanvas);
+      
   }
 
   /**

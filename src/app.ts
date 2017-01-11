@@ -188,6 +188,7 @@ export default class Client {
       this.gamearea.setCanvas();
       this.controls.setControls();
     };
+    
     return this.gamearea.div;
   }
 
@@ -203,7 +204,7 @@ export default class Client {
         this.scaffold = new ScaffoldCommunicator(scaffoldPath);
         this.sidebar.addScaffold(this.scaffold);
       } else {
-        console.log("Couldn't load scaffold: click \"Run Match\" to learn more.");
+        console.log("Couldn't load scaffold: click \"Queue\" to learn more.");
       }
     }
   }
