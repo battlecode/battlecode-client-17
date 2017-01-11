@@ -712,22 +712,18 @@ export default class MapEditorForm {
    */
   bodies(): Map<number, MapUnit> {
     const map = new Map<number, MapUnit>();
-    const idGenerators = [
-      function(id: number) { return id * 2; },
-      function(id: number) { return id * 2 + 1; }
-    ];
-    const indexA = Math.round(Math.random() * 2); // 0 or 1
-    const indexB = 1 - indexA; // 1 or 0
-    const idGeneratorA = idGenerators[indexA];
-    const idGeneratorB = idGenerators[indexB];
+
+    const offsetA = Math.round(Math.random()); // 0 or 1
+    const offsetB = 1 - offsetA; // 1 or 0
+    console.log(`${offsetA} ${offsetB}`);
 
     this.originalBodies.forEach((body: MapUnit, id: number) => {
       if (body.type === cst.ARCHON) body.teamID = 1;
-      map.set(idGeneratorA(id), body);
+      map.set(id * 2 + offsetA, body);
     });
     this.symmetricBodies.forEach((body: MapUnit, id: number) => {
       if (body.type === cst.ARCHON) body.teamID = 2;
-      map.set(idGeneratorB(id), body);
+      map.set(id * 2 + offsetB, body);
     });
 
     return map;
