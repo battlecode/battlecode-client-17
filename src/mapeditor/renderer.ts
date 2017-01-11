@@ -75,11 +75,21 @@ export default class MapRenderer {
     this.ctx.scale(scale, scale);
 
     this.renderBackground();
-    this.renderBodies(bodies, symmetricBodies);
+    this.renderBodies(height, bodies, symmetricBodies);
 
     // restore default rendering
     this.setEventListener(width, height, bodies, symmetricBodies);
     this.ctx.restore();
+  }
+
+  /**
+   * Returns the mirrored y coordinate to be consistent with (0, 0) in the
+   * bottom-left corner (top-left corner is canvas default).
+   * params: y coordinate to flip
+   *         height coordinate of the maximum edge
+   */
+  private flip(y: number, height: number) {
+    return height - y;
   }
 
   /**
@@ -100,7 +110,8 @@ export default class MapRenderer {
   /**
    * Draw trees and units on the canvas
    */
-  private renderBodies(bodies: Map<number, MapUnit>,
+  private renderBodies(height: number,
+    bodies: Map<number, MapUnit>,
     symmetricBodies: Map<number, MapUnit>) {
 
     const tree = this.imgs.tree.fullHealth;
@@ -109,7 +120,7 @@ export default class MapRenderer {
     this.ctx.fillStyle = "#84bf4b";
     bodies.forEach((body: MapUnit) => {
       const x = body.loc.x;
-      const y = body.loc.y;
+      const y = this.flip(body.loc.y, height);
       const radius = body.radius;
 
       this.drawCircleBot(x, y, radius);
@@ -122,7 +133,7 @@ export default class MapRenderer {
 
     symmetricBodies.forEach((body: MapUnit) => {
       const x = body.loc.x;
-      const y = body.loc.y;
+      const y = this.flip(body.loc.y, height);
       const radius = body.radius;
 
       this.drawCircleBot(x, y, radius);
@@ -142,7 +153,7 @@ export default class MapRenderer {
     bodies: Map<number, MapUnit>, symmetricBodies: Map<number, MapUnit>) {
     this.canvas.onmousedown = (event: MouseEvent) => {
       let x = width * event.offsetX / this.canvas.offsetWidth;
-      let y = height * event.offsetY / this.canvas.offsetHeight;
+      let y = this.flip(height * event.offsetY / this.canvas.offsetHeight, height);
       let loc = new Victor(x, y);
 
       // Get the ID of the selected unit
