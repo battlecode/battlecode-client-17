@@ -205,8 +205,7 @@ export default class MatchRunner {
 
     // Found the maps
     if (maps) {
-      console.log(maps);
-      this.mapsContainer.removeChild(this.loadingMaps);
+      this.loadingMaps.remove();
       this.maps = new Array();
       // Create a checkbox for each map...
       for (let map of maps) {
@@ -229,7 +228,7 @@ export default class MatchRunner {
   private run = () => {
     this.divScaffold.appendChild(this.loadingMatch);
     const cb = (err: Error | null, stdout: string, stderr: string) => {
-      this.divScaffold.removeChild(this.loadingMatch);
+      this.loadingMatch.remove();
       if (err) {
         console.log(err);
       }
