@@ -250,6 +250,26 @@ export default class Client {
     }
   }
 
+  /**
+   * Updates the stats bar displaying VP, bullets, and robot counts for each
+   * team in the current game world.
+   */
+  private updateStats(world: GameWorld, meta: Metadata) {
+    for (let team in meta.teams) {
+      let teamID = meta.teams[team].teamID;
+      let teamStats = world.stats.get(teamID);
+
+      // Update the bullets and victory points
+      this.stats.setBullets(teamID, teamStats.bullets);
+      this.stats.setVPs(teamID, teamStats.vps);
+
+      // Update each robot count
+      this.stats.robots.forEach((type: schema.BodyType) => {
+        this.stats.setRobotCount(teamID, type, teamStats.robots[type]);
+      });
+    }
+  }
+
   private runMatch() {
     console.log('Running match.');
 
@@ -535,27 +555,13 @@ export default class Client {
         renderer.render(match.current,
                         match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
                         nextStep, lerp);
-
-        // UPDATE STATS HERE
-        for (let team in meta.teams) {
-          var teamID = meta.teams[team].teamID;
-          var teamStats = match.current.stats.get(teamID);
-          this.stats.setBullets(teamID, teamStats.bullets);
-          this.stats.setVPs(teamID, teamStats.vps);
-
-          // Update each robot count
-          this.stats.robots.forEach((type: schema.BodyType) => {
-            this.stats.setRobotCount(teamID, type, teamStats.robots[type]);
-          });
-        }
-
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
         renderer.render(match.current,
                         match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
-
       }
 
+      this.updateStats(match.current, meta);
       this.loopID = window.requestAnimationFrame(loop);
 
     };
