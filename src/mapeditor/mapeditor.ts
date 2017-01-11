@@ -83,17 +83,22 @@ export default class MapEditor {
    */
   onkeydown(): (event: KeyboardEvent) => void {
     return (event: KeyboardEvent) => {
-      switch (event.keyCode) {
-        case 67: // "c" - Toggle Circle Bots
-        this.conf.circleBots = !this.conf.circleBots;
-        this.form.render();
-        break;
-        case 83: // "s" - Set (Add/Update)c
-        this.form.addToMap();
-        break;
-        case 68: // "d" - Delete
-        this.form.deleteFromMap();
-        break;
+      
+      console.log(document.activeElement.nodeName)
+      var input = document.activeElement.nodeName == "INPUT";
+      if(!input) {
+        switch (event.keyCode) {
+          case 67: // "c" - Toggle Circle Bots
+          this.conf.circleBots = !this.conf.circleBots;
+          this.form.render();
+          break;
+          case 83: // "s" - Set (Add/Update)c
+          this.form.addToMap();
+          break;
+          case 68: // "d" - Delete
+          this.form.deleteFromMap();
+          break;
+        }
       }
     };
   }
