@@ -12,22 +12,42 @@ export default class Console {
 
   // The public div
   readonly div: HTMLDivElement;
-  private readonly console: HTMLDivElement;
+
+  // HTML Elements
+  private console: HTMLDivElement;
+  private teamAInput: HTMLInputElement;
+  private teamBInput: HTMLInputElement;
+  private lengthInput: HTMLInputElement;
+
+  // Filters
+  // use teamA(), teamB(), and minRound() to get the other filters
+  private robotID: number | undefined;
+  private currentRound: number;
 
   // Options
-  private teamA: HTMLInputElement;
-  private teamB: HTMLInputElement;
+  private readonly MIN_ROUNDS: number = 1;
+  private readonly MAX_ROUNDS: number = 3000;
+  private readonly DEFAULT_MAX_ROUNDS: string = "50";
   private readonly conf: Config;
 
   // Map from round number to list of logs
-  private roundLogs: Map<number, Array<Log>>;
-  private idLogs: Map<number, Array<Log>>;
+  private roundToLogs: Map<number, Array<Log>>;
+  // Invariants:
+  // - consoleDivs are the div objects displayed in the console
+  // - consoleDivs.length === consoleLogs.length, and consoleDivs[i] and
+  //   consoleLogs[i] are the corresponding div and log
+  // - The logs in consoleLogs are in chronological order by round
+  private consoleLogs: Array<Log>;
+  private consoleDivs: Array<HTMLDivElement>;
 
   constructor(conf: Config) {
     this.conf = conf;
-    this.roundLogs = new Map<number, Array<Log>>();
-    this.idLogs = new Map<number, Array<Log>>();
-    this.console = document.createElement("div");
+    this.robotID = undefined;
+    this.currentRound = 1;
+
+    this.roundToLogs = new Map<number, Array<Log>>();
+    this.consoleLogs = new Array();
+    this.consoleDivs = new Array();
     this.div = this.basediv();
   }
 
@@ -37,87 +57,243 @@ export default class Console {
   private basediv(): HTMLDivElement {
     let div = document.createElement("div");
 
-    this.teamA = this.checkBox("A");
-    this.teamB = this.checkBox("B");
+    // Create the HTML elements
+    this.teamAInput = this.getHTMLCheckbox("A");
+    this.teamBInput = this.getHTMLCheckbox("B");
+    this.lengthInput = this.getHTMLInput();
 
-    div.appendChild(this.teamA);
+    // Add the team filter
+    div.appendChild(this.teamAInput);
     div.appendChild(document.createTextNode("Team A"));
-    div.appendChild(this.teamB);
+    div.appendChild(this.teamBInput);
     div.appendChild(document.createTextNode("Team B"));
     div.appendChild(document.createElement("br"));
 
-    div.appendChild(this.console);
+    // Add the round filter
+    div.appendChild(document.createTextNode("Number of rounds:"));
+    div.appendChild(this.getHTMLInput());
+    div.appendChild(document.createElement("br"));
+
+    // Add the console
+    this.console = document.createElement("div");
     this.console.id = "console";
+    div.appendChild(this.console);
+
     return div;
   }
 
-  // team is A or B
-  private checkBox(team: string): HTMLInputElement {
+  /**
+   * Parameter team is "A" or "B"
+   * Returns the HTML checkbox element for filtering teams
+   */
+  private getHTMLCheckbox(team: string): HTMLInputElement {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.value = team;
     checkbox.checked = true;
+    checkbox.onchange = () => {
+      this.applyFilter();
+    }
     return checkbox;
   }
 
-  setLogs(logs: Array<Log>): void {
+  /**
+   * Returns the HTML input element for filtering number of records
+   */
+  private getHTMLInput(): HTMLInputElement {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = this.DEFAULT_MAX_ROUNDS;
+    input.onchange = () => {
+      // Input validation, must be a number between 1 and 50,
+      // Defaults to this.DEFAULT_MAX_ROUNDS otherwise.
+      const value: number = parseInt(input.value);
+      if (!isNaN(value)) {
+        input.value = this.DEFAULT_MAX_ROUNDS;
+      } else if (value < this.MIN_ROUNDS) {
+        input.value = String(this.MIN_ROUNDS);
+      } else if (value > this.MAX_ROUNDS) {
+        input.value = String(this.MAX_ROUNDS);
+      }
+
+      // Then reapply the filter
+      this.applyFilter();
+    }
+    return input;
+  }
+
+  /**
+   * Indexes a new set of logs for a match by round number
+   */
+  indexLogs(logs: Array<Log>): void {
     logs.forEach((log: Log) => {
       const round = log.round;
-      if (!this.roundLogs.has(round)) {
-        this.roundLogs.set(round, new Array());
+      if (!this.roundToLogs.has(round)) {
+        this.roundToLogs.set(round, new Array());
       }
-      if (!this.idLogs.has(round)) {
-        this.idLogs.set(round, new Array());
-      }
-      this.roundLogs.get(round).push(log);
-      this.idLogs.get(round).push(log);
+      this.roundToLogs.get(round).push(log);
     });
   }
 
   /**
-   * Clear the console.
+   * Jumps to a round and updates the console.
    */
-  clear(): void {
-    while (this.console.firstChild) {
-      this.console.removeChild(this.console.firstChild);
-    }
-  }
+  seekRound(round: number): void {
+    // Update the round numbers
+    const previousRound = this.currentRound;
+    this.currentRound = round;
 
-  pushRound(round: number, id: number | undefined): void {
-    if (this.roundLogs.has(round)) {
-      const roundLogs: Array<Log> = this.roundLogs.get(round);
-      roundLogs.forEach((log: Log) => {
-        if ((!id || id === log.id) && this.teamSelected(log.team)) {
-          // No ID was selected, or an ID was selected and matches the log's ID
-          this.push(log.text);
-        }
-      });
-      this.console.scrollTop = this.console.scrollHeight;
-    }
-    this.removeExtraLogs();
-  }
-
-  // team is 'A' or 'B'
-  private teamSelected(team: string): boolean {
-    return (team === "A" && this.teamA.checked) ||
-           (team === "B" && this.teamB.checked);
-  }
-
-  private removeExtraLogs(): void {
-    while (this.console.scrollHeight > this.console.clientHeight) {
-      if (this.console.firstChild) {
-        this.console.removeChild(this.console.firstChild);
-      } else {
-        return;
-      }
+    if (this.currentRound === previousRound) {
+      // We are in the same round, don't to anything
+      return;
+    } else if (this.currentRound === previousRound + 1) {
+      // We went forward a single round; just push and pop for efficiency
+      this.popRound();
+      this.pushRound(this.maxRound());
+    } else {
+      // Otherwise we need to reapply the entire filter
+      this.applyFilter();
     }
   }
 
   /**
-   * Add a line to the console output.
+   * Sets the ID filter and updates the console.
    */
-  private push(line: string): void {
-    this.console.appendChild(document.createTextNode(line));
-    this.console.appendChild(document.createElement("br"));
+  setIDFilter(id: number | undefined): void {
+    this.robotID = id;
+    this.applyFilter();
+  }
+
+  /**
+   * Removes all the logs from the minimum round, which may be at most the
+   * earliest round currently displayed in the console. If it is less than the
+   * earliest round, does nothing.
+   */
+  private popRound(): void {
+    const minRound = this.minRound();
+    while (this.consoleLogs.length > 0) {
+      // If the first log in the console is from after minRound, we're done.
+      const log = this.consoleLogs[0];
+      if (log.round > minRound) {
+        return;
+      }
+      // Otherwise, remove it
+      this.popLine();
+    }
+  }
+
+  /**
+   * Pushes all logs from the current round that match the filter, or does
+   * nothing if there are no logs for that round.
+   * Returns true iff at least one log was successfully added.
+   */
+  private pushRound(round: number): void {
+    // If logs exist for this round
+    if (this.roundToLogs.has(round)) {
+      const logs = this.roundToLogs.get(round);
+
+      // For each log in the round, add it to the console if it's good
+      logs.forEach((log: Log) => {
+        if (this.isGood(log)) {
+          this.pushLine(log);
+        }
+      });
+
+      // Update the scroll height
+      this.console.scrollTop = this.console.scrollHeight;
+    }
+  }
+
+  /**
+   * Removes the earliest line from the console output, if it exists. Returns
+   * true iff a line was successfully removed.
+   * (Maintains the invariant for consoleLogs and consoleDivs)
+   */
+  private popLine(): boolean {
+    if (this.consoleLogs.length === 0) {
+      // There is nothing in the console
+      return false;
+    }
+
+    // Remove the div from the console
+    this.consoleDivs[0].remove();
+
+    // Maintain the invariant
+    this.consoleLogs.pop();
+    this.consoleDivs.pop();
+    return true;
+  }
+
+  /**
+   * Add a line to the console output.
+   * (Maintains the invariant for consoleLogs and consoleDivs)
+   */
+  private pushLine(log: Log): void {
+    const div = document.createElement("div");
+    div.appendChild(document.createTextNode(log.text));
+    div.appendChild(document.createElement("br"));
+    this.console.appendChild(div);
+
+    // Maintain the invariant
+    this.consoleLogs.push(log);
+    this.consoleDivs.push(div);
+  }
+
+  /**
+   * Apply a filter by clearing the console and pushing all the logs that match
+   * the filter within the defined rounds.
+   */
+  private applyFilter(): void {
+    // Remove all the current elements
+    while (this.console.firstChild) {
+      this.console.removeChild(this.console.firstChild);
+    }
+
+    // Maintain the invariant
+    this.consoleDivs = new Array();
+    this.consoleLogs = new Array();
+
+    // Push all the logs from the defined rounds that match the filter
+    for (let round = this.minRound() + 1; round <= this.maxRound(); round++) {
+      this.pushRound(round);
+    }
+  }
+
+  /**
+   * Returns true iff the Log matches the current filter
+   */
+  private isGood(log: Log) {
+    const teamSelected: boolean = log.team === "A" ? this.teamA() : this.teamB();
+    const idSelected: boolean = this.robotID === undefined || this.robotID === log.id;
+    const roundSelected: boolean = this.minRound() < log.round && log.round <= this.maxRound();
+    return teamSelected && idSelected && roundSelected;
+  }
+
+  /**
+   * Returns true iff team A is included in the filter
+   */
+  private teamA(): boolean {
+    return this.teamAInput.checked;
+  }
+
+  /**
+   * Returns true iff team B is included in the filter
+   */
+  private teamB(): boolean {
+    return this.teamBInput.checked;
+  }
+
+  /**
+   * Returns the minimum round (not inclusive) in the filter
+   */
+  private minRound(): number {
+    return Math.max(0, this.currentRound - parseInt(this.lengthInput.value) + 1);
+  }
+
+  /**
+   * Returns the maximum round (inclusive) in the filter
+   */
+  private maxRound(): number {
+    return Math.min(this.MAX_ROUNDS, this.currentRound);
   }
 }
