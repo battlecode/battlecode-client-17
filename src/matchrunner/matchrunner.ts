@@ -138,7 +138,7 @@ export default class MatchRunner {
     div.appendChild(document.createElement("br"));
     div.appendChild(this.mapsContainer);
     this.mapsContainer.id = "mapListContainer";
-    
+
     // Select all maps button
     this.selectAllMaps.type = "button";
     this.selectAllMaps.appendChild(document.createTextNode("Select All"));
@@ -156,10 +156,12 @@ export default class MatchRunner {
     this.refreshButton.appendChild(document.createTextNode("Refresh"));
     this.refreshButton.onclick = this.refresh;
     div.appendChild(this.refreshButton);
+    div.appendChild(document.createElement("br"));
 
     // Run match button
     this.runMatch.type = "button";
     this.runMatch.appendChild(document.createTextNode("Run Match"));
+    this.runMatch.id = "runMatch"
     this.runMatch.onclick = this.run;
     div.appendChild(this.runMatch);
 

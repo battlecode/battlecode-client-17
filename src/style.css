@@ -234,3 +234,10 @@ input[type='file'] {
     margin-bottom: 8px;
     padding-left: 48px;
 }
+
+#runMatch {
+    width: 70%;
+    font-size: 18px;
+    padding: 8px 0px;
+    margin: 8px 0px;
+}
