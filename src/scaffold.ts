@@ -95,7 +95,7 @@ export default class ScaffoldCommunicator {
           .map((file) => {
             const relPath = path.relative(this.sourcePath, file);
             return relPath.substring(0, relPath.length - (path.sep + 'RobotPlayer.java').length)
-                          .replace(new RegExp(path.sep, 'g'), '.');
+                          .replace(new RegExp(WINDOWS? '\\\\' : '/', 'g'), '.');
           })
       );
     });
