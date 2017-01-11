@@ -27,7 +27,7 @@ export default class Console {
   // Options
   private readonly MIN_ROUNDS: number = 1;
   private readonly MAX_ROUNDS: number = 3000;
-  private readonly DEFAULT_MAX_ROUNDS: number = 100;
+  private readonly DEFAULT_MAX_ROUNDS: number = 15;
   private readonly conf: Config;
 
   // Map from round number to list of logs
@@ -153,8 +153,8 @@ export default class Console {
       // We are in the same round, don't to anything
       return;
     } else if (this.currentRound === previousRound + 1) {
-      // We went forward a single round; just push and pop for efficiency
-      this.popRound();
+      // We went forward a single round; just push and shift for efficiency
+      this.shiftRound();
       this.pushRound(this.maxRound());
     } else {
       // Otherwise we need to reapply the entire filter
@@ -175,16 +175,17 @@ export default class Console {
    * earliest round currently displayed in the console. If it is less than the
    * earliest round, does nothing.
    */
-  private popRound(): void {
+  private shiftRound(): void {
     const minRound = this.minRound();
     while (this.consoleLogs.length > 0) {
       // If the first log in the console is from after minRound, we're done.
       const log = this.consoleLogs[0];
       if (log.round > minRound) {
+
         return;
       }
       // Otherwise, remove it
-      this.popLine();
+      this.shiftLine();
     }
   }
 
@@ -214,9 +215,10 @@ export default class Console {
    * true iff a line was successfully removed.
    * (Maintains the invariant for consoleLogs and consoleDivs)
    */
-  private popLine(): boolean {
+  private shiftLine(): boolean {
     if (this.consoleLogs.length === 0) {
       // There is nothing in the console
+
       return false;
     }
 
@@ -224,8 +226,8 @@ export default class Console {
     this.consoleDivs[0].remove();
 
     // Maintain the invariant
-    this.consoleLogs.pop();
-    this.consoleDivs.pop();
+    this.consoleLogs.shift();
+    this.consoleDivs.shift();
     return true;
   }
 
