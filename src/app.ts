@@ -480,28 +480,25 @@ export default class Client {
       // this may look innocuous, but it's a large chunk of the run time
       match.compute(5 /* ms */);
 
-      // Updates that happen every turn instead of every time to save on computation
-      if (lastTurn != match.current.turn) {
-        // update the info string in controls
-        if (lastSelectedID !== undefined) {
-          let bodies = match.current.bodies.arrays;
-          let index = bodies.id.indexOf(lastSelectedID)
-          if (index === -1) {
-            // The body doesn't exist anymore so indexOf returns -1
-            lastSelectedID = undefined;
+      // update the info string in controls
+      if (lastSelectedID !== undefined) {
+        let bodies = match.current.bodies.arrays;
+        let index = bodies.id.indexOf(lastSelectedID)
+        if (index === -1) {
+          // The body doesn't exist anymore so indexOf returns -1
+          lastSelectedID = undefined;
+        } else {
+          let id = bodies.id[index];
+          let x = bodies.x[index];
+          let y = bodies.y[index];
+          let health = bodies.health[index];
+          let maxHealth = bodies.maxHealth[index];
+          let type = bodies.type[index];
+          let bytecodes = bodies.bytecodesUsed[index];
+          if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
+            this.controls.setInfoString(id, x, y, health, maxHealth);
           } else {
-            let id = bodies.id[index];
-            let x = bodies.x[index];
-            let y = bodies.y[index];
-            let health = bodies.health[index];
-            let maxHealth = bodies.maxHealth[index];
-            let type = bodies.type[index];
-            let bytecodes = bodies.bytecodesUsed[index];
-            if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
-              this.controls.setInfoString(id, x, y, health, maxHealth);
-            } else {
-              this.controls.setInfoString(id, x, y, health, maxHealth, bytecodes);
-            }
+            this.controls.setInfoString(id, x, y, health, maxHealth, bytecodes);
           }
         }
       }
@@ -526,12 +523,12 @@ export default class Client {
         let lerp = Math.min(interpGameTime - match.current.turn, 1);
 
         renderer.render(match.current,
-                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
+                        match.current.minCorner, match.current.maxCorner,
                         nextStep, lerp);
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
         renderer.render(match.current,
-                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
+                        match.current.minCorner, match.current.maxCorner);
       }
 
       this.updateStats(match.current, meta);
