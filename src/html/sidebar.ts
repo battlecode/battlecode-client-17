@@ -126,9 +126,11 @@ export default class Sidebar {
     navigate the match.<br>
     <br>
     <b class="red">How to Use the Console</b><br>
-    The console displays all System.out.println() data run by your robots.
-    You can filter by team by checking the boxes, by robot ID by clicking the
-    robot, and by round by going to that time and replaying the match.<br>
+    The console displays all System.out.println() data up to the current round.
+    You can filter teams by checking the boxes and robot IDs by clicking the
+    robot. You can also change the maximum number of rounds displayed in the
+    input box. (WARNING: If you want to, say, suddenly display 3000 rounds
+    of data on round 2999, pause the client first to prevent freezing.)<br>
     <br>
     <b class="blue">How to Use the Map Editor</b><br>
     Select the initial map settings: name, width, height, symmetry. Add trees
