@@ -163,7 +163,7 @@ export default class MapEditor {
             if (err) {
               console.log(err);
             } else {
-              alert("Good to go! Restart the client to use your new map.");
+              alert("Good to go! Click \"Refresh\" in the Queue to use your new map.");
             }
           });
         } else {
