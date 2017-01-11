@@ -39,11 +39,17 @@ export default class Console {
 
     this.teamA = this.checkBox("A");
     this.teamB = this.checkBox("B");
+    const spanA = document.createElement("span");
+    const spanB = document.createElement("span");
+    spanA.className = "red";
+    spanB.className = "blue";
+    spanA.appendChild(document.createTextNode("Team A"));
+    spanB.appendChild(document.createTextNode("Team B"));
 
     div.appendChild(this.teamA);
-    div.appendChild(document.createTextNode("Team A"));
+    div.appendChild(spanA);
     div.appendChild(this.teamB);
-    div.appendChild(document.createTextNode("Team B"));
+    div.appendChild(spanB);
     div.appendChild(document.createElement("br"));
 
     div.appendChild(this.console);

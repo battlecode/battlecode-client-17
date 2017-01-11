@@ -5,8 +5,8 @@ import {AllImages} from '../imageloader';
 import {schema} from 'battlecode-playback';
 
 const hex: Object = {
-  1: "#a62014",
-  2: "#0636ac"
+  1: "#db3627",
+  2: "#4f7ee6"
 };
 
 /**
