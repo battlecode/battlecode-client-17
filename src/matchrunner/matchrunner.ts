@@ -36,6 +36,7 @@ export default class MatchRunner {
   private teamB: HTMLSelectElement;
   private mapsContainer: HTMLDivElement;
   private maps: Array<HTMLInputElement>;
+  private selectAllMaps: HTMLButtonElement;
   private runMatch: HTMLButtonElement;
   private refreshButton: HTMLButtonElement
 
@@ -110,6 +111,7 @@ export default class MatchRunner {
     this.mapsContainer = document.createElement("div");
     this.runMatch = document.createElement("button");
     this.refreshButton = document.createElement("button");
+    this.selectAllMaps = document.createElement("button");
 
     // Loading messages area
     this.loading.appendChild(this.loadingMaps);
@@ -131,19 +133,35 @@ export default class MatchRunner {
     div.appendChild(divB);
 
     // Map selector
+    div.appendChild(document.createElement("br"));
     div.appendChild(document.createTextNode("Select a map: "));
     div.appendChild(document.createElement("br"));
     div.appendChild(this.mapsContainer);
+    this.mapsContainer.id = "mapListContainer";
+
+    // Select all maps button
+    this.selectAllMaps.type = "button";
+    this.selectAllMaps.appendChild(document.createTextNode("Select All"));
+    this.selectAllMaps.onclick = () => {
+      var boxes = this.mapsContainer.getElementsByTagName("INPUT");
+      for(var i = 0; i < boxes.length; i++) {
+        var box = <HTMLInputElement> boxes[i];
+        box.checked = true;
+      }
+    };
+    div.appendChild(this.selectAllMaps);
 
     // Refresh Button
     this.refreshButton.type = "button";
     this.refreshButton.appendChild(document.createTextNode("Refresh"));
     this.refreshButton.onclick = this.refresh;
     div.appendChild(this.refreshButton);
+    div.appendChild(document.createElement("br"));
 
     // Run match button
     this.runMatch.type = "button";
     this.runMatch.appendChild(document.createTextNode("Run Match"));
+    this.runMatch.id = "runMatch"
     this.runMatch.onclick = this.run;
     div.appendChild(this.runMatch);
 
