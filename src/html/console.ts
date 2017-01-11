@@ -20,7 +20,7 @@ export default class Console {
   private lengthInput: HTMLInputElement;
 
   // Filters
-  // use teamA(), teamB(), and minRound() to get the other filters
+  // use teamA(), teamB(), minRound(), and maxRound() to get the other filters
   private robotID: number | undefined;
   private currentRound: number;
 
@@ -70,7 +70,7 @@ export default class Console {
     div.appendChild(document.createElement("br"));
 
     // Add the round filter
-    div.appendChild(document.createTextNode("Number of rounds:"));
+    div.appendChild(document.createTextNode("Max Number of Rounds:"));
     div.appendChild(this.lengthInput);
     div.appendChild(document.createElement("br"));
 
@@ -185,7 +185,6 @@ export default class Console {
   /**
    * Pushes all logs from the current round that match the filter, or does
    * nothing if there are no logs for that round.
-   * Returns true iff at least one log was successfully added.
    */
   private pushRound(round: number): void {
     // If logs exist for this round
@@ -257,7 +256,7 @@ export default class Console {
     this.consoleLogs = new Array();
 
     // Push all the logs from the defined rounds that match the filter
-    for (let round = this.minRound() + 1; round <= this.maxRound(); round++) {
+    for (let round = this.minRound(); round <= this.maxRound(); round++) {
       this.pushRound(round);
     }
   }
@@ -265,10 +264,10 @@ export default class Console {
   /**
    * Returns true iff the Log matches the current filter
    */
-  private isGood(log: Log) {
+  private isGood(log: Log): boolean {
     const teamSelected: boolean = log.team === "A" ? this.teamA() : this.teamB();
     const idSelected: boolean = this.robotID === undefined || this.robotID === log.id;
-    const roundSelected: boolean = this.minRound() < log.round && log.round <= this.maxRound();
+    const roundSelected: boolean = this.minRound() <= log.round && log.round <= this.maxRound();
     return teamSelected && idSelected && roundSelected;
   }
 
@@ -287,10 +286,10 @@ export default class Console {
   }
 
   /**
-   * Returns the minimum round (not inclusive) in the filter
+   * Returns the minimum round (inclusive) in the filter
    */
   private minRound(): number {
-    return Math.max(0, this.currentRound - parseInt(this.lengthInput.value));
+    return Math.max(this.MIN_ROUNDS, this.currentRound - parseInt(this.lengthInput.value) + 1);
   }
 
   /**
