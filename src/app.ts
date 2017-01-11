@@ -152,23 +152,17 @@ export default class Client {
     let onkeydownControls = (event: KeyboardEvent) => {
       switch (event.keyCode) {
         case 80: // "p" - Pause/Unpause
-          this.controls.pause();
-          break;
+        this.controls.pause();
+        break;
         case 79: // "o" - Stop
-          this.controls.restart();
-          break;
-        case 37: // "LEFT" - Step Backward
-          this.controls.stepBackward();
-          break;
-        case 39: // "RIGHT" - Step Forward
-          this.controls.stepForward();
-          break;
-        case 70: // "f" - Skip/Seek Forward
-          this.controls.forward();
-          break;
-        case 82: // "r" - Skip/Seek Backward
-          this.controls.rewind();
-          break;
+        this.controls.restart();
+        break;
+        case 37: // "LEFT" - Skip/Seek Backward
+        this.controls.rewind();
+        break;
+        case 39: // "RIGHT" - Skip/Seek Forward
+        this.controls.forward();
+        break;
       }
     };
     this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
@@ -444,6 +438,43 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     }, false);
+
+    // set key options
+    const conf = this.conf;
+    document.onkeydown = function(event) {
+      switch (event.keyCode) {
+        case 80: // "p" - Pause/Unpause
+          controls.pause();
+          break;
+        case 79: // "o" - Stop
+          controls.restart();
+          break;
+        case 37: // "LEFT" - Step Backward
+          controls.stepBackward();
+          break;
+        case 39: // "RIGHT" - Step Forward
+          controls.stepForward();
+          break;
+        case 72: // "h" - Toggle Health Bars
+          conf.healthBars = !conf.healthBars;
+          break;
+        case 67: // "c" - Toggle Circle Bots
+          conf.circleBots = !conf.circleBots;
+          break;
+        case 70: // "f" - Skip/Seek Forward
+          controls.forward();
+          break;
+        case 82: // "r" - Skip/Seek Backward
+          controls.rewind();
+          break;
+        case 86: // "v" - Toggle Indicator Dots and Lines
+          conf.indicators = !conf.indicators;
+          break;
+        case 66: // "b" - Toggle Interpolation
+          conf.interpolate = !conf.interpolate;
+          break;
+      }
+    };
 
     // The main update loop
     const loop = (curTime) => {
