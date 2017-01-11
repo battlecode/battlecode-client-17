@@ -198,14 +198,11 @@ export default class Controls {
     reader.readAsArrayBuffer(file);
 
     // Reset buttons
+    this.resetButtons();
     this.imgs["playbackStart"].style.display = "unset";
     this.imgs["playbackPause"].style.display = "none";
-    this.imgs["seekBackward"].style.display = "none";
-    this.imgs["skipBackward"].style.display = "unset";
-    this.imgs["seekForward"].style.display = "none";
-    this.imgs["skipForward"].style.display = "unset";
   }
-  
+
   resetButtons() {
     // Reset buttons
     this.imgs["playbackStart"].style.display = "none";
@@ -223,19 +220,14 @@ export default class Controls {
     this.onTogglePause();
 
     // toggle the play/pause button
-    if (this.imgs["playbackStart"].style.display == "none") {
-      this.imgs["playbackStart"].style.display = "unset";
-      this.imgs["playbackPause"].style.display = "none";
-
-      // if pausing the simulation, reset the fast forward / rewind button
-      // TODO: These methods should be separate because they are clunky and used many times
-      this.imgs["seekForward"].style.display = "none";
-      this.imgs["skipForward"].style.display = "unset";
-      this.imgs["seekBackward"].style.display = "none";
-      this.imgs["skipBackward"].style.display = "unset";
-    } else {
+    const isNowPaused: boolean = this.imgs.playbackPause.style.display === "none";
+    this.resetButtons();
+    if (isNowPaused) {
       this.imgs["playbackStart"].style.display = "none";
       this.imgs["playbackPause"].style.display = "unset";
+    } else {
+      this.imgs["playbackStart"].style.display = "unset";
+      this.imgs["playbackPause"].style.display = "none";
     }
   }
 
@@ -243,24 +235,17 @@ export default class Controls {
    * Fast forward our simulation.
    */
   forward() {
-    // toggle speeds between regular speed and fast forward
     this.onToggleForward();
-    console.log("FORWARD");
-    if (this.imgs["seekForward"].style.display == "none") {
-      this.imgs["seekForward"].style.display = "unset";
-      this.imgs["skipForward"].style.display = "none";
-    } else {
+
+    // toggle speeds between regular speed and fast forward
+    const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";
+    this.resetButtons();
+    if (isNowSkipping) {
       this.imgs["seekForward"].style.display = "none";
       this.imgs["skipForward"].style.display = "unset";
-    }
-
-    // toggle the pause button to play if the simulation is paused
-    // Reset the rewind button
-    this.imgs["seekBackward"].style.display = "none";
-    this.imgs["skipBackward"].style.display = "unset";
-    if (this.imgs["playbackPause"].style.display == "none") {
-      this.imgs["playbackStart"].style.display = "none";
-      this.imgs["playbackPause"].style.display = "unset";
+    } else {
+      this.imgs["seekForward"].style.display = "unset";
+      this.imgs["skipForward"].style.display = "none";
     }
   }
 
@@ -269,22 +254,16 @@ export default class Controls {
    */
   rewind() {
     this.onToggleRewind();
-    console.log("REWIND");
-    if (this.imgs["seekBackward"].style.display == "none") {
-      this.imgs["seekBackward"].style.display = "unset";
-      this.imgs["skipBackward"].style.display = "none";
-    } else {
+
+    // toggle speeds between rewind and regular speed
+    const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";
+    this.resetButtons();
+    if (isNowSkipping) {
       this.imgs["seekBackward"].style.display = "none";
       this.imgs["skipBackward"].style.display = "unset";
-    }
-
-    // toggle the pause button to play if the simulation is paused
-    // Reset the forward button
-    this.imgs["seekForward"].style.display = "none";
-    this.imgs["skipForward"].style.display = "unset";
-    if (this.imgs["playbackPause"].style.display == "none") {
-      this.imgs["playbackStart"].style.display = "none";
-      this.imgs["playbackPause"].style.display = "unset";
+    } else {
+      this.imgs["seekBackward"].style.display = "unset";
+      this.imgs["skipBackward"].style.display = "none";
     }
   }
 
@@ -294,14 +273,14 @@ export default class Controls {
   restart() {
     this.onSeek(0);
   }
-  
+
   /**
    * Steps forward one turn in the simulation
    */
   stepForward() {
     this.onStepForward();
   }
-  
+
   /**
    * Steps backward one turn in the simulation
    */
@@ -342,12 +321,5 @@ export default class Controls {
         Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
         Health: ${health.toFixed(3)}/${maxHealth.toFixed(3)}`;
     }
-  }
-
-  /**
-   * Stop running the simulation, release all resources.
-   */
-  destroy() {
-    // TODO? Not that important.
   }
 }

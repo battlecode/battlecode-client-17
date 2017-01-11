@@ -31,7 +31,7 @@ export const ARCHON_RADIUS = 2;
 export const MIN_TREE_RADIUS = 0.5;
 export const MAX_TREE_RADIUS = 10;
 export const MIN_DIMENSION = 30;
-export const MAX_DIMENSION = 80;
+export const MAX_DIMENSION = 100;
 
 // Server settings
 export const NUMBER_OF_TEAMS = 2;

@@ -18,7 +18,7 @@
 }
 
 .red {
-    color: #a62014;
+    color: #db3627;
 }
 
 #matchQueue {
@@ -79,14 +79,6 @@ form {
 
 #canvas-wrapper {
     margin-top: -75px;
-}
-
-.red {
-    color: #a62014;
-}
-
-.blue {
-    color: #0636ac;
 }
 
 #export {

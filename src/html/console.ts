@@ -57,16 +57,22 @@ export default class Console {
   private basediv(): HTMLDivElement {
     let div = document.createElement("div");
 
-    // Create the HTML elements
     this.teamAInput = this.getHTMLCheckbox("A");
     this.teamBInput = this.getHTMLCheckbox("B");
     this.lengthInput = this.getHTMLInput();
 
     // Add the team filter
     div.appendChild(this.teamAInput);
-    div.appendChild(document.createTextNode("Team A"));
+    const spanA = document.createElement("span");
+    spanA.appendChild(document.createTextNode("Team A"));
+    spanA.className = "red";
+    div.appendChild(spanA);
+
     div.appendChild(this.teamBInput);
-    div.appendChild(document.createTextNode("Team B"));
+    const spanB = document.createElement("span");
+    spanB.appendChild(document.createTextNode("Team B"));
+    spanB.className = "blue";
+    div.appendChild(spanB);
     div.appendChild(document.createElement("br"));
 
     // Add the round filter
