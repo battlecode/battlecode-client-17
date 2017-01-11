@@ -27,7 +27,7 @@ export default class Console {
   // Options
   private readonly MIN_ROUNDS: number = 1;
   private readonly MAX_ROUNDS: number = 3000;
-  private readonly DEFAULT_MAX_ROUNDS: string = "50";
+  private readonly DEFAULT_MAX_ROUNDS: number = 100;
   private readonly conf: Config;
 
   // Map from round number to list of logs
@@ -71,7 +71,7 @@ export default class Console {
 
     // Add the round filter
     div.appendChild(document.createTextNode("Number of rounds:"));
-    div.appendChild(this.getHTMLInput());
+    div.appendChild(this.lengthInput);
     div.appendChild(document.createElement("br"));
 
     // Add the console
@@ -103,13 +103,13 @@ export default class Console {
   private getHTMLInput(): HTMLInputElement {
     const input = document.createElement("input");
     input.type = "text";
-    input.value = this.DEFAULT_MAX_ROUNDS;
+    input.value = String(this.DEFAULT_MAX_ROUNDS);
     input.onchange = () => {
       // Input validation, must be a number between 1 and 50,
       // Defaults to this.DEFAULT_MAX_ROUNDS otherwise.
       const value: number = parseInt(input.value);
-      if (!isNaN(value)) {
-        input.value = this.DEFAULT_MAX_ROUNDS;
+      if (isNaN(value)) {
+        input.value = String(this.DEFAULT_MAX_ROUNDS);
       } else if (value < this.MIN_ROUNDS) {
         input.value = String(this.MIN_ROUNDS);
       } else if (value > this.MAX_ROUNDS) {
@@ -230,8 +230,11 @@ export default class Console {
    */
   private pushLine(log: Log): void {
     const div = document.createElement("div");
-    div.appendChild(document.createTextNode(log.text));
-    div.appendChild(document.createElement("br"));
+    // Replace \n with <br>
+    const span = document.createElement("span");
+    const text = log.text.split("\n").join("<br>");
+    span.innerHTML = text;
+    div.appendChild(span);
     this.console.appendChild(div);
 
     // Maintain the invariant
@@ -287,7 +290,7 @@ export default class Console {
    * Returns the minimum round (not inclusive) in the filter
    */
   private minRound(): number {
-    return Math.max(0, this.currentRound - parseInt(this.lengthInput.value) + 1);
+    return Math.max(0, this.currentRound - parseInt(this.lengthInput.value));
   }
 
   /**
