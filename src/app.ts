@@ -292,7 +292,7 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
-    this.console.setLogs(match.logs);
+    this.console.indexLogs(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
@@ -302,6 +302,7 @@ export default class Client {
     let lastSelectedID: number | undefined = undefined;
     const onRobotSelected = (id: number | undefined) => {
       lastSelectedID = id;
+      this.console.setIDFilter(id);
     }
 
     // Configure renderer for this match
@@ -323,7 +324,6 @@ export default class Client {
     let interpGameTime = 0;
     // The time of the last frame
     let lastTime: number | null = null;
-    let lastTurn: number | null = null;
     // whether we're seeking
     let externalSeek = false;
 
@@ -475,7 +475,7 @@ export default class Client {
     // The main update loop
     const loop = (curTime) => {
       let delta = 0;
-      if (lastTime === null && lastTurn === null) {
+      if (lastTime === null) {
         // first simulation step
         // do initial stuff?
       } else if (externalSeek) {
@@ -530,11 +530,7 @@ export default class Client {
         }
       }
 
-      if (lastTurn != match.current.turn) {
-        this.console.pushRound(match.current.turn, lastSelectedID);
-        lastTurn = match.current.turn;
-      }
-
+      this.console.seekRound(match.current.turn);
       lastTime = curTime;
 
       // only interpolate if:
