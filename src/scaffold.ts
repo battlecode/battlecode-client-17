@@ -7,6 +7,16 @@ const MAC = process.platform === 'mac os x';
 
 const GRADLE_WRAPPER = WINDOWS ? 'gradlew.bat' : 'gradlew';
 
+// Maps available in the server.
+const SERVER_MAPS = [
+  "Barrier",
+  "DenseForest",
+  "Enclosure",
+  "Hurdle",
+  "shrine",
+  "SparseForest"
+].sort();
+
 /**
  * Talk to the scaffold!
  */
@@ -30,6 +40,14 @@ export default class ScaffoldCommunicator {
     return path.join(this.scaffoldPath, GRADLE_WRAPPER);
   }
 
+  get mapPath() {
+    return path.join(this.scaffoldPath, 'maps');
+  }
+
+  get sourcePath() {
+    return path.join(this.scaffoldPath, 'src');
+  }
+
   /**
    * Make a best-effort attempt to find the scaffold.
    */
@@ -40,9 +58,11 @@ export default class ScaffoldCommunicator {
 
     // release/client
     const fromDev = path.join(path.dirname(appPath), 'battlecode-scaffold-2017');
-    // scaffold/client/app
+    // scaffold/client/Battlecode Client[.exe]
+    // (May never happen?)
     const fromWin = path.dirname(path.dirname(appPath));
 
+    // scaffold/client/resources/app.asar
     const from3 = path.dirname(path.dirname(path.dirname(appPath)));
 
     // scaffold/Battlecode Client.app/Contents/Resources/app.asar
@@ -63,49 +83,47 @@ export default class ScaffoldCommunicator {
   /**
    * Asynchronously get a list of available players in the scaffold.
    */
-  getPlayers(cb: (err: Error | null, packages: string[] | null) => void) {
-    child_process.exec(`"${this.wrapperPath}" listPlayers`, {cwd: this.scaffoldPath}, (err, stdout, stderr) => {
-      if (err) {
-        cb(err, null);
-      }
-      const lines = stdout.split(/\r?\n/);
-      const packages = new Array<string>();
+  getPlayers(cb: (err: Error | null, packages?: string[]) => void) {
+    walk(this.sourcePath, (err, files) => {
+      if (err) return cb(err);
+      if (!files) return cb(null, []);
 
-      for (var i = 0; i < lines.length; i++) {
-        const match = /PLAYER: (.*)/.exec(lines[i]);
-        if (match) {
-          packages.push(match[1]);
-        }
-      }
-
-      cb(null, packages);
+      return cb(
+        null,
+        files
+          .filter((file) => file.endsWith(path.sep + 'RobotPlayer.java') || file.endsWith(path.sep + 'RobotPlayer.scala'))
+          .map((file) => {
+            const relPath = path.relative(this.sourcePath, file);
+            return relPath.substring(0, relPath.length - (path.sep + 'RobotPlayer.java').length)
+                          .replace(new RegExp(path.sep, 'g'), '.');
+          })
+      );
     });
   }
 
   /**
    * Asynchronously get a list of map paths.
    */
-  getMaps(cb: (err: Error | null, maps: string[] | null) => void) {
-    child_process.exec(`"${this.wrapperPath}" listMaps`, {cwd: this.scaffoldPath}, (err, stdout, stderr) => {
-      if (err) {
-        cb(err, null);
+  getMaps(cb: (err: Error | null, maps?: string[]) => void) {
+    fs.stat(this.mapPath, (err, stat) => {
+      if (err != null) {
+        // map path doesn't exist
+        return cb(null, SERVER_MAPS);
       }
-      const lines = stdout.split(/\r?\n/);
-      const maps = new Array<string>();
+      if (!stat || !stat.isDirectory()) {
+        return cb(null, SERVER_MAPS);
+      }
 
-      for (var i = 0; i < lines.length; i++) {
-        const match = /MAP: (.*)/.exec(lines[i]);
-        if (match) {
-          maps.push(match[1]);
+      fs.readdir(this.mapPath, (err, files) => {
+        if (err) {
+          return cb(err);
         }
-      }
 
-      if (maps.length === 0) {
-        console.log(stdout);
-        console.log(stderr);
-      }
-
-      cb(null, maps);
+        // paths are relative for readdir
+        return cb(null, files.filter((file) => file.endsWith('.map17'))
+                  .map((file) => file.substring(0, file.length - 6))
+                  .concat(SERVER_MAPS).sort());
+      });
     });
   }
 
@@ -135,3 +153,47 @@ export default class ScaffoldCommunicator {
                         {cwd: this.scaffoldPath}, cb);
   }
 }
+
+
+/**
+ * Walk a directory and return all the files found.
+ */
+export function walk(dir: string, done: (err: Error | null, paths?: string[]) => void) {
+  var results = new Array<string>();
+
+  fs.readdir(dir, (err, list) => {
+    if (err) return done(err);
+    var errored = false;
+    var pending = list.length;
+    if (!pending) return done(null, results);
+    list.forEach((file) => {
+      file = path.resolve(dir, file);
+      fs.stat(file, (err, stat) => {
+        if (errored) return;
+        if (err) {
+          errored = true;
+          return done(err);
+        }
+
+        if (stat && stat.isDirectory() && !stat.isSymbolicLink()) {
+          walk(file, (err, res) => {
+            if (errored) return;
+            if (err) {
+              errored = true;
+              return done(err);
+            }
+
+            results = results.concat(res as string[]);
+            if (!--pending) done(null, results);
+          });
+        } else {
+          if (errored) return;
+          results.push(file);
+          if (!--pending) done(null, results);
+        }
+      });
+    });
+  });
+};
+
+window['walk'] = walk;

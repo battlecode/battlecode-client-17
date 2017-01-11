@@ -171,7 +171,7 @@ export default class MatchRunner {
   /**
    * If the scaffold can find the players, populate the client
    */
-  private teamCallback = (err: Error | null, packages: string[] | null) => {
+  private teamCallback = (err: Error | null, packages?: string[]) => {
     // There was an error
     if (err) {
       console.log(err);
@@ -198,7 +198,7 @@ export default class MatchRunner {
   /**
    * In the scaffold can find maps, populate the client
    */
-  private mapCallback = (err: Error | null, maps: string[] | null) => {
+  private mapCallback = (err: Error | null, maps?: string[]) => {
     // There was an error
     if (err) {
       console.log(err);
