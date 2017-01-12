@@ -89,6 +89,7 @@ export default class Client {
 
     this.root = root;
     this.root.id = "root";
+    conf.gameVersion = "2017.1.1.7";
     this.conf = config.defaults(conf);
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {

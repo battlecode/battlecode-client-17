@@ -227,3 +227,25 @@ input[type='file'] {
     text-align: left;
     overflow: scroll;
 }
+
+#splashSubtitle {
+    font-size: 24px;
+    font-family: Graduate;
+    color: white;
+}
+
+#splashTitle {
+    font-size: 56px;
+    font-family: Graduate;
+    font-weight: bold;
+    color: #e03636;
+    text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    1px 1px 0 #fff;
+}
+
+#splashNewVersion {
+    color: deepskyblue;
+}

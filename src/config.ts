@@ -69,7 +69,8 @@ export enum Mode {
   HELP,
   MAPEDITOR,
   CONSOLE,
-  QUEUE
+  QUEUE,
+  SPLASH
 }
 
 /**
@@ -89,6 +90,6 @@ export function defaults(supplied?: any): Config {
     healthBars: supplied.healthBars || true,
     circleBots: supplied.circleBots || false,
     indicators: supplied.indicators || true,
-    mode: supplied.mode || Mode.GAME
+    mode: supplied.mode || Mode.SPLASH
   };
 }

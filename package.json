@@ -25,7 +25,8 @@
   "homepage": "https://github.com/battlecode/battlecode-client-17#readme",
   "dependencies": {
     "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#f287b374a32268ebbc5984ae22aa6286c259d0f0",
-    "victor": "^1.1.0"
+    "victor": "^1.1.0",
+    "web-request": "^1.0.7"
   },
   "devDependencies": {
     "@types/blue-tape": "^0.1.30",
@@ -69,14 +70,20 @@
       }
     ],
     "mac": {
-      "target": ["dir"],
+      "target": [
+        "dir"
+      ],
       "category": "public.app-category.games"
     },
     "win": {
-      "target": ["dir"]
+      "target": [
+        "dir"
+      ]
     },
     "linux": {
-      "target": ["dir"]
+      "target": [
+        "dir"
+      ]
     }
   }
 }

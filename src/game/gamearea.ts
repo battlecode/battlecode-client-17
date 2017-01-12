@@ -3,12 +3,15 @@ import {AllImages} from '../imageloader';
 
 import {GameWorld} from 'battlecode-playback';
 
+import * as WebRequest from 'web-request';
+
 export default class GameArea {
 
   // HTML elements
   private readonly images: AllImages;
   readonly div: HTMLDivElement;
   readonly canvas: HTMLCanvasElement;
+  readonly splashDiv: HTMLDivElement;
   private readonly wrapper: HTMLDivElement;
   private readonly mapEditorCanvas: HTMLCanvasElement;
 
@@ -30,11 +33,14 @@ export default class GameArea {
     const canvas: HTMLCanvasElement = document.createElement('canvas');
     canvas.id = "battlecode-canvas";
     this.canvas = canvas;
-    this.loadSplashScreenInto(this.canvas);
+    
+    this.splashDiv = document.createElement("div");
+    this.splashDiv.id = "battlecode-splash";
+    this.loadSplashDiv();
 
     // Add elements to the main div
     this.div.appendChild(this.wrapper);
-    this.wrapper.appendChild(canvas);
+    this.wrapper.appendChild(this.splashDiv);
   }
 
   /**
@@ -51,34 +57,31 @@ export default class GameArea {
   /**
    * Displays the splash screen
    */
-  loadSplashScreenInto(splashCanvas : HTMLCanvasElement) {
+  loadSplashDiv() {
     
-    // Wait for the font to load ...
-    // sleep time expects milliseconds
-    function sleep (time) {
-      return new Promise((resolve) => setTimeout(resolve, time));
-    }
-
-    // Usage!
-    sleep(500).then(() => {
-        
-        let ctx = splashCanvas.getContext("2d");
-        if (ctx === null) {
-            throw new Error("Couldn't load canvas2d context");
-        } else {
-
-          ctx['imageSmoothingEnabled'] = false;
-          ctx.font = '42px "Graduate"';
-          ctx.fillStyle = 'white';
-          ctx.fillText("Battlecode Client", 0, 48, 300);
-          ctx.font = '32px "Graduate"';
-          ctx.fillText("v1.1.5", 110, 88);
-
-        }
-
-        this.wrapper.appendChild(splashCanvas);
+    let splashTitle = document.createElement("h1");
+    splashTitle.id = "splashTitle";
+    splashTitle.appendChild(document.createTextNode("Battlecode Client"));
+    this.splashDiv.appendChild(splashTitle);
+    
+    let splashSubtitle = document.createElement("h3");
+    splashSubtitle.id = "splashSubtitle";
+    splashSubtitle.appendChild(document.createTextNode("v" + this.conf.gameVersion));
+    this.splashDiv.appendChild(splashSubtitle);
+    
+    // Set the version string from http://www.battlecode.org/contestants/latest/
+    (async function (splashDiv, version) {
       
-    });
+      var result = await WebRequest.get('http://www.battlecode.org/contestants/latest/');
+      if(result.content.trim() != version.trim()) {
+        let newVersion = document.createElement("a");
+        newVersion.id = "splashNewVersion";
+        newVersion.href = "http://www.battlecode.org/contestants/releases/"
+        newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + result.content;
+        splashDiv.appendChild(newVersion);
+      }
+      
+    })(this.splashDiv, this.conf.gameVersion);
       
   }
 
@@ -100,6 +103,8 @@ export default class GameArea {
     // ...and add the correct one
     if (mode === Mode.MAPEDITOR) {
       this.wrapper.appendChild(this.mapEditorCanvas);
+    } else if (mode === Mode.SPLASH) {
+      this.wrapper.appendChild(this.splashDiv);
     } else {
       this.wrapper.appendChild(this.canvas);
     }
