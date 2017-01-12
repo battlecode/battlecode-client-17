@@ -96,7 +96,7 @@ export default class Sidebar {
   private initializeHelp(): HTMLDivElement {
     const innerHTML: string =
     `This is the client for Battlecode 2017. If you run into any issues,
-    make a post in the <a href="www.battlecodeforum.org">Battlecode forum</a>.
+    make a post in the <a href="http://www.battlecodeforum.org" target="_blank">Battlecode forum</a>.
     Be sure to attach a screenshot of your console output (F12 in the app) and
     any other relevant information.<br>
     <br>
