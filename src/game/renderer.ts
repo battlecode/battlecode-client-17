@@ -358,8 +358,8 @@ export default class Renderer {
 
       this.ctx.beginPath();
       this.ctx.arc(x, y, cst.INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
-      this.ctx.fill();
       this.ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
+      this.ctx.fill();
     }
 
     // Render the indicator lines
