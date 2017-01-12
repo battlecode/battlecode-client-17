@@ -4,6 +4,7 @@ import {AllImages} from '../imageloader';
 import {GameWorld} from 'battlecode-playback';
 
 import * as WebRequest from 'web-request';
+var XMLParser = require('xml2js');
 
 export default class GameArea {
 
@@ -72,14 +73,23 @@ export default class GameArea {
     // Set the version string from http://www.battlecode.org/contestants/latest/
     (async function (splashDiv, version) {
       
-      var result = await WebRequest.get('http://www.battlecode.org/contestants/latest/');
-      if(result.content.trim() != version.trim()) {
+      var result = await WebRequest.get('http://battlecode-maven.s3-website-us-east-1.amazonaws.com/org/battlecode/battlecode/maven-metadata.xml');
+      
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(result.content, "application/xml");
+        
+      //var jsonResult = jsonify(doc);
+      var latest = doc.getElementsByTagName('release')[0].innerHTML;
+
+      if(latest.trim() != version.trim()) {
+
         let newVersion = document.createElement("a");
         newVersion.id = "splashNewVersion";
         newVersion.href = "http://www.battlecode.org/contestants/releases/"
         newVersion.target = "_blank";
-        newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + result.content;
+        newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + latest;
         splashDiv.appendChild(newVersion);
+
       }
       
     })(this.splashDiv, this.conf.gameVersion);
