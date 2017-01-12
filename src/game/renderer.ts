@@ -382,8 +382,8 @@ export default class Renderer {
       const endY = this.flip(linesEndY[i], minY, maxY);
 
       this.ctx.beginPath();
-      this.ctx.moveTo(linesStartX[i], linesStartY[i]);
-      this.ctx.lineTo(linesEndX[i], linesEndY[i]);
+      this.ctx.moveTo(startX, startY);
+      this.ctx.lineTo(endX, endY);
       this.ctx.strokeStyle = `rgb(${red}, ${green}, ${blue})`;
       this.ctx.stroke();
     }
