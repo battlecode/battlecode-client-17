@@ -206,6 +206,33 @@ export default class Client {
    * Marks the client as fully loaded.
    */
   ready() {
+    if (this.conf.matchFileURL) {
+      // Load a match file
+      console.log(`Loading provided match file: ${this.conf.matchFileURL}`);
+      const req = new XMLHttpRequest();
+      req.open('GET', this.conf.matchFileURL, true);
+      req.responseType = 'arraybuffer';
+      req.onerror = (event) => {
+        console.log(`Can't load provided match file: ${event.error}`);
+      };
+      req.onload = (event) => {
+        const resp = req.response;
+        if (resp) {
+          console.log('Loaded provided match file');
+          var lastGame = this.games.length
+          this.games[lastGame] = new Game();
+          this.games[lastGame].loadFullGameRaw(resp);
+
+          if (this.games.length === 1) {
+            // this will run the first match from the game
+            this.setGame(0);
+            this.setMatch(0);
+          }
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+        }
+      };
+      req.send();
+    }
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
       var lastGame = this.games.length
       this.games[lastGame] = new Game();
@@ -217,7 +244,8 @@ export default class Client {
         this.setMatch(0);
       }
       this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
-    }
+    };
+
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
@@ -378,7 +406,6 @@ export default class Client {
           // Do nothing, at the end
         }
       }
-
     };
     this.matchqueue.onPreviousMatch = () => {
       console.log("PREV MATCH");
