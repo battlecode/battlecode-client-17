@@ -10,6 +10,7 @@ export default class Controls {
   wrapper: HTMLDivElement;
 
   readonly speedReadout: Text;
+  readonly locationReadout: Text;
   readonly infoString: HTMLTableDataCellElement;
 
   // Callbacks initialized from outside Controls
@@ -18,6 +19,8 @@ export default class Controls {
   onTogglePause: () => void;
   onToggleForward: () => void;
   onToggleRewind: () => void;
+  onStepForward: () => void;
+  onStepBackward: () => void;
   onSeek: (frame: number) => void;
 
   // qualities of progress bar
@@ -35,12 +38,15 @@ export default class Controls {
     skipForward: HTMLImageElement,
     seekBackward: HTMLImageElement,
     skipBackward: HTMLImageElement,
+    goNext: HTMLImageElement,
+    goPrevious: HTMLImageElement,
     upload: HTMLImageElement
   };
 
   constructor(conf: Config, images: imageloader.AllImages) {
     this.div = this.baseDiv();
     this.speedReadout = document.createTextNode('No match loaded');
+    this.locationReadout = document.createTextNode('Location: (???, ???)');
 
     // initialize the images
     this.conf = conf;
@@ -52,6 +58,8 @@ export default class Controls {
       skipForward: images.controls.skipForward,
       seekBackward: images.controls.seekBackward,
       skipBackward: images.controls.skipBackward,
+      goNext: images.controls.goNext,
+      goPrevious: images.controls.goPrevious,
       upload: images.controls.upload
     }
 
@@ -71,7 +79,11 @@ export default class Controls {
     buttons.appendChild(this.createButton("playbackStop", () => this.restart()));
     buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
     buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
+    buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
+    buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
+    buttons.appendChild(document.createElement("br"));
+    buttons.appendChild(this.locationReadout);
 
     // create the info string display
     let infoString = document.createElement("td");
@@ -190,6 +202,13 @@ export default class Controls {
     reader.readAsArrayBuffer(file);
 
     // Reset buttons
+    this.resetButtons();
+    this.imgs["playbackStart"].style.display = "unset";
+    this.imgs["playbackPause"].style.display = "none";
+  }
+
+  resetButtons() {
+    // Reset buttons
     this.imgs["playbackStart"].style.display = "none";
     this.imgs["playbackPause"].style.display = "unset";
     this.imgs["seekBackward"].style.display = "none";
@@ -205,19 +224,14 @@ export default class Controls {
     this.onTogglePause();
 
     // toggle the play/pause button
-    if (this.imgs["playbackStart"].style.display == "none") {
-      this.imgs["playbackStart"].style.display = "unset";
-      this.imgs["playbackPause"].style.display = "none";
-
-      // if pausing the simulation, reset the fast forward / rewind button
-      // TODO: These methods should be separate because they are clunky and used many times
-      this.imgs["seekForward"].style.display = "none";
-      this.imgs["skipForward"].style.display = "unset";
-      this.imgs["seekBackward"].style.display = "none";
-      this.imgs["skipBackward"].style.display = "unset";
-    } else {
+    const isNowPaused: boolean = this.imgs.playbackPause.style.display === "none";
+    this.resetButtons();
+    if (isNowPaused) {
       this.imgs["playbackStart"].style.display = "none";
       this.imgs["playbackPause"].style.display = "unset";
+    } else {
+      this.imgs["playbackStart"].style.display = "unset";
+      this.imgs["playbackPause"].style.display = "none";
     }
   }
 
@@ -225,24 +239,17 @@ export default class Controls {
    * Fast forward our simulation.
    */
   forward() {
-    // toggle speeds between regular speed and fast forward
     this.onToggleForward();
-    console.log("FORWARD");
-    if (this.imgs["seekForward"].style.display == "none") {
-      this.imgs["seekForward"].style.display = "unset";
-      this.imgs["skipForward"].style.display = "none";
-    } else {
+
+    // toggle speeds between regular speed and fast forward
+    const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";
+    this.resetButtons();
+    if (isNowSkipping) {
       this.imgs["seekForward"].style.display = "none";
       this.imgs["skipForward"].style.display = "unset";
-    }
-
-    // toggle the pause button to play if the simulation is paused
-    // Reset the rewind button
-    this.imgs["seekBackward"].style.display = "none";
-    this.imgs["skipBackward"].style.display = "unset";
-    if (this.imgs["playbackPause"].style.display == "none") {
-      this.imgs["playbackStart"].style.display = "none";
-      this.imgs["playbackPause"].style.display = "unset";
+    } else {
+      this.imgs["seekForward"].style.display = "unset";
+      this.imgs["skipForward"].style.display = "none";
     }
   }
 
@@ -251,22 +258,16 @@ export default class Controls {
    */
   rewind() {
     this.onToggleRewind();
-    console.log("REWIND");
-    if (this.imgs["seekBackward"].style.display == "none") {
-      this.imgs["seekBackward"].style.display = "unset";
-      this.imgs["skipBackward"].style.display = "none";
-    } else {
+
+    // toggle speeds between rewind and regular speed
+    const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";
+    this.resetButtons();
+    if (isNowSkipping) {
       this.imgs["seekBackward"].style.display = "none";
       this.imgs["skipBackward"].style.display = "unset";
-    }
-
-    // toggle the pause button to play if the simulation is paused
-    // Reset the forward button
-    this.imgs["seekForward"].style.display = "none";
-    this.imgs["skipForward"].style.display = "unset";
-    if (this.imgs["playbackPause"].style.display == "none") {
-      this.imgs["playbackStart"].style.display = "none";
-      this.imgs["playbackPause"].style.display = "unset";
+    } else {
+      this.imgs["seekBackward"].style.display = "unset";
+      this.imgs["skipBackward"].style.display = "none";
     }
   }
 
@@ -275,6 +276,20 @@ export default class Controls {
    */
   restart() {
     this.onSeek(0);
+  }
+
+  /**
+   * Steps forward one turn in the simulation
+   */
+  stepForward() {
+    this.onStepForward();
+  }
+
+  /**
+   * Steps backward one turn in the simulation
+   */
+  stepBackward() {
+    this.onStepBackward();
   }
 
   /**
@@ -291,22 +306,31 @@ export default class Controls {
   }
 
   /**
-   * Display an info string in the controls bar
-   * "Robot ID id
-   * Location: (x, y)
-   * Health: health/maxHealth"
+   * Updates the location readout
    */
-  setInfoString(id, x, y, health, maxHealth, bytecodes?): void {
-    this.infoString.innerHTML = `Robot ID ${id}<br>
-                                 Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
-                                 Health: ${health.toFixed(3)}/${maxHealth}`;
-                                 // Bytecode Usage: ${bytecodes}`;
+  setLocation(x, y): void {
+    this.locationReadout.textContent = `Location (${x.toFixed(3)}, ${y.toFixed(3)})`;
   }
 
   /**
-   * Stop running the simulation, release all resources.
+   * Display an info string in the controls bar
+   * "Robot ID id
+   * Location: (x, y)
+   * Health: health/maxHealth
+   * Bytecodes Used: bytecodes"
    */
-  destroy() {
-    // TODO? Not that important.
+  setInfoString(id, x, y, health, maxHealth, bytecodes?: number): void {
+    if (bytecodes !== undefined) {
+      // Not a neutral tree or bullet tree
+      this.infoString.innerHTML = `Robot ID ${id}<br>
+        Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
+        Health: ${health.toFixed(3)}/${maxHealth.toFixed(3)}<br>
+        Bytecodes Used: ${bytecodes}`;
+    } else {
+      // Neutral tree or bullet tree, no bytecode information
+      this.infoString.innerHTML = `Robot ID ${id}<br>
+        Location: (${x.toFixed(3)}, ${y.toFixed(3)})<br>
+        Health: ${health.toFixed(3)}/${maxHealth.toFixed(3)}`;
+    }
   }
 }

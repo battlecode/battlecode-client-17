@@ -1,6 +1,6 @@
 /* Global stylings here */
 
-.gameDiv {
+.gameWrapper {
     background: #e0e0e0;
     color: black;
     border-radius: 4px;
@@ -14,18 +14,19 @@
 }
 
 .blue {
-    color: blue;
+    color: #4f7ee6;
 }
 
 .red {
-    color: red;
+    color: #db3627;
 }
 
-#matchViewer {
+#matchQueue {
     text-align: left;
     font-size: 18px;
     padding: 10px;
     margin-bottom: 16px;
+    font-family: Tahoma, sans-serif;
 }
 
 #matchRunner {
@@ -39,7 +40,8 @@
 .gameNum {
     display: inline-block;
     margin-left: 16px;
-    min-width: 100px;
+    margin-right: 16px;
+    min-width: 80px;
 }
 
 .active-match {
@@ -77,14 +79,6 @@ form {
 
 #canvas-wrapper {
     margin-top: -75px;
-}
-
-.red {
-    color: #a62014;
-}
-
-.blue {
-    color: #0636ac;
 }
 
 #export {
@@ -186,7 +180,8 @@ input[type='file'] {
 
 #helpDiv {
     text-align: left;
-    font-size: 12px;
+    font-family: Tahoma, sans-serif;
+    font-size: 14px;
     padding: 10px;
 }
 
@@ -226,9 +221,23 @@ input[type='file'] {
     color: #46ff00;
     padding: 15px;
     margin: 0px 5px;
-    font-family: "Lucida Console", monospace;
-    font-size: 14px;
+    font-family: Tahoma, sans-serif;
+    font-size: 11px;
     height: 70vh; /* HELP: I'd prefer this be calc(100vh - ?px) but I can't get it to work */
     text-align: left;
     overflow: scroll;
+}
+
+#mapListContainer {
+    text-align: left;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding-left: 48px;
+}
+
+#runMatch {
+    width: 70%;
+    font-size: 18px;
+    padding: 8px 0px;
+    margin: 8px 0px;
 }

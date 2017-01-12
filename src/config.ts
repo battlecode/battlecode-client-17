@@ -31,6 +31,11 @@ export interface Config {
   readonly websocketURL: string | null;
 
   /**
+   * The match file URL to load when we start.
+   */
+  readonly matchFileURL: string | null;
+
+  /**
    * How often to poll the server via websocket, in ms.
    */
   readonly pollEvery: number;
@@ -69,7 +74,7 @@ export enum Mode {
   HELP,
   MAPEDITOR,
   CONSOLE,
-  RUNMATCH
+  QUEUE
 }
 
 /**
@@ -84,6 +89,7 @@ export function defaults(supplied?: any): Config {
     height: supplied.height || 600,
     defaultTPS: supplied.defaultTPS || 20,
     websocketURL: supplied.websocketURL || null,
+    matchFileURL: supplied.matchFileURL || null,
     pollEvery: supplied.pollEvery || 500,
     interpolate: supplied.interpolate || true,
     healthBars: supplied.healthBars || true,

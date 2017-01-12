@@ -27,7 +27,7 @@ export default class MapEditor {
   private readonly conf: Config;
 
   // Scaffold
-  private readonly scaffold: ScaffoldCommunicator | null;
+  private scaffold: ScaffoldCommunicator | null;
 
   // For storing map information
   private bodiesArray: {
@@ -47,10 +47,10 @@ export default class MapEditor {
     containedBodies: schema.BodyType[]
   };
 
-  constructor(conf: Config, images: AllImages, scaffold: ScaffoldCommunicator | null) {
+  constructor(conf: Config, images: AllImages) {
     this.canvas = document.createElement("canvas");
     this.form = new MapEditorForm(conf, images, this.canvas);
-    this.scaffold = scaffold;
+    this.scaffold = null;
     this.div = this.basediv();
     this.images = images;
     this.conf = conf;
@@ -67,7 +67,9 @@ export default class MapEditor {
 
     div.appendChild(this.form.div);
 
+    div.appendChild(this.validateButton());
     div.appendChild(this.removeInvalidButton());
+    div.appendChild(this.resetButton());
     div.appendChild(document.createElement("br"));
     div.appendChild(document.createElement("br"));
 
@@ -96,15 +98,48 @@ export default class MapEditor {
     };
   }
 
+  private validateButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("Validate"));
+    button.onclick = () => {
+      if (this.form.isValid()) {
+        alert("Congratulations! Your map is valid. :)")
+      }
+    };
+    return button;
+  }
+
+  /**
+   * Sets a scaffold if a scaffold directory is found after everything is loaded
+   */
+  addScaffold(scaffold: ScaffoldCommunicator): void {
+    this.scaffold = scaffold;
+  }
+
   private removeInvalidButton(): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";
     button.appendChild(document.createTextNode("Remove invalid units"));
     button.onclick = () => {
       let youAreSure = confirm(
-        "Are you sure? Continuing will permanently remove invalid units.");
+        "WARNING: you will permanently lose all invalid units. Click OK to continue anyway.");
       if (youAreSure) {
         this.form.removeInvalidUnits();
+      }
+    };
+    return button;
+  }
+
+  private resetButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.appendChild(document.createTextNode("RESET"));
+    button.onclick = () => {
+      let youAreSure = confirm(
+        "WARNING: you will lose all your data. Click OK to continue anyway.");
+      if (youAreSure) {
+        this.form.reset();
       }
     };
     return button;
@@ -128,7 +163,7 @@ export default class MapEditor {
             if (err) {
               console.log(err);
             } else {
-              alert("Good to go!");
+              alert("Good to go! Click \"Refresh\" in the Queue to use your new map.");
             }
           });
         } else {

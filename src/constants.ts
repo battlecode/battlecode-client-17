@@ -31,7 +31,7 @@ export const ARCHON_RADIUS = 2;
 export const MIN_TREE_RADIUS = 0.5;
 export const MAX_TREE_RADIUS = 10;
 export const MIN_DIMENSION = 30;
-export const MAX_DIMENSION = 80;
+export const MAX_DIMENSION = 100;
 
 // Server settings
 export const NUMBER_OF_TEAMS = 2;
@@ -58,5 +58,19 @@ export function symmetryToString(symmetry: Symmetry) {
     case Symmetry.HORIZONTAL: return "Horizontal";
     case Symmetry.VERTICAL:   return "Vertical";
     default:         throw new Error("invalid symmetry");
+  }
+}
+
+export function radiusFromBodyType(bodyType: schema.BodyType) {
+  switch(bodyType) {
+    case ARCHON:       return 2;
+    case GARDENER:     return 1;
+    case LUMBERJACK:   return 1;
+    case SOLDIER:      return 1;
+    case TANK:         return 2;
+    case SCOUT:        return 1;
+    case TREE_BULLET:  return 1;
+    case NONE:         return 0;
+    default:           throw new Error("invalid body type");
   }
 }

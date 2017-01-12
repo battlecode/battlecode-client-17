@@ -3,9 +3,12 @@ import {AllImages} from '../imageloader';
 
 import Stats from './stats';
 import Console from './console';
-import MapEditor from '../mapeditor/main';
-import MatchRunner from './matchrunner';
+import MapEditor from '../mapeditor/mapeditor';
+import MatchRunner from '../matchrunner/matchrunner';
+import MatchQueue from '../matchrunner/matchqueue';
 import ScaffoldCommunicator from '../scaffold';
+
+import {electron} from '../electron-modules';
 
 export default class Sidebar {
 
@@ -19,10 +22,14 @@ export default class Sidebar {
   readonly console: Console;
   readonly mapeditor: MapEditor;
   readonly matchrunner: MatchRunner;
+  readonly matchqueue: MatchQueue;
   private readonly help: HTMLDivElement;
 
   // Options
   private readonly conf: Config;
+
+  // Scaffold
+  private scaffold: ScaffoldCommunicator;
 
   // onkeydown event that uses the controls depending on the game mode
   private readonly onkeydownControls: (event: KeyboardEvent) => void;
@@ -32,15 +39,31 @@ export default class Sidebar {
 
   // onkeydownControls is an onkeydown event that uses the controls depending on the game mode
   constructor(conf: Config, images: AllImages,
-    onkeydownControls: (event: KeyboardEvent) => void,
-    scaffold: ScaffoldCommunicator | null) {
+    onkeydownControls: (event: KeyboardEvent) => void) {
     // Initialize fields
     this.div = document.createElement("div");
     this.innerDiv = document.createElement("div");
     this.images = images;
     this.stats = new Stats(conf, images);
     this.console = new Console(conf);
-    this.mapeditor = new MapEditor(conf, images, scaffold);
+    this.mapeditor = new MapEditor(conf, images);
+    this.matchrunner = new MatchRunner(conf, () => {
+      // Set callback for matchrunner in case the scaffold is loaded later
+      electron.remote.dialog.showOpenDialog(
+      {
+        title: 'Please select your battlecode-scaffold directory.',
+        properties: ['openDirectory']
+      },
+      (filePaths) => {
+        if (filePaths.length > 0) {
+          this.scaffold = new ScaffoldCommunicator(filePaths[0]);
+          this.addScaffold(this.scaffold);
+        } else {
+          console.log('No scaffold found or provided');
+        }
+      })
+    });
+    this.matchqueue = new MatchQueue(conf, images);
     this.help = this.initializeHelp();
     this.conf = conf;
     this.onkeydownControls = onkeydownControls
@@ -49,12 +72,8 @@ export default class Sidebar {
     this.loadStyles();
     this.div.appendChild(this.battlecodeLogo());
     this.div.appendChild(this.modeButton(Mode.GAME, "Game"));
-    if (process.env.ELECTRON && scaffold) {
-      this.matchrunner = new MatchRunner(conf, scaffold);
-      this.div.appendChild(this.modeButton(Mode.RUNMATCH, "Run Match"));
-    }
-    // HIDE THE CONSOLE FOR NOW
-    // this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
+    this.div.appendChild(this.modeButton(Mode.QUEUE, "Queue"));
+    this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
     this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
     this.div.appendChild(this.modeButton(Mode.HELP, "Help"));
     this.div.appendChild(document.createElement("br"));
@@ -64,23 +83,28 @@ export default class Sidebar {
   }
 
   /**
+   * Sets a scaffold if a scaffold directory is found after everything is loaded
+   */
+  addScaffold(scaffold: ScaffoldCommunicator): void {
+    this.mapeditor.addScaffold(scaffold);
+    this.matchrunner.addScaffold(scaffold);
+  }
+
+  /**
    * Initializes the help div
    */
   private initializeHelp(): HTMLDivElement {
     const innerHTML: string =
-    `This is the client for Battlecode 2017.<br>
+    `This is the client for Battlecode 2017. If you run into any issues,
+    make a post in the <a href="www.battlecodeforum.org">Battlecode forum</a>.
+    Be sure to attach a screenshot of your console output (F12 in the app) and
+    any other relevant information.<br>
     <br>
-    <b class="red">How to Play a Match</b><br>
-    <i>From the client:</i> Upload a <b>.bc17</b> file from your computer by
-    clicking the + button in the top-right corner. Use the control buttons to
-    navigate the match.<br>
-    <i>From the scaffold:</i> Click 'Run Match' above, and select players and 
-    maps to create and view matches. Note that it may take a few seconds for the
-    matches to be run and displayed.<br>
-    <br>
-    <b class="blue">Keyboard Shortcuts</b><br>
-    LEFT - Skip/Seek Backward<br>
-    RIGHT - Skip/Seek Forward<br>
+    <b class="red">Keyboard Shortcuts</b><br>
+    LEFT - Step Back One Turn<br>
+    RIGHT - Step Forward One Turn<br>
+    R - Skip/Seek Backward<br>
+    F - Skip/Seek Forward<br>
     P - Pause/Unpause<br>
     O - Stop<br>
     H - Toggle Health Bars<br>
@@ -90,31 +114,45 @@ export default class Sidebar {
     S - Add/Update (map editor mode)<br>
     D - Delete (map editor mode)<br>
     <br>
-    <b class="red">How to Use the Map Editor</b><br>
-    Select the initial map settings: name, width, height, symmetry. If you
-    later change these settings and the map becomes invalid, you can click
-    “EXPORT!” to see what modifications need to be made. You can also click
-    “Clear invalid units” to automatically remove overlapping or off-map units,
-    but data may be lost.<br>
+    <b class="blue">How to Play a Match</b><br>
+    <i>From the application:</i> Click <b>'Queue'</b> and follow the
+    instructions in the sidebar. Note that it may take a few seconds for
+    matches to be displayed.<br>
+    <i>From the web client:</i> If you are not running the client as a
+    stand-alone application, you can always upload a <b>.bc17</b> file by
+    clicking the + button in the top-right corner.<br>
     <br>
-    Add trees and archons to the map by setting the coordinates and radius. The
-    coordinates can also be set by clicking on the map. The tree radius will
-    automatically adjust to the maximum valid radius if the input is too large,
-    and the archon radius is always 2. If the radius is 0, no unit of that type
-    can be placed there.<br>
+    Use the control buttons in <b>'Queue'</b> and the top of the screen to
+    navigate the match.<br>
+    <br>
+    <b class="red">How to Use the Console</b><br>
+    The console displays all System.out.println() data up to the current round.
+    You can filter teams by checking the boxes and robot IDs by clicking the
+    robot. You can also change the maximum number of rounds displayed in the
+    input box. (WARNING: If you want to, say, suddenly display 3000 rounds
+    of data on round 2999, pause the client first to prevent freezing.)<br>
+    <br>
+    <b class="blue">How to Use the Map Editor</b><br>
+    Select the initial map settings: name, width, height, symmetry. Add trees
+    and archons by setting the coordinates and radius, and clicking
+    <b>"Add/Update."</b> The coordinates can also be set by clicking the map.
+    The radius will automatically adjust to the maximum valid radius if the
+    input is too large, and an archon always has radius 2. If the radius is 0,
+    no unit of that type can be placed there.<br>
     <br>
     Modify or delete existing units by clicking on them, making changes, then
-    clicking “Add/Update.”<br>
+    clicking <b>“Add/Update."</b><br>
     <br>
-    When you are happy with your map, click “EXPORT!”. (Note: the name of your
-    .map17 file must be the same as the name of your map.) If you are running
-    this application from the client/ directory, restart the client to see your
-    exported map. Otherwise, save the .map17 file to 
-    <b>battlecode-scaffold-2017/maps/</b> directory of your scaffold.`;
+    Before exporting, click <b>"Validate"</b> to see if any changes need to be
+    made, and <b>"Remove Invalid Units"</b> to automatically remove off-map or
+    overlapping units. When you are happy with your map, click <b>“EXPORT!”</b>.
+    If you are directed to save your map, save it in the
+    <b>/battlecode-scaffold-2017-master/maps</b> directory of your scaffold.
+    (Note: the name of your .map17 file must be the same as the name of your
+    map.)`;
 
     const div = document.createElement("div");
     div.id = "helpDiv";
-    div.style.fontFamily = "Tahoma, sans serif";
 
     div.innerHTML = innerHTML;
     return div;
@@ -195,10 +233,9 @@ export default class Sidebar {
       case Mode.CONSOLE:
         this.innerDiv.appendChild(this.console.div);
         break;
-      case Mode.RUNMATCH:
-        if (this.matchrunner) {
-          this.innerDiv.appendChild(this.matchrunner.div);
-        }
+      case Mode.QUEUE:
+        this.innerDiv.appendChild(this.matchrunner.div);
+        this.innerDiv.appendChild(this.matchqueue.div);
         break;
     }
 

@@ -1,11 +1,14 @@
 import {Game, GameWorld, Match, Metadata, schema, flatbuffers} from 'battlecode-playback';
+import * as cst from './constants';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
 import Sidebar from './html/sidebar';
 import Stats from './html/stats';
 import Controls from './html/controls';
-import MapEditor from './mapeditor/main';
+import Console from './html/console';
+import MapEditor from './mapeditor/mapeditor';
+import MatchQueue from './matchrunner/matchqueue';
 
 import GameArea from './game/gamearea';
 import NextStep from './game/nextstep';
@@ -62,8 +65,10 @@ export default class Client {
   stats: Stats;
   mapeditor: MapEditor;
   gamearea: GameArea; // Inner game area
+  console: Console; // Console to display logs
   gamecanvas: HTMLCanvasElement;
   mapcanvas: HTMLCanvasElement;
+  matchqueue: MatchQueue; // Match queue
 
   // Match logic
   listener: WebSocketListener | null;
@@ -88,10 +93,10 @@ export default class Client {
 
     imageloader.loadAll(conf, (images: imageloader.AllImages) => {
       this.imgs = images;
-      this.loadScaffold();
       this.root.appendChild(this.loadControls());
       this.root.appendChild(this.loadSidebar());
       this.root.appendChild(this.loadGameArea());
+      this.loadScaffold();
       this.ready();
     });
 
@@ -114,6 +119,7 @@ export default class Client {
     }
     this.clearScreen();
     this.currentGame = game;
+    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
   }
 
   setMatch(match: number) {
@@ -126,7 +132,9 @@ export default class Client {
 
     // Restart game loop
     this.runMatch();
-    this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
+    this.controls.resetButtons();
+    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
+    this.games[this.currentGame ? this.currentGame: 0].getMatch(this.currentMatch).seek(0);
   }
 
   /**
@@ -157,9 +165,11 @@ export default class Client {
         break;
       }
     };
-    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls, this.scaffold);
+    this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
     this.stats = this.sidebar.stats;
+    this.console = this.sidebar.console;
     this.mapeditor = this.sidebar.mapeditor;
+    this.matchqueue = this.sidebar.matchqueue;
     return this.sidebar.div;
   }
 
@@ -185,33 +195,44 @@ export default class Client {
 
       if (scaffoldPath != null) {
         this.scaffold = new ScaffoldCommunicator(scaffoldPath);
+        this.sidebar.addScaffold(this.scaffold);
       } else {
-        console.log("Couldn't load scaffold: ");
-        // This is how to get a file path in electron:
-        /*
-        electron.remote.dialog.showOpenDialog(
-          {
-            title: 'Please select your battlecode-scaffold directory (the one you downloaded that has all those files in it and lets you run matches)',
-            properties: ['openDirectory']
-          },
-          (filePaths) => {
-            if (filePaths.length > 0) {
-              this.scaffold = new ScaffoldCommunicator(filePaths[0]);
-            } else {
-              console.log('No scaffold found or provided');
-            }
-          }
-        );
-        */
+        console.log("Couldn't load scaffold: click \"Run Match\" to learn more.");
       }
     }
-
   }
 
   /**
    * Marks the client as fully loaded.
    */
   ready() {
+    if (this.conf.matchFileURL) {
+      // Load a match file
+      console.log(`Loading provided match file: ${this.conf.matchFileURL}`);
+      const req = new XMLHttpRequest();
+      req.open('GET', this.conf.matchFileURL, true);
+      req.responseType = 'arraybuffer';
+      req.onerror = (event) => {
+        console.log(`Can't load provided match file: ${event.error}`);
+      };
+      req.onload = (event) => {
+        const resp = req.response;
+        if (resp) {
+          console.log('Loaded provided match file');
+          var lastGame = this.games.length
+          this.games[lastGame] = new Game();
+          this.games[lastGame].loadFullGameRaw(resp);
+
+          if (this.games.length === 1) {
+            // this will run the first match from the game
+            this.setGame(0);
+            this.setMatch(0);
+          }
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+        }
+      };
+      req.send();
+    }
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
       var lastGame = this.games.length
       this.games[lastGame] = new Game();
@@ -222,14 +243,15 @@ export default class Client {
         this.setGame(0);
         this.setMatch(0);
       }
-      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
-    }
+      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+    };
+
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
         (game) => {
           this.games.push(game);
-          this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         },
         // What to do with the websocket's first game's first match
         () => {
@@ -237,7 +259,12 @@ export default class Client {
           if (this.games.length === 1) {
             this.setGame(0);
             this.setMatch(0);
+            this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
           }
+        },
+        // What to do with any other match
+        () => {
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
         }
       );
     }
@@ -248,6 +275,26 @@ export default class Client {
     if (this.loopID !== null) {
       window.cancelAnimationFrame(this.loopID);
       this.loopID = null;
+    }
+  }
+
+  /**
+   * Updates the stats bar displaying VP, bullets, and robot counts for each
+   * team in the current game world.
+   */
+  private updateStats(world: GameWorld, meta: Metadata) {
+    for (let team in meta.teams) {
+      let teamID = meta.teams[team].teamID;
+      let teamStats = world.stats.get(teamID);
+
+      // Update the bullets and victory points
+      this.stats.setBullets(teamID, teamStats.bullets);
+      this.stats.setVPs(teamID, teamStats.vps);
+
+      // Update each robot count
+      this.stats.robots.forEach((type: schema.BodyType) => {
+        this.stats.setRobotCount(teamID, type, teamStats.robots[type]);
+      });
     }
   }
 
@@ -273,6 +320,7 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
+    this.console.indexLogs(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
@@ -280,14 +328,18 @@ export default class Client {
     // Last selected robot ID to display extra info
     const controls = this.controls;
     let lastSelectedID: number | undefined = undefined;
-    const onRobotSelected = (id: number) => {
+    const onRobotSelected = (id: number | undefined) => {
       lastSelectedID = id;
-    }
+      this.console.setIDFilter(id);
+    };
+    const onMouseover = (x: number, y: number) => {
+      this.controls.setLocation(x, y);
+    };
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
     const renderer = new Renderer(this.gamearea.canvas, this.imgs,
-      this.conf, meta as Metadata, onRobotSelected);
+      this.conf, meta as Metadata, onRobotSelected, onMouseover);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -303,6 +355,7 @@ export default class Client {
     let interpGameTime = 0;
     // The time of the last frame
     let lastTime: number | null = null;
+    let lastTurn: number | null = null;
     // whether we're seeking
     let externalSeek = false;
 
@@ -323,7 +376,19 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     };
-    this.stats.onNextMatch = () => {
+    this.controls.onStepForward = () => {
+      if(!(goalUPS == 0)) {
+        this.controls.pause();
+      }
+      this.controls.onSeek(match.current.turn + 1);
+    };
+    this.controls.onStepBackward = () => {
+      if(!(goalUPS == 0)) {
+        this.controls.pause();
+      }
+      this.controls.onSeek(match.current.turn - 1);
+    };
+    this.matchqueue.onNextMatch = () => {
       console.log("NEXT MATCH");
 
       if(this.currentGame < 0) {
@@ -341,9 +406,8 @@ export default class Client {
           // Do nothing, at the end
         }
       }
-
     };
-    this.stats.onPreviousMatch = () => {
+    this.matchqueue.onPreviousMatch = () => {
       console.log("PREV MATCH");
 
       if(this.currentMatch > 0) {
@@ -358,7 +422,7 @@ export default class Client {
       }
 
     };
-    this.stats.removeGame = (game: number) => {
+    this.matchqueue.removeGame = (game: number) => {
 
       if (game > this.currentGame) {
         this.games.splice(game, 1);
@@ -386,9 +450,9 @@ export default class Client {
         this.currentGame = game - 1;
       }
 
-      this.stats.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
+      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
     };
-    this.stats.gotoMatch = (game: number, match: number) => {
+    this.matchqueue.gotoMatch = (game: number, match: number) => {
       this.setGame(game);
       this.setMatch(match);
     };
@@ -412,17 +476,23 @@ export default class Client {
         case 79: // "o" - Stop
           controls.restart();
           break;
-        case 37: // "LEFT" - Skip/Seek Backward
-          controls.rewind();
+        case 37: // "LEFT" - Step Backward
+          controls.stepBackward();
           break;
-        case 39: // "RIGHT" - Skip/Seek Forward
-          controls.forward();
+        case 39: // "RIGHT" - Step Forward
+          controls.stepForward();
           break;
         case 72: // "h" - Toggle Health Bars
           conf.healthBars = !conf.healthBars;
           break;
         case 67: // "c" - Toggle Circle Bots
           conf.circleBots = !conf.circleBots;
+          break;
+        case 70: // "f" - Skip/Seek Forward
+          controls.forward();
+          break;
+        case 82: // "r" - Skip/Seek Backward
+          controls.rewind();
           break;
         case 86: // "v" - Toggle Indicator Dots and Lines
           conf.indicators = !conf.indicators;
@@ -481,11 +551,19 @@ export default class Client {
           let y = bodies.y[index];
           let health = bodies.health[index];
           let maxHealth = bodies.maxHealth[index];
-          this.controls.setInfoString(id, x, y, health, maxHealth);
+          let type = bodies.type[index];
+          let bytecodes = bodies.bytecodesUsed[index];
+          if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
+            this.controls.setInfoString(id, x, y, health, maxHealth);
+          } else {
+            this.controls.setInfoString(id, x, y, health, maxHealth, bytecodes);
+          }
         }
       }
 
+      this.console.seekRound(match.current.turn);
       lastTime = curTime;
+      lastTurn = match.current.turn;
 
       // only interpolate if:
       // - we want to
@@ -503,29 +581,15 @@ export default class Client {
         let lerp = Math.min(interpGameTime - match.current.turn, 1);
 
         renderer.render(match.current,
-                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
+                        match.current.minCorner, match.current.maxCorner,
                         nextStep, lerp);
-
-        // UPDATE STATS HERE
-        for (let team in meta.teams) {
-          var teamID = meta.teams[team].teamID;
-          var teamStats = match.current.stats.get(teamID);
-          this.stats.setBullets(teamID, teamStats.bullets);
-          this.stats.setVPs(teamID, teamStats.vps);
-
-          // Update each robot count
-          for(var i = 0; i < 6; i++) { // TODO: We need a way to get the number of robot types that are robots
-            this.stats.setRobotCount(teamID, i, teamStats.robots[i]);
-          }
-        }
-
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
         renderer.render(match.current,
-                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
-
+                        match.current.minCorner, match.current.maxCorner);
       }
 
+      this.updateStats(match.current, meta);
       this.loopID = window.requestAnimationFrame(loop);
 
     };

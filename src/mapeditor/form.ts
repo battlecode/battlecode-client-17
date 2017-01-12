@@ -135,7 +135,7 @@ export default class MapEditorForm {
     // Map name
     this.nameGM = document.createElement("input");
     this.nameGM.type = "text";
-    this.nameGM.value = "map";
+    this.nameGM.value = "coolmap";
     this.nameGM.maxLength = 50;
     mapname.appendChild(document.createTextNode("Map name:"));
     mapname.appendChild(this.nameGM);
@@ -711,16 +711,19 @@ export default class MapEditorForm {
    * The bodies (trees and archons) currently on the map
    */
   bodies(): Map<number, MapUnit> {
-    let map = new Map<number, MapUnit>();
+    const map = new Map<number, MapUnit>();
 
-    // TODO: randomize archon IDs so tiebreakers aren't rigged
+    const offsetA = Math.round(Math.random()); // 0 or 1
+    const offsetB = 1 - offsetA; // 1 or 0
+    console.log(`${offsetA} ${offsetB}`);
+
     this.originalBodies.forEach((body: MapUnit, id: number) => {
       if (body.type === cst.ARCHON) body.teamID = 1;
-      map.set(id * 2, body);
+      map.set(id * 2 + offsetA, body);
     });
     this.symmetricBodies.forEach((body: MapUnit, id: number) => {
       if (body.type === cst.ARCHON) body.teamID = 2;
-      map.set(id * 2 + 1, body);
+      map.set(id * 2 + offsetB, body);
     });
 
     return map;
@@ -778,6 +781,17 @@ export default class MapEditorForm {
       });
     });
 
+    // Neutral trees cannot have a smaller radius than the body they contain
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.TREE_NEUTRAL) {
+        const treeRadius = unit.radius;
+        const bodyRadius = cst.radiusFromBodyType(unit.containedBody);
+        if (treeRadius < bodyRadius) {
+          errors.push(`Tree ID ${id} with radius ${treeRadius.toFixed(2)} contains a body with radius ${bodyRadius}`);
+        }
+      }
+    });
+
     if (errors.length > 0) {
       alert(errors.join("\n"));
       return false;
@@ -788,6 +802,8 @@ export default class MapEditorForm {
   }
 
   removeInvalidUnits(): void {
+    // NOTE: All changes that are made to originalBodies are reflected in
+    // symmetricBodies when calling this.render()
     let actions = new Array();
 
     // If there are too many archons, remove them until there aren't
@@ -801,7 +817,6 @@ export default class MapEditorForm {
       let poppedID = archonIDs.pop();
       if (poppedID) {
         this.originalBodies.delete(poppedID);
-        this.symmetricBodies.delete(poppedID);
         actions.push(`Removed archon ID ${poppedID}`);
       }
     }
@@ -818,7 +833,6 @@ export default class MapEditorForm {
       let distanceToWall = Math.min(x, y, this.width() - x, this.height() - y);
       if (unit.radius > distanceToWall || x < 0 || y < 0 || x > this.width() || y > this.height()) {
         this.originalBodies.delete(id);
-        this.symmetricBodies.delete(id);
         actions.push(`Removed ID ${id}. (off the map)`);
       }
     });
@@ -830,12 +844,22 @@ export default class MapEditorForm {
       this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
         if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
           this.originalBodies.delete(idA);
-          this.symmetricBodies.delete(idA);
           this.originalBodies.delete(idB);
-          this.symmetricBodies.delete(idB);
           actions.push (`Removed IDs ${idA} and ${idB}. (overlapping)`);
         }
       });
+    });
+
+    // Remove the body from neutral trees with a smaller radius than the contained body
+    this.originalBodies.forEach((unit: MapUnit, id: number) => {
+      if (unit.type === cst.TREE_NEUTRAL) {
+        const treeRadius = unit.radius;
+        const bodyRadius = cst.radiusFromBodyType(unit.containedBody);
+        if (treeRadius < bodyRadius) {
+          this.originalBodies.get(id).containedBody = cst.NONE;
+          actions.push(`Removed a body from tree ID ${id}`);
+        }
+      }
     });
 
     if (actions.length > 0) {
@@ -844,5 +868,12 @@ export default class MapEditorForm {
     } else {
       alert("Congratulations, the map is already valid!");
     }
+  }
+
+  reset(): void {
+    this.lastID = 1;
+    this.originalBodies = new Map<number, MapUnit>();
+    this.symmetricBodies = new Map<number, MapUnit>();
+    this.render();
   }
 }
