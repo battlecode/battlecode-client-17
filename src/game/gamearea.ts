@@ -53,21 +53,32 @@ export default class GameArea {
    */
   loadSplashScreenInto(splashCanvas : HTMLCanvasElement) {
     
-    let ctx = splashCanvas.getContext("2d");
-    if (ctx === null) {
-        throw new Error("Couldn't load canvas2d context");
-    } else {
-      
-      ctx['imageSmoothingEnabled'] = false;
-      ctx.font = '48px Graduate';
-      ctx.fillStyle = 'white';
-      ctx.fillText("Battlecode Client", 0, 48, 300);
-      ctx.font = '32px "Graduate"';
-      ctx.fillText("v1.1.0", 110, 88);
-      
+    // Wait for the font to load ...
+    // sleep time expects milliseconds
+    function sleep (time) {
+      return new Promise((resolve) => setTimeout(resolve, time));
     }
 
-    this.wrapper.appendChild(splashCanvas);
+    // Usage!
+    sleep(500).then(() => {
+        
+        let ctx = splashCanvas.getContext("2d");
+        if (ctx === null) {
+            throw new Error("Couldn't load canvas2d context");
+        } else {
+
+          ctx['imageSmoothingEnabled'] = false;
+          ctx.font = '42px "Graduate"';
+          ctx.fillStyle = 'white';
+          ctx.fillText("Battlecode Client", 0, 48, 300);
+          ctx.font = '32px "Graduate"';
+          ctx.fillText("v1.1.5", 110, 88);
+
+        }
+
+        this.wrapper.appendChild(splashCanvas);
+      
+    });
       
   }
 
