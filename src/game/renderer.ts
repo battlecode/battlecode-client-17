@@ -346,14 +346,18 @@ export default class Renderer {
     const dotsRed = dots.arrays.red;
     const dotsGreen = dots.arrays.green;
     const dotsBlue = dots.arrays.blue;
+    const minY = world.minCorner.y;
+    const maxY = world.maxCorner.y;
 
     for (let i = 0; i < dots.length; i++) {
       const red = dotsRed[i];
       const green = dotsGreen[i];
       const blue = dotsBlue[i];
+      const x = dotsX[i];
+      const y = this.flip(dotsY[i], minY, maxY);
 
       this.ctx.beginPath();
-      this.ctx.arc(dotsX[i], dotsY[i], cst.INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
+      this.ctx.arc(x, y, cst.INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
       this.ctx.fill();
       this.ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
     }
@@ -372,6 +376,10 @@ export default class Renderer {
       const red = linesRed[i];
       const green = linesGreen[i];
       const blue = linesBlue[i];
+      const startX = linesStartX[i];
+      const startY = this.flip(linesStartY[i], minY, maxY);
+      const endX = linesEndX[i];
+      const endY = this.flip(linesEndY[i], minY, maxY);
 
       this.ctx.beginPath();
       this.ctx.moveTo(linesStartX[i], linesStartY[i]);
