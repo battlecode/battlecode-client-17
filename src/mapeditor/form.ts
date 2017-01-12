@@ -132,6 +132,7 @@ export default class MapEditorForm {
     header.appendChild(width);
     header.appendChild(height);
     header.appendChild(document.createElement("br"));
+    container.id = "gameEditorHeaderTable";
 
     // Map name
     let nameLabelCont = document.createElement("td");
