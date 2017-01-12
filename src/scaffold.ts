@@ -13,6 +13,7 @@ const SERVER_MAPS = [
   "DenseForest",
   "Enclosure",
   "Hurdle",
+  "LineOfFire",
   "MagicWood",
   "shrine",
   "SparseForest"
