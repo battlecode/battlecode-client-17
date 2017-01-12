@@ -13,6 +13,8 @@ const SERVER_MAPS = [
   "DenseForest",
   "Enclosure",
   "Hurdle",
+  "LineOfFire",
+  "MagicWood",
   "shrine",
   "SparseForest"
 ].sort();
@@ -149,7 +151,7 @@ export default class ScaffoldCommunicator {
    * TODO what if the server hangs?
    */
   runMatch(teamA: string, teamB: string, maps: string[], cb: (err: Error | null, stdout: string, stderr: string) => void) {
-      child_process.exec(`"${this.wrapperPath}" run -PteamA=${teamA} -PteamB=${teamB} -Pmaps=${maps.join(',')}`,
+      child_process.exec(`"${this.wrapperPath}" runFromClient -PteamA=${teamA} -PteamB=${teamB} -Pmaps=${maps.join(',')}`,
                         {cwd: this.scaffoldPath}, cb);
   }
 }

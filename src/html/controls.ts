@@ -10,6 +10,7 @@ export default class Controls {
   wrapper: HTMLDivElement;
 
   readonly speedReadout: Text;
+  readonly locationReadout: Text;
   readonly infoString: HTMLTableDataCellElement;
 
   // Callbacks initialized from outside Controls
@@ -45,6 +46,7 @@ export default class Controls {
   constructor(conf: Config, images: imageloader.AllImages) {
     this.div = this.baseDiv();
     this.speedReadout = document.createTextNode('No match loaded');
+    this.locationReadout = document.createTextNode('Location: (???, ???)');
 
     // initialize the images
     this.conf = conf;
@@ -80,6 +82,8 @@ export default class Controls {
     buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
     buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
+    buttons.appendChild(document.createElement("br"));
+    buttons.appendChild(this.locationReadout);
 
     // create the info string display
     let infoString = document.createElement("td");
@@ -299,6 +303,13 @@ export default class Controls {
     // Edit the text
     this.speedReadout.textContent =
       ` TIME: ${time}/${loadedTime} UPS: ${ups | 0} FPS: ${fps | 0}`;
+  }
+
+  /**
+   * Updates the location readout
+   */
+  setLocation(x, y): void {
+    this.locationReadout.textContent = `Location (${x.toFixed(3)}, ${y.toFixed(3)})`;
   }
 
   /**

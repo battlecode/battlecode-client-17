@@ -153,23 +153,17 @@ export default class Client {
     let onkeydownControls = (event: KeyboardEvent) => {
       switch (event.keyCode) {
         case 80: // "p" - Pause/Unpause
-          this.controls.pause();
-          break;
+        this.controls.pause();
+        break;
         case 79: // "o" - Stop
-          this.controls.restart();
-          break;
-        case 37: // "LEFT" - Step Backward
-          this.controls.stepBackward();
-          break;
-        case 39: // "RIGHT" - Step Forward
-          this.controls.stepForward();
-          break;
-        case 70: // "f" - Skip/Seek Forward
-          this.controls.forward();
-          break;
-        case 82: // "r" - Skip/Seek Backward
-          this.controls.rewind();
-          break;
+        this.controls.restart();
+        break;
+        case 37: // "LEFT" - Skip/Seek Backward
+        this.controls.rewind();
+        break;
+        case 39: // "RIGHT" - Skip/Seek Forward
+        this.controls.forward();
+        break;
       }
     };
     this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
@@ -214,6 +208,33 @@ export default class Client {
    * Marks the client as fully loaded.
    */
   ready() {
+    if (this.conf.matchFileURL) {
+      // Load a match file
+      console.log(`Loading provided match file: ${this.conf.matchFileURL}`);
+      const req = new XMLHttpRequest();
+      req.open('GET', this.conf.matchFileURL, true);
+      req.responseType = 'arraybuffer';
+      req.onerror = (event) => {
+        console.log(`Can't load provided match file: ${event.error}`);
+      };
+      req.onload = (event) => {
+        const resp = req.response;
+        if (resp) {
+          console.log('Loaded provided match file');
+          var lastGame = this.games.length
+          this.games[lastGame] = new Game();
+          this.games[lastGame].loadFullGameRaw(resp);
+
+          if (this.games.length === 1) {
+            // this will run the first match from the game
+            this.setGame(0);
+            this.setMatch(0);
+          }
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+        }
+      };
+      req.send();
+    }
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
       var lastGame = this.games.length
       this.games[lastGame] = new Game();
@@ -225,7 +246,8 @@ export default class Client {
         this.setMatch(0);
       }
       this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
-    }
+    };
+
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
@@ -280,6 +302,9 @@ export default class Client {
 
   private runMatch() {
     console.log('Running match.');
+    
+    this.conf.mode = config.Mode.GAME;
+    this.gamearea.setCanvas();
 
     // Cancel previous games if they're running
     this.clearScreen();
@@ -311,12 +336,15 @@ export default class Client {
     const onRobotSelected = (id: number | undefined) => {
       lastSelectedID = id;
       this.console.setIDFilter(id);
-    }
+    };
+    const onMouseover = (x: number, y: number) => {
+      this.controls.setLocation(x, y);
+    };
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
     const renderer = new Renderer(this.gamearea.canvas, this.imgs,
-      this.conf, meta as Metadata, onRobotSelected);
+      this.conf, meta as Metadata, onRobotSelected, onMouseover);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -332,6 +360,7 @@ export default class Client {
     let interpGameTime = 0;
     // The time of the last frame
     let lastTime: number | null = null;
+    let lastTurn: number | null = null;
     // whether we're seeking
     let externalSeek = false;
 
@@ -382,7 +411,6 @@ export default class Client {
           // Do nothing, at the end
         }
       }
-
     };
     this.matchqueue.onPreviousMatch = () => {
       console.log("PREV MATCH");
@@ -426,6 +454,11 @@ export default class Client {
         this.games.splice(game, 1);
         this.currentGame = game - 1;
       }
+      
+      if(this.games.length == 0) {
+        this.conf.mode = config.Mode.SPLASH;
+        this.gamearea.setCanvas();
+      }
 
       this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
     };
@@ -442,6 +475,43 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     }, false);
+
+    // set key options
+    const conf = this.conf;
+    document.onkeydown = function(event) {
+      switch (event.keyCode) {
+        case 80: // "p" - Pause/Unpause
+          controls.pause();
+          break;
+        case 79: // "o" - Stop
+          controls.restart();
+          break;
+        case 37: // "LEFT" - Step Backward
+          controls.stepBackward();
+          break;
+        case 39: // "RIGHT" - Step Forward
+          controls.stepForward();
+          break;
+        case 72: // "h" - Toggle Health Bars
+          conf.healthBars = !conf.healthBars;
+          break;
+        case 67: // "c" - Toggle Circle Bots
+          conf.circleBots = !conf.circleBots;
+          break;
+        case 70: // "f" - Skip/Seek Forward
+          controls.forward();
+          break;
+        case 82: // "r" - Skip/Seek Backward
+          controls.rewind();
+          break;
+        case 86: // "v" - Toggle Indicator Dots and Lines
+          conf.indicators = !conf.indicators;
+          break;
+        case 66: // "b" - Toggle Interpolation
+          conf.interpolate = !conf.interpolate;
+          break;
+      }
+    };
 
     // The main update loop
     const loop = (curTime) => {
@@ -503,6 +573,7 @@ export default class Client {
 
       this.console.seekRound(match.current.turn);
       lastTime = curTime;
+      lastTurn = match.current.turn;
 
       // only interpolate if:
       // - we want to
@@ -520,12 +591,12 @@ export default class Client {
         let lerp = Math.min(interpGameTime - match.current.turn, 1);
 
         renderer.render(match.current,
-                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
+                        match.current.minCorner, match.current.maxCorner,
                         nextStep, lerp);
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
         renderer.render(match.current,
-                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
+                        match.current.minCorner, match.current.maxCorner);
       }
 
       this.updateStats(match.current, meta);

@@ -77,6 +77,7 @@ export default class GameArea {
         let newVersion = document.createElement("a");
         newVersion.id = "splashNewVersion";
         newVersion.href = "http://www.battlecode.org/contestants/releases/"
+        newVersion.target = "_blank";
         newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + result.content;
         splashDiv.appendChild(newVersion);
       }
