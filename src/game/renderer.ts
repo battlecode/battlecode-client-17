@@ -305,6 +305,8 @@ export default class Renderer {
     const velXs = bullets.arrays.velX;
     const velYs = bullets.arrays.velY;
     const spawnedTimes = bullets.arrays.spawnedTime;
+    const minY = world.minCorner.y;
+    const maxY = world.maxCorner.y;
 
     for (let i = 0; i < length; i++) {
       const velX = velXs[i];
@@ -313,7 +315,7 @@ export default class Renderer {
       const dt = (world.turn + lerpAmount) - spawnedTimes[i];
 
       const x = xs[i] + velX*dt;
-      const y = ys[i] + velY*dt;
+      const y = this.flip(ys[i] + velY*dt, minY, maxY);
 
       const speedsq = velX*velX + velY*velY;
 
