@@ -132,6 +132,7 @@ export default class Console {
    * Indexes a new set of logs for a match by round number
    */
   indexLogs(logs: Array<Log>): void {
+    this.roundToLogs = new Map<number, Array<Log>>();
     logs.forEach((log: Log) => {
       const round = log.round;
       if (!this.roundToLogs.has(round)) {
