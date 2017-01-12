@@ -30,8 +30,14 @@ export default class Console {
   private readonly DEFAULT_MAX_ROUNDS: number = 15;
   private readonly conf: Config;
 
-  // Map from round number to list of logs
-  private roundToLogs: Map<number, Array<Log>>;
+  // Used to check if there are more logs to pull from the match.
+  private lastLoadedRound: number;
+
+  // Note: this is a reference to an Array<Array<Log>> in a Match, and may have
+  // more logs added behind our backs.
+  // On the other hand, it may not have logs for a round at all.
+  private logsRef: Array<Array<Log>> | null;
+
   // Invariants:
   // - consoleDivs are the div objects displayed in the console
   // - consoleDivs.length === consoleLogs.length, and consoleDivs[i] and
@@ -44,8 +50,8 @@ export default class Console {
     this.conf = conf;
     this.robotID = undefined;
     this.currentRound = 1;
+    this.lastLoadedRound = 0;
 
-    this.roundToLogs = new Map<number, Array<Log>>();
     this.consoleLogs = new Array();
     this.consoleDivs = new Array();
     this.div = this.basediv();
@@ -129,17 +135,10 @@ export default class Console {
   }
 
   /**
-   * Indexes a new set of logs for a match by round number
+   * Set the logs we should be checking.
    */
-  indexLogs(logs: Array<Log>): void {
-    this.roundToLogs = new Map<number, Array<Log>>();
-    logs.forEach((log: Log) => {
-      const round = log.round;
-      if (!this.roundToLogs.has(round)) {
-        this.roundToLogs.set(round, new Array());
-      }
-      this.roundToLogs.get(round).push(log);
-    });
+  setLogsRef(logsRef: Array<Array<Log>>): void {
+    this.logsRef = logsRef;
   }
 
   /**
@@ -196,8 +195,8 @@ export default class Console {
    */
   private pushRound(round: number): void {
     // If logs exist for this round
-    if (this.roundToLogs.has(round)) {
-      const logs = this.roundToLogs.get(round);
+    if (this.logsRef != null && this.logsRef[round] != undefined) {
+      const logs = this.logsRef[round];
 
       // For each log in the round, add it to the console if it's good
       logs.forEach((log: Log) => {

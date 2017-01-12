@@ -320,7 +320,7 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
-    this.console.indexLogs(match.logs);
+    this.console.setLogsRef(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
