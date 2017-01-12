@@ -55,8 +55,7 @@ export default class MapRenderer {
     } else {
       this.ctx = ctx;
     }
-
-    this.ctx['imageSmoothingEnabled'] = false;
+    
     this.bgPattern = this.ctx.createPattern(imgs.background, 'repeat');
   }
 
@@ -193,6 +192,7 @@ export default class MapRenderer {
    * Draws an image centered at (x, y) with the given radius
    */
   private drawImage(img: HTMLImageElement, x: number, y: number, radius: number) {
+    this.ctx['imageSmoothingEnabled'] = false;
     this.ctx.drawImage(img, x-radius, y-radius, radius*2, radius*2);
   }
 }
