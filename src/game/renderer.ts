@@ -19,19 +19,23 @@ export default class Renderer {
   readonly imgs: AllImages;
   readonly metadata: Metadata;
 
+  // Callbacks
   readonly onRobotSelected: (id: number) => void;
+  readonly onMouseover: (x: number, y: number) => void;
 
   // other cached useful values
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
-  constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config,
-    metadata: Metadata, onRobotSelected: (id: number) => void) {
+  constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config, metadata: Metadata,
+    onRobotSelected: (id: number) => void,
+    onMouseover: (x: number, y: number) => void) {
     this.canvas = canvas;
     this.conf = conf;
     this.imgs = imgs;
     this.metadata = metadata;
     this.onRobotSelected = onRobotSelected;
+    this.onMouseover = onMouseover;
 
     let ctx = canvas.getContext("2d");
     if (ctx === null) {
@@ -50,10 +54,12 @@ export default class Renderer {
    * world: world to render
    * time: time in turns
    * viewMin: min corner of view (in world units)
-   * viewSize: width / height of view (in world units)
+   * viewMax: max corner of view (in world units)
    */
-  render(world: GameWorld, viewMin: Victor, viewWidth: number, nextStep?: NextStep, lerpAmount?: number) {
+  render(world: GameWorld, viewMin: Victor, viewMax: Victor, nextStep?: NextStep, lerpAmount?: number) {
     // setup correct rendering
+    const viewWidth = viewMax.x - viewMin.x
+    const viewHeight = viewMax.y - viewMin.y
     const scale = this.canvas.width / viewWidth;
 
     this.ctx.save();
@@ -71,6 +77,7 @@ export default class Renderer {
     }
 
     this.renderIndicatorDotsLines(world);
+    this.setMouseoverEvent(world);
 
     // restore default rendering
     this.ctx.restore();
@@ -111,28 +118,36 @@ export default class Renderer {
     const healths = bodies.arrays.health;
     const maxHealths = bodies.arrays.maxHealth;
     const radii = bodies.arrays.radius;
+    const minY = world.minCorner.y;
+    const maxY = world.maxCorner.y;
 
     let nextXs, nextYs, realXs, realYs;
     if (nextStep && lerpAmount) {
       // Interpolated
       nextXs = nextStep.bodies.arrays.x;
       nextYs = nextStep.bodies.arrays.y;
-      realXs = new Float32Array(length)
-      realYs = new Float32Array(length)
     }
+    realXs = new Float32Array(length)
+    realYs = new Float32Array(length)
 
     for (let i = 0; i < length; i++) {
       let x, y;
       if (nextStep && lerpAmount) {
         // Interpolated
+        // realXs[i] = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
+        // realYs[i] = ys[i] + (nextYs[i] - ys[i]) * lerpAmount;
+        // x = realXs[i];
+        // y = this.flip(realYs[i], minY, maxY);
         x = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
-        y = ys[i] + (nextYs[i] - ys[i]) * lerpAmount;
+        y = this.flip(ys[i] + (nextYs[i] - ys[i]) * lerpAmount, minY, maxY);
         realXs[i] = x;
         realYs[i] = y;
       } else {
         // Not interpolated
         x = xs[i];
-        y = ys[i];
+        y = this.flip(ys[i], minY, maxY);
+        realXs[i] = x;
+        realYs[i] = y;
       }
 
       const radius = radii[i];
@@ -175,13 +190,18 @@ export default class Renderer {
         world.minCorner, world.maxCorner);
     }
 
-    if (realXs && realYs) {
-      // Interpolated
-      this.setInfoStringEvent(world, realXs, realYs);
-    } else {
-      // Not inteprolated
-      this.setInfoStringEvent(world, xs, ys);
-    }
+    this.setInfoStringEvent(world, realXs, realYs);
+  }
+
+  /**
+   * Returns the mirrored y coordinate to be consistent with (0, 0) in the
+   * bottom-left corner (top-left corner is canvas default).
+   * params: y coordinate to flip
+   *         yMin coordinate of the minimum edge
+   *         yMax coordinate of the maximum edge
+   */
+  private flip(y: number, yMin: number, yMax: number) {
+    return yMin + yMax - y;
   }
 
   /**
@@ -239,8 +259,8 @@ export default class Renderer {
     const onRobotSelected = this.onRobotSelected;
 
     this.canvas.onmousedown = function(event) {
-      const x = width * event.offsetX / this.offsetWidth + world.minCorner.x;
-      const y = height * event.offsetY / this.offsetHeight + world.minCorner.y;
+      let x = width * event.offsetX / this.offsetWidth + world.minCorner.x;
+      let y = height * event.offsetY / this.offsetHeight + world.minCorner.y;
 
       // Get the ID of the selected robot
       let selectedRobotID;
@@ -260,6 +280,23 @@ export default class Renderer {
     };
   }
 
+  private setMouseoverEvent(world: GameWorld) {
+    // world information
+    const width = world.maxCorner.x - world.minCorner.x;
+    const height = world.maxCorner.y - world.minCorner.y;
+    const onMouseover = this.onMouseover;
+    const minY = world.minCorner.y;
+    const maxY = world.maxCorner.y;
+
+    this.canvas.onmousemove = (event) => {
+      const x = width * event.offsetX / this.canvas.offsetWidth + world.minCorner.x;
+      const y = height * event.offsetY / this.canvas.offsetHeight + world.minCorner.y;
+
+      // Set the location of the mouseover
+      onMouseover(x, this.flip(y, minY, maxY));
+    };
+  }
+
   private renderBullets(world: GameWorld, lerpAmount: number) {
     const bullets = world.bullets;
     const length = bullets.length;
@@ -268,6 +305,8 @@ export default class Renderer {
     const velXs = bullets.arrays.velX;
     const velYs = bullets.arrays.velY;
     const spawnedTimes = bullets.arrays.spawnedTime;
+    const minY = world.minCorner.y;
+    const maxY = world.maxCorner.y;
 
     for (let i = 0; i < length; i++) {
       const velX = velXs[i];
@@ -276,7 +315,7 @@ export default class Renderer {
       const dt = (world.turn + lerpAmount) - spawnedTimes[i];
 
       const x = xs[i] + velX*dt;
-      const y = ys[i] + velY*dt;
+      const y = this.flip(ys[i] + velY*dt, minY, maxY);
 
       const speedsq = velX*velX + velY*velY;
 
@@ -307,14 +346,18 @@ export default class Renderer {
     const dotsRed = dots.arrays.red;
     const dotsGreen = dots.arrays.green;
     const dotsBlue = dots.arrays.blue;
+    const minY = world.minCorner.y;
+    const maxY = world.maxCorner.y;
 
     for (let i = 0; i < dots.length; i++) {
       const red = dotsRed[i];
       const green = dotsGreen[i];
       const blue = dotsBlue[i];
+      const x = dotsX[i];
+      const y = this.flip(dotsY[i], minY, maxY);
 
       this.ctx.beginPath();
-      this.ctx.arc(dotsX[i], dotsY[i], cst.INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
+      this.ctx.arc(x, y, cst.INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
       this.ctx.fill();
       this.ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
     }
@@ -333,10 +376,14 @@ export default class Renderer {
       const red = linesRed[i];
       const green = linesGreen[i];
       const blue = linesBlue[i];
+      const startX = linesStartX[i];
+      const startY = this.flip(linesStartY[i], minY, maxY);
+      const endX = linesEndX[i];
+      const endY = this.flip(linesEndY[i], minY, maxY);
 
       this.ctx.beginPath();
-      this.ctx.moveTo(linesStartX[i], linesStartY[i]);
-      this.ctx.lineTo(linesEndX[i], linesEndY[i]);
+      this.ctx.moveTo(startX, startY);
+      this.ctx.lineTo(endX, endY);
       this.ctx.strokeStyle = `rgb(${red}, ${green}, ${blue})`;
       this.ctx.stroke();
     }

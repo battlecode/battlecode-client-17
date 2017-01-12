@@ -5,8 +5,8 @@ import {AllImages} from '../imageloader';
 import {schema} from 'battlecode-playback';
 
 const hex: Object = {
-  1: "#a62014",
-  2: "#0636ac"
+  1: "#db3627",
+  2: "#4f7ee6"
 };
 
 /**
@@ -30,8 +30,8 @@ export default class Stats {
   // match info. Keep in mind if we ever change these, or implement this less
   // statically.
 
-  private readonly stats: string[] = ["Bullets", "Victory Points"];
-  private readonly robots: schema.BodyType[] = [
+  readonly stats: string[] = ["Bullets", "Victory Points"];
+  readonly robots: schema.BodyType[] = [
     cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT
   ];
 

@@ -206,6 +206,33 @@ export default class Client {
    * Marks the client as fully loaded.
    */
   ready() {
+    if (this.conf.matchFileURL) {
+      // Load a match file
+      console.log(`Loading provided match file: ${this.conf.matchFileURL}`);
+      const req = new XMLHttpRequest();
+      req.open('GET', this.conf.matchFileURL, true);
+      req.responseType = 'arraybuffer';
+      req.onerror = (event) => {
+        console.log(`Can't load provided match file: ${event.error}`);
+      };
+      req.onload = (event) => {
+        const resp = req.response;
+        if (resp) {
+          console.log('Loaded provided match file');
+          var lastGame = this.games.length
+          this.games[lastGame] = new Game();
+          this.games[lastGame].loadFullGameRaw(resp);
+
+          if (this.games.length === 1) {
+            // this will run the first match from the game
+            this.setGame(0);
+            this.setMatch(0);
+          }
+          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+        }
+      };
+      req.send();
+    }
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
       var lastGame = this.games.length
       this.games[lastGame] = new Game();
@@ -217,7 +244,8 @@ export default class Client {
         this.setMatch(0);
       }
       this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
-    }
+    };
+
     if (this.listener != null) {
       this.listener.start(
         // What to do when we get a game from the websocket
@@ -250,6 +278,26 @@ export default class Client {
     }
   }
 
+  /**
+   * Updates the stats bar displaying VP, bullets, and robot counts for each
+   * team in the current game world.
+   */
+  private updateStats(world: GameWorld, meta: Metadata) {
+    for (let team in meta.teams) {
+      let teamID = meta.teams[team].teamID;
+      let teamStats = world.stats.get(teamID);
+
+      // Update the bullets and victory points
+      this.stats.setBullets(teamID, teamStats.bullets);
+      this.stats.setVPs(teamID, teamStats.vps);
+
+      // Update each robot count
+      this.stats.robots.forEach((type: schema.BodyType) => {
+        this.stats.setRobotCount(teamID, type, teamStats.robots[type]);
+      });
+    }
+  }
+
   private runMatch() {
     console.log('Running match.');
 
@@ -272,7 +320,7 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
-    this.console.setLogs(match.logs);
+    this.console.indexLogs(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
@@ -282,12 +330,16 @@ export default class Client {
     let lastSelectedID: number | undefined = undefined;
     const onRobotSelected = (id: number | undefined) => {
       lastSelectedID = id;
-    }
+      this.console.setIDFilter(id);
+    };
+    const onMouseover = (x: number, y: number) => {
+      this.controls.setLocation(x, y);
+    };
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
     const renderer = new Renderer(this.gamearea.canvas, this.imgs,
-      this.conf, meta as Metadata, onRobotSelected);
+      this.conf, meta as Metadata, onRobotSelected, onMouseover);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -354,7 +406,6 @@ export default class Client {
           // Do nothing, at the end
         }
       }
-
     };
     this.matchqueue.onPreviousMatch = () => {
       console.log("PREV MATCH");
@@ -455,7 +506,7 @@ export default class Client {
     // The main update loop
     const loop = (curTime) => {
       let delta = 0;
-      if (lastTime === null && lastTurn === null) {
+      if (lastTime === null) {
         // first simulation step
         // do initial stuff?
       } else if (externalSeek) {
@@ -510,12 +561,9 @@ export default class Client {
         }
       }
 
-      if (lastTurn != match.current.turn) {
-        this.console.pushRound(match.current.turn, lastSelectedID);
-        lastTurn = match.current.turn;
-      }
-
+      this.console.seekRound(match.current.turn);
       lastTime = curTime;
+      lastTurn = match.current.turn;
 
       // only interpolate if:
       // - we want to
@@ -533,29 +581,15 @@ export default class Client {
         let lerp = Math.min(interpGameTime - match.current.turn, 1);
 
         renderer.render(match.current,
-                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x,
+                        match.current.minCorner, match.current.maxCorner,
                         nextStep, lerp);
-
-        // UPDATE STATS HERE
-        for (let team in meta.teams) {
-          var teamID = meta.teams[team].teamID;
-          var teamStats = match.current.stats.get(teamID);
-          this.stats.setBullets(teamID, teamStats.bullets);
-          this.stats.setVPs(teamID, teamStats.vps);
-
-          // Update each robot count
-          for(var i = 0; i < 6; i++) { // TODO: We need a way to get the number of robot types that are robots
-            this.stats.setRobotCount(teamID, i, teamStats.robots[i]);
-          }
-        }
-
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough
         renderer.render(match.current,
-                        match.current.minCorner, match.current.maxCorner.x - match.current.minCorner.x);
-
+                        match.current.minCorner, match.current.maxCorner);
       }
 
+      this.updateStats(match.current, meta);
       this.loopID = window.requestAnimationFrame(loop);
 
     };

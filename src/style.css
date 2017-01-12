@@ -18,7 +18,7 @@
 }
 
 .red {
-    color: #a62014;
+    color: #db3627;
 }
 
 #matchQueue {
@@ -75,14 +75,6 @@
 
 #canvas-wrapper {
     margin-top: -75px;
-}
-
-.red {
-    color: #a62014;
-}
-
-.blue {
-    color: #0636ac;
 }
 
 #export {
@@ -251,4 +243,18 @@ input[type='file'] {
 
 #gameEditorHeaderTable {
     margin-left: 16px;
+}
+
+#mapListContainer {
+    text-align: left;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding-left: 48px;
+}
+
+#runMatch {
+    width: 70%;
+    font-size: 18px;
+    padding: 8px 0px;
+    margin: 8px 0px;
 }

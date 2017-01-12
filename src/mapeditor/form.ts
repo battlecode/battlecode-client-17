@@ -742,16 +742,19 @@ export default class MapEditorForm {
    * The bodies (trees and archons) currently on the map
    */
   bodies(): Map<number, MapUnit> {
-    let map = new Map<number, MapUnit>();
+    const map = new Map<number, MapUnit>();
 
-    // TODO: randomize archon IDs so tiebreakers aren't rigged
+    const offsetA = Math.round(Math.random()); // 0 or 1
+    const offsetB = 1 - offsetA; // 1 or 0
+    console.log(`${offsetA} ${offsetB}`);
+
     this.originalBodies.forEach((body: MapUnit, id: number) => {
       if (body.type === cst.ARCHON) body.teamID = 1;
-      map.set(id * 2, body);
+      map.set(id * 2 + offsetA, body);
     });
     this.symmetricBodies.forEach((body: MapUnit, id: number) => {
       if (body.type === cst.ARCHON) body.teamID = 2;
-      map.set(id * 2 + 1, body);
+      map.set(id * 2 + offsetB, body);
     });
 
     return map;

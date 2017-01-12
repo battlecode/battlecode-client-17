@@ -155,7 +155,7 @@ export default class MatchQueue {
     const span = document.createElement("span");
     if (winnerID === null) {
       // There was a tie
-      span.appendChild(document.createTextNode("Neither team"));
+      span.appendChild(document.createTextNode("(Loading...)"));
     } else {
       // Find the winner
       let teamNumber = 1;
