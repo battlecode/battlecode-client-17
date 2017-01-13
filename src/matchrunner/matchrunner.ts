@@ -23,6 +23,7 @@ export default class MatchRunner {
   private loadingMaps: Text;
   private loadingMatch: Text;
   private isLoadingMatch: boolean;
+  private error: HTMLDivElement;
 
   // Options
   private readonly conf: Config;
@@ -165,6 +166,11 @@ export default class MatchRunner {
     this.runMatch.onclick = this.run;
     div.appendChild(this.runMatch);
 
+    // Compile error log
+    this.error = document.createElement("div");
+    this.error.id = "errorLog";
+    div.appendChild(this.error);
+
     return div;
   }
 
@@ -265,14 +271,15 @@ export default class MatchRunner {
       return;
     }
 
+    this.error.innerHTML = "";
     this.loading.appendChild(this.loadingMatch);
     this.isLoadingMatch = true;
     const cb = (err: Error | null, stdout: string, stderr: string) => {
       this.loadingMatch.remove();
       if (err) {
-        console.log(err);
+        console.log(err.stack);
+        this.error.innerHTML = stderr.split("\n").join("<br>");
       }
-      console.log(stderr);
       this.isLoadingMatch = false;
     };
     this.scaffold.runMatch(

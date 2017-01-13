@@ -241,3 +241,9 @@ input[type='file'] {
     padding: 8px 0px;
     margin: 8px 0px;
 }
+
+#errorLog {
+    color: red;
+    font-size: 12px;
+    text-align: left;
+}
