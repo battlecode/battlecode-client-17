@@ -1,11 +1,11 @@
 import {Config, Mode} from '../config';
 import {AllImages} from '../imageloader';
 
-import Stats from './stats';
-import Console from './console';
+import Stats from '../game/sidebar/stats';
+import Console from '../game/sidebar/console';
+import MatchRunner from '../game/sidebar/matchrunner';
+import MatchQueue from '../game/sidebar/matchqueue';
 import MapEditor from '../mapeditor/mapeditor';
-import MatchRunner from '../matchrunner/matchrunner';
-import MatchQueue from '../matchrunner/matchqueue';
 import ScaffoldCommunicator from '../scaffold';
 
 import {electron} from '../electron-modules';

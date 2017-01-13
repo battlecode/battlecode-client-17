@@ -1,5 +1,5 @@
-import {Config, Mode} from '../config';
-import {AllImages} from '../imageloader';
+import {Config, Mode} from '../../config';
+import {AllImages} from '../../imageloader';
 
 import {GameWorld} from 'battlecode-playback';
 
@@ -44,7 +44,7 @@ export default class GameArea {
 
     this.canvas.width = world.minCorner.absDistanceX(world.maxCorner) * scale;
     this.canvas.height = world.minCorner.absDistanceY(world.maxCorner) * scale;
-    
+
   }
 
   /**
