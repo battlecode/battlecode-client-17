@@ -242,8 +242,16 @@ input[type='file'] {
     margin: 8px 0px;
 }
 
-#errorLog {
+.errorLog {
     color: red;
+    font-family: Monospace;
+    font-size: 12px;
+    text-align: left;
+}
+
+.outLog {
+    color: gray;
+    font-family: Monospace;
     font-size: 12px;
     text-align: left;
 }
