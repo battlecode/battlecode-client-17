@@ -3,8 +3,7 @@ import {AllImages} from '../imageloader';
 
 import {GameWorld} from 'battlecode-playback';
 
-import * as WebRequest from 'web-request';
-var XMLParser = require('xml2js');
+import * as http from 'http';
 
 export default class GameArea {
 
@@ -15,6 +14,7 @@ export default class GameArea {
   readonly splashDiv: HTMLDivElement;
   private readonly wrapper: HTMLDivElement;
   private readonly mapEditorCanvas: HTMLCanvasElement;
+  private currentMode : Mode;
 
   // Options
   private readonly conf: Config
@@ -38,6 +38,7 @@ export default class GameArea {
     this.splashDiv = document.createElement("div");
     this.splashDiv.id = "battlecode-splash";
     this.loadSplashDiv();
+    this.currentMode = Mode.SPLASH;
 
     // Add elements to the main div
     this.div.appendChild(this.wrapper);
@@ -73,24 +74,29 @@ export default class GameArea {
     // Set the version string from http://www.battlecode.org/contestants/latest/
     (async function (splashDiv, version) {
       
-      var result = await WebRequest.get('http://battlecode-maven.s3-website-us-east-1.amazonaws.com/org/battlecode/battlecode/maven-metadata.xml');
-      
-      var parser = new DOMParser();
-      var doc = parser.parseFromString(result.content, "application/xml");
-        
-      //var jsonResult = jsonify(doc);
-      var latest = doc.getElementsByTagName('release')[0].innerHTML;
+      http.get({
+        hostname: 'battlecode-maven.s3-website-us-east-1.amazonaws.com',
+        port: 80,
+        path: '/org/battlecode/battlecode/maven-metadata.xml',
+        agent: false
+      }, (res) => {
+        console.log(res);
+        var parser = new DOMParser();
+        var doc = parser.parseFromString("", "application/xml");
 
-      if(latest.trim() != version.trim()) {
+        var latest = doc.getElementsByTagName('release')[0].innerHTML;
 
-        let newVersion = document.createElement("a");
-        newVersion.id = "splashNewVersion";
-        newVersion.href = "http://www.battlecode.org/contestants/releases/"
-        newVersion.target = "_blank";
-        newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + latest;
-        splashDiv.appendChild(newVersion);
+        if(latest.trim() != version.trim()) {
 
-      }
+          let newVersion = document.createElement("a");
+          newVersion.id = "splashNewVersion";
+          newVersion.href = "http://www.battlecode.org/contestants/releases/"
+          newVersion.target = "_blank";
+          newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + latest;
+          splashDiv.appendChild(newVersion);
+
+        }
+      });
       
     })(this.splashDiv, this.conf.gameVersion);
       
@@ -105,6 +111,12 @@ export default class GameArea {
 
     // The canvas can be anything in help mode
     if (mode === Mode.HELP) return;
+    
+    if (this.currentMode == Mode.SPLASH) {
+        if(!(mode === Mode.GAME)) {
+          return;
+        }
+    }
 
     // Otherwise clear the canvas area...
     while (this.wrapper.firstChild) {
@@ -114,10 +126,13 @@ export default class GameArea {
     // ...and add the correct one
     if (mode === Mode.MAPEDITOR) {
       this.wrapper.appendChild(this.mapEditorCanvas);
+      this.currentMode = Mode.MAPEDITOR;
     } else if (mode === Mode.SPLASH) {
       this.wrapper.appendChild(this.splashDiv);
+      this.currentMode = Mode.SPLASH;
     } else {
       this.wrapper.appendChild(this.canvas);
+      this.currentMode = Mode.GAME;
     }
   };
 }
