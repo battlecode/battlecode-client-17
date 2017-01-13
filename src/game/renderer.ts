@@ -117,6 +117,8 @@ export default class Renderer {
     const ys = bodies.arrays.y;
     const healths = bodies.arrays.health;
     const maxHealths = bodies.arrays.maxHealth;
+    const treeBullets = bodies.arrays.containedBullets;
+    const treeBodies = bodies.arrays.containedBody;
     const radii = bodies.arrays.radius;
     const minY = world.minCorner.y;
     const maxY = world.maxCorner.y;
@@ -134,10 +136,6 @@ export default class Renderer {
       let x, y;
       if (nextStep && lerpAmount) {
         // Interpolated
-        // realXs[i] = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
-        // realYs[i] = ys[i] + (nextYs[i] - ys[i]) * lerpAmount;
-        // x = realXs[i];
-        // y = this.flip(realYs[i], minY, maxY);
         x = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
         y = this.flip(ys[i] + (nextYs[i] - ys[i]) * lerpAmount, minY, maxY);
         realXs[i] = x;
@@ -186,6 +184,9 @@ export default class Renderer {
       }
       this.drawCircleBot(x, y, radius);
       this.drawImage(img, x, y, radius);
+      if (types[i] === cst.TREE_NEUTRAL) {
+        this.drawGoodies(x, y, radius, treeBullets[i], treeBodies[i]);
+      }
       this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
         world.minCorner, world.maxCorner);
     }
@@ -214,6 +215,14 @@ export default class Renderer {
     this.ctx.fillStyle = "#ddd";
     this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
     this.ctx.fill();
+  }
+
+  /**
+   * Draws goodies centered at (x, y) with the given radius, if there are any
+   */
+  private drawGoodies(x: number, y: number, radius: number, bullets: number, body: schema.BodyType) {
+    if (bullets > 0) this.drawImage(this.imgs.tree.bullets, x, y, radius);
+    if (body !== cst.NONE) this.drawImage(this.imgs.tree.robot, x, y, radius);
   }
 
   /**
