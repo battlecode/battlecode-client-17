@@ -240,6 +240,10 @@ export default class TreeForm implements UnitForm {
   }
 
   getUnit(): MapUnit | undefined {
+    if (!this.isValid()) {
+      return undefined;
+    }
+
     return {
       loc: new Victor(this.getX(), this.getY()),
       radius: this.getRadius(),
