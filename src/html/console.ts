@@ -67,6 +67,14 @@ export default class Console {
     this.teamBInput = this.getHTMLCheckbox("B");
     this.lengthInput = this.getHTMLInput();
 
+    // Add a tip
+    const span = document.createElement("span");
+    span.appendChild(document.createTextNode("(Tip: Click a robot to filter by robot ID.)"));
+    span.style.fontFamily = "Tahoma, sans-serif";
+    div.appendChild(span);
+    div.appendChild(document.createElement("br"));
+    div.appendChild(document.createElement("br"));
+
     // Add the team filter
     div.appendChild(this.teamAInput);
     const spanA = document.createElement("span");
