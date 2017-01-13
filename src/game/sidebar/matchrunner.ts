@@ -1,6 +1,6 @@
-import {Config} from '../config';
+import {Config} from '../../config';
 
-import ScaffoldCommunicator from '../scaffold';
+import ScaffoldCommunicator from '../../scaffold';
 
 
 /**

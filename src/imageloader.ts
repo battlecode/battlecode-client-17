@@ -69,55 +69,57 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
     image.src = url;
   }
 
-  img(result, 'background', require('./img/map/tiled_1.jpg'));
-  img(result, 'unknown', require('./img/sprites/unknown.png'));
+  const dirname = "./static/img/";
 
-  img(result.tree, 'fullHealth', require('./img/map/full_health_tree.png'));
-  img(result.tree, 'lowHealth', require('./img/map/low_health_tree.png'));
-  img(result.tree, 'sapling', require('./img/map/sapling.png'));
+  img(result, 'background', require(dirname + 'map/tiled_1.jpg'));
+  img(result, 'unknown', require(dirname + 'sprites/unknown.png'));
 
-  img(result.bullet, 'fast', require('./img/bullets/bullet_fast.png'));
-  img(result.bullet, 'medium', require('./img/bullets/bullet_medium.png'));
-  img(result.bullet, 'slow', require('./img/bullets/bullet_slow.png'));
+  img(result.tree, 'fullHealth', require(dirname + 'map/full_health_tree.png'));
+  img(result.tree, 'lowHealth', require(dirname + 'map/low_health_tree.png'));
+  img(result.tree, 'sapling', require(dirname + 'map/sapling.png'));
+
+  img(result.bullet, 'fast', require(dirname + 'bullets/bullet_fast.png'));
+  img(result.bullet, 'medium', require(dirname + 'bullets/bullet_medium.png'));
+  img(result.bullet, 'slow', require(dirname + 'bullets/bullet_slow.png'));
 
   // these are the teams we expect robots to be in according to current
   // battlecode-server
   // TODO(jhgilles):
   // we'll need to update them if team configuration becomes more dynamic
-  img(result.robot.archon, 0, require('./img/sprites/archon_neutral.png'));
-  img(result.robot.archon, 1, require('./img/sprites/archon_red.png'));
-  img(result.robot.archon, 2, require('./img/sprites/archon_blue.png'));
-  img(result.robot.bulletTree, 0, require('./img/sprites/bullet_tree_neutral.png'));
-  img(result.robot.bulletTree, 1, require('./img/sprites/bullet_tree_red.png'));
-  img(result.robot.bulletTree, 2, require('./img/sprites/bullet_tree_blue.png'));
-  img(result.robot.gardener, 0, require('./img/sprites/gardener_neutral.png'));
-  img(result.robot.gardener, 1, require('./img/sprites/gardener_red.png'));
-  img(result.robot.gardener, 2, require('./img/sprites/gardener_blue.png'));
-  img(result.robot.lumberjack, 0, require('./img/sprites/lumberjack_neutral.png'));
-  img(result.robot.lumberjack, 1, require('./img/sprites/lumberjack_red.png'));
-  img(result.robot.lumberjack, 2, require('./img/sprites/lumberjack_blue.png'));
-  img(result.robot.scout, 0, require('./img/sprites/scout_neutral.png'));
-  img(result.robot.scout, 1, require('./img/sprites/scout_red.png'));
-  img(result.robot.scout, 2, require('./img/sprites/scout_blue.png'));
-  img(result.robot.soldier, 0, require('./img/sprites/soldier_neutral.png'));
-  img(result.robot.soldier, 1, require('./img/sprites/soldier_red.png'));
-  img(result.robot.soldier, 2, require('./img/sprites/soldier_blue.png'));
-  img(result.robot.tank, 0, require('./img/sprites/tank_neutral.png'));
-  img(result.robot.tank, 1, require('./img/sprites/tank_red.png'));
-  img(result.robot.tank, 2, require('./img/sprites/tank_blue.png'));
+  img(result.robot.archon, 0, require(dirname + 'sprites/archon_neutral.png'));
+  img(result.robot.archon, 1, require(dirname + 'sprites/archon_red.png'));
+  img(result.robot.archon, 2, require(dirname + 'sprites/archon_blue.png'));
+  img(result.robot.bulletTree, 0, require(dirname + 'sprites/bullet_tree_neutral.png'));
+  img(result.robot.bulletTree, 1, require(dirname + 'sprites/bullet_tree_red.png'));
+  img(result.robot.bulletTree, 2, require(dirname + 'sprites/bullet_tree_blue.png'));
+  img(result.robot.gardener, 0, require(dirname + 'sprites/gardener_neutral.png'));
+  img(result.robot.gardener, 1, require(dirname + 'sprites/gardener_red.png'));
+  img(result.robot.gardener, 2, require(dirname + 'sprites/gardener_blue.png'));
+  img(result.robot.lumberjack, 0, require(dirname + 'sprites/lumberjack_neutral.png'));
+  img(result.robot.lumberjack, 1, require(dirname + 'sprites/lumberjack_red.png'));
+  img(result.robot.lumberjack, 2, require(dirname + 'sprites/lumberjack_blue.png'));
+  img(result.robot.scout, 0, require(dirname + 'sprites/scout_neutral.png'));
+  img(result.robot.scout, 1, require(dirname + 'sprites/scout_red.png'));
+  img(result.robot.scout, 2, require(dirname + 'sprites/scout_blue.png'));
+  img(result.robot.soldier, 0, require(dirname + 'sprites/soldier_neutral.png'));
+  img(result.robot.soldier, 1, require(dirname + 'sprites/soldier_red.png'));
+  img(result.robot.soldier, 2, require(dirname + 'sprites/soldier_blue.png'));
+  img(result.robot.tank, 0, require(dirname + 'sprites/tank_neutral.png'));
+  img(result.robot.tank, 1, require(dirname + 'sprites/tank_red.png'));
+  img(result.robot.tank, 2, require(dirname + 'sprites/tank_blue.png'));
 
-  img(result.controls, 'goNext', require('./img/controls/go-next.png'));
-  img(result.controls, 'goPrevious', require('./img/controls/go-previous.png'));
-  img(result.controls, 'playbackPause', require('./img/controls/playback-pause.png'));
-  img(result.controls, 'playbackStart', require('./img/controls/playback-start.png'));
-  img(result.controls, 'playbackStop', require('./img/controls/playback-stop.png'));
-  img(result.controls, 'seekBackward', require('./img/controls/seek-backward.png'));
-  img(result.controls, 'seekForward', require('./img/controls/seek-forward.png'));
-  img(result.controls, 'skipBackward', require('./img/controls/skip-backward.png'));
-  img(result.controls, 'skipForward', require('./img/controls/skip-forward.png'));
-  img(result.controls, 'matchBackward', require('./img/controls/skip-backward.png'));
-  img(result.controls, 'matchForward', require('./img/controls/skip-forward.png'));
-  img(result.controls, 'upload', require('./img/controls/upload.png'));
+  img(result.controls, 'goNext', require(dirname + 'controls/go-next.png'));
+  img(result.controls, 'goPrevious', require(dirname + 'controls/go-previous.png'));
+  img(result.controls, 'playbackPause', require(dirname + 'controls/playback-pause.png'));
+  img(result.controls, 'playbackStart', require(dirname + 'controls/playback-start.png'));
+  img(result.controls, 'playbackStop', require(dirname + 'controls/playback-stop.png'));
+  img(result.controls, 'seekBackward', require(dirname + 'controls/seek-backward.png'));
+  img(result.controls, 'seekForward', require(dirname + 'controls/seek-forward.png'));
+  img(result.controls, 'skipBackward', require(dirname + 'controls/skip-backward.png'));
+  img(result.controls, 'skipForward', require(dirname + 'controls/skip-forward.png'));
+  img(result.controls, 'matchBackward', require(dirname + 'controls/skip-backward.png'));
+  img(result.controls, 'matchForward', require(dirname + 'controls/skip-forward.png'));
+  img(result.controls, 'upload', require(dirname + 'controls/upload.png'));
 }
 
 

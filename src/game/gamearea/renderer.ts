@@ -1,9 +1,9 @@
-import * as config from '../config';
-import * as cst from '../constants';
-import NextStep from './nextstep';
+import * as config from '../../config';
+import * as cst from '../../constants';
+import NextStep from './../nextstep';
 
 import {GameWorld, Metadata, schema} from 'battlecode-playback';
-import {AllImages} from '../imageloader';
+import {AllImages} from '../../imageloader';
 import Victor = require('victor');
 
 /**

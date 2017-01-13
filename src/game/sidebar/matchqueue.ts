@@ -1,5 +1,5 @@
-import {Config} from '../config';
-import {AllImages} from '../imageloader';
+import {Config} from '../../config';
+import {AllImages} from '../../imageloader';
 
 import {Game} from 'battlecode-playback';
 

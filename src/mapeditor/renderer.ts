@@ -55,7 +55,7 @@ export default class MapRenderer {
     } else {
       this.ctx = ctx;
     }
-    
+
     this.bgPattern = this.ctx.createPattern(imgs.background, 'repeat');
   }
 
