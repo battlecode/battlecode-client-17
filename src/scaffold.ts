@@ -150,12 +150,32 @@ export default class ScaffoldCommunicator {
    *
    * TODO what if the server hangs?
    */
-  runMatch(teamA: string, teamB: string, maps: string[], cb: (err: Error | null, stdout: string, stderr: string) => void) {
-      child_process.exec(`"${this.wrapperPath}" runFromClient -x unpackClient -PteamA=${teamA} -PteamB=${teamB} -Pmaps=${maps.join(',')}`,
-                        {cwd: this.scaffoldPath}, cb);
+  runMatch(teamA: string, teamB: string, maps: string[], onErr: (err: Error) => void, onStdout: (data: string) => void, onStderr: (data: string) => void) {
+    const proc = child_process.spawn(
+      this.wrapperPath,
+      [
+        `runFromClient`,
+        `-x`,
+        `unpackClient`,
+        `-PteamA=${teamA}`,
+        `-PteamB=${teamB}`,
+        `-Pmaps=${maps.join(',')}`,
+      ],
+      {cwd: this.scaffoldPath}
+    );
+    const decoder = new window['TextDecoder']();
+    proc.stdout.on('data', (data) => onStdout(decoder.decode(data)));
+    proc.stderr.on('data', (data) => onStderr(decoder.decode(data)));
+    proc.on('close', (code) => {
+      if (code !== 0) {
+        onErr(new Error(`Non-zero exit code: ${code}`));
+      }
+    });
+    proc.on('error', (err) => {
+      onErr(err);
+    });
   }
 }
-
 
 /**
  * Walk a directory and return all the files found.
@@ -197,5 +217,3 @@ export function walk(dir: string, done: (err: Error | null, paths?: string[]) =>
     });
   });
 };
-
-window['walk'] = walk;
