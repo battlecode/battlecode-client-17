@@ -111,6 +111,8 @@ export default class Sidebar {
     C - Toggle Circle Bots<br>
     V - Toggle Indicator Dots/Lines<br>
     B - Toggle Interpolation<br>
+    N - Toggle Sight/Sensor Radius<br>
+    M - Toggle Bullet Sight Radius<br>
     S - Add/Update (map editor mode)<br>
     D - Delete (map editor mode)<br>
     <br>
@@ -218,6 +220,12 @@ export default class Sidebar {
             break;
             case 66: // "b" - Toggle Interpolation
             this.conf.interpolate = !this.conf.interpolate;
+            break;
+            case 78: // "n" - Toggle sight radius
+            this.conf.sightRadius = !this.conf.sightRadius;
+            break;
+            case 77: // "m" - Toggle bullet sight radius
+            this.conf.bulletSightRadius = !this.conf.bulletSightRadius;
             break;
           }
         };

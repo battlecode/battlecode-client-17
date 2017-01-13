@@ -150,10 +150,11 @@ export default class Renderer {
 
       const radius = radii[i];
       const team = teams[i];
+      const type = types[i];
 
       let img;
 
-      switch (types[i]) {
+      switch (type) {
         case cst.TREE_NEUTRAL:
           img = this.imgs.tree.fullHealth;
           break;
@@ -184,6 +185,7 @@ export default class Renderer {
       }
       this.drawCircleBot(x, y, radius);
       this.drawImage(img, x, y, radius);
+      this.drawSightRadii(x, y, type);
       if (types[i] === cst.TREE_NEUTRAL) {
         this.drawGoodies(x, y, radius, treeBullets[i], treeBodies[i]);
       }
@@ -215,6 +217,34 @@ export default class Renderer {
     this.ctx.fillStyle = "#ddd";
     this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
     this.ctx.fill();
+  }
+
+  /**
+   * Draws a circular outline representing the sight radius or bullet sight
+   * radius of the given robot type, centered at (x, y)
+   */
+  private drawSightRadii(x: number, y: number, type: schema.BodyType) {
+    if (type === cst.TREE_NEUTRAL || type === cst.TREE_BULLET) {
+      return; // trees can't see...
+    }
+
+    if (this.conf.sightRadius) {
+      const sightRadius = this.metadata.types[type].sightRadius;
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, sightRadius, 0, 2 * Math.PI);
+      this.ctx.strokeStyle = "#46ff00";
+      this.ctx.lineWidth = cst.SIGHT_RADIUS_LINE_WIDTH;
+      this.ctx.stroke();
+    }
+
+    if (this.conf.bulletSightRadius) {
+      const bulletSightRadius = this.metadata.types[type].bulletSightRadius;
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, bulletSightRadius, 0, 2 * Math.PI);
+      this.ctx.strokeStyle = "#ff8e00";
+      this.ctx.lineWidth = cst.SIGHT_RADIUS_LINE_WIDTH;
+      this.ctx.stroke();
+    }
   }
 
   /**

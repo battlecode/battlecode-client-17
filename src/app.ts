@@ -500,6 +500,12 @@ export default class Client {
         case 66: // "b" - Toggle Interpolation
           conf.interpolate = !conf.interpolate;
           break;
+        case 78: // "n" - Toggle sight radius
+          conf.sightRadius = !conf.sightRadius;
+          break;
+        case 77: // "m" - Toggle bullet sight radius
+          conf.bulletSightRadius = !conf.bulletSightRadius;
+          break;
       }
     };
 
