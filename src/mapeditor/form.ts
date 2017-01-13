@@ -3,6 +3,9 @@ import * as cst from '../constants';
 import {AllImages} from '../imageloader';
 import MapRenderer from './renderer';
 
+import HeaderForm from './forms/header';
+import SymmetryForm from './forms/symmetry';
+
 import {schema, flatbuffers} from 'battlecode-playback';
 
 import {Symmetry, MapUnit} from './renderer';
@@ -20,14 +23,15 @@ export default class MapEditorForm {
   private readonly images: AllImages;
   private readonly canvas: HTMLCanvasElement;
   private readonly renderer: MapRenderer;
+
+  // Forms
+  private readonly forms: {
+    header: HeaderForm,
+    symmetry: SymmetryForm
+  }
+
   private archonForm: HTMLFormElement;
   private treeForm: HTMLFormElement;
-
-  // Form elements
-  private nameGM: HTMLInputElement;
-  private widthGM: HTMLInputElement;
-  private heightGM: HTMLInputElement;
-  private symmetryGM: HTMLSelectElement;
 
   private tree: HTMLInputElement;
   private archon: HTMLInputElement;
@@ -59,6 +63,11 @@ export default class MapEditorForm {
     this.conf = conf;
     this.images = imgs;
     this.canvas = canvas;
+
+    this.forms = {
+      header: new HeaderForm(() => {this.render()}),
+      symmetry: new SymmetryForm(() => {this.render()})
+    };
 
     this.lastID = 1;
     this.div = this.initialDiv();
@@ -95,7 +104,7 @@ export default class MapEditorForm {
     }
 
     this.renderer = new MapRenderer(canvas, imgs, conf, onclickUnit, onclickBlank);
-    this.setCanvasDimensions();
+    this.render();
   }
 
   /**
@@ -104,8 +113,8 @@ export default class MapEditorForm {
   private initialDiv(): HTMLDivElement {
     const div: HTMLDivElement = document.createElement("div");
 
-    div.appendChild(this.createHeaderForm());
-    div.appendChild(this.createSymmetryForm());
+    div.appendChild(this.forms.header.div);
+    div.appendChild(this.forms.symmetry.div);
     div.appendChild(this.createUnitOption());
 
     this.archonForm = this.createArchonForm();
@@ -116,85 +125,6 @@ export default class MapEditorForm {
 
     div.appendChild(document.createElement("br"));
     return div;
-  }
-
-  /**
-   * Creates the form that collects match header information: name, width, height.
-   */
-  private createHeaderForm(): HTMLFormElement {
-    // HTML structure
-    const header: HTMLFormElement = document.createElement("form");
-    const mapname: HTMLDivElement = document.createElement("div");
-    const width: HTMLDivElement = document.createElement("div");
-    const height: HTMLDivElement = document.createElement("div");
-    header.appendChild(mapname);
-    header.appendChild(width);
-    header.appendChild(height);
-    header.appendChild(document.createElement("br"));
-
-    // Map name
-    this.nameGM = document.createElement("input");
-    this.nameGM.type = "text";
-    this.nameGM.value = "coolmap";
-    this.nameGM.maxLength = 50;
-    mapname.appendChild(document.createTextNode("Map name:"));
-    mapname.appendChild(this.nameGM);
-
-    // Map width
-    this.widthGM = document.createElement("input");
-    this.widthGM.type = "text";
-    this.widthGM.value = "50";
-    this.widthGM.onchange = () => {
-      // Width must be in the defined range
-      let value: number = parseFloat(this.widthGM.value);
-      value = Math.max(value, cst.MIN_DIMENSION);
-      value = Math.min(value, cst.MAX_DIMENSION);
-      this.widthGM.value = isNaN(value) ? "50" : String(value);
-      this.setCanvasDimensions();
-    };
-    width.appendChild(document.createTextNode("Width:"));
-    width.appendChild(this.widthGM);
-
-    // Map width
-    this.heightGM = document.createElement("input");
-    this.heightGM.type = "text";
-    this.heightGM.value = "50";
-    this.heightGM.onchange = () => {
-      // Height must be in the defined range
-      let value: number = parseFloat(this.heightGM.value);
-      value = Math.max(value, cst.MIN_DIMENSION);
-      value = Math.min(value, cst.MAX_DIMENSION);
-      this.heightGM.value = isNaN(value) ? "50" : String(value);
-      this.setCanvasDimensions();
-    };
-    height.appendChild(document.createTextNode("Height:"));
-    height.appendChild(this.heightGM);
-
-    return header;
-  }
-
-  private createSymmetryForm(): HTMLDivElement {
-    const form = document.createElement("div");
-    this.symmetryGM = document.createElement("select");
-    form.appendChild(document.createTextNode("Symmetry:"));
-    form.appendChild(this.symmetryGM);
-
-    // Add an option for each value in enum Symmetry
-    const options = [Symmetry.ROTATIONAL, Symmetry.HORIZONTAL, Symmetry.VERTICAL];
-    for (let option of options) {
-      let opt = document.createElement("option");
-      opt.value = String(option);
-      opt.appendChild(document.createTextNode(cst.symmetryToString(option)));
-      this.symmetryGM.appendChild(opt);
-    }
-
-    this.symmetryGM.onchange = () => {
-      this.render();
-    };
-
-    form.appendChild(document.createElement("br"));
-    form.appendChild(document.createElement("br"));
-    return form;
   }
 
   private createUnitOption(): HTMLDivElement {
@@ -596,20 +526,12 @@ export default class MapEditorForm {
   }
 
   /**
-   * Sets the map editor canvas to the dimensions described in the map editor
-   * form, then re-renders. Scales the canvas to render at a higher resolution.
-   */
-  private setCanvasDimensions(): void {
-    const scale: number = 30; // arbitrary scaling factor
-    this.canvas.width = this.width() * scale;
-    this.canvas.height = this.height() * scale;
-    this.render();
-  }
-
-  /**
    * Re-renders the canvas based on the parameters of the map editor.
    */
   render() {
+    const scale: number = 50; // arbitrary scaling factor
+    this.canvas.width = this.width() * scale;
+    this.canvas.height = this.height() * scale;
     this.symmetricBodies = this.getSymmetricBodies();
     this.renderer.render(this.width(), this.height(), this.originalBodies, this.symmetricBodies);
   }
@@ -690,21 +612,21 @@ export default class MapEditorForm {
    * The name of the map currently in the field
    */
   name(): string {
-    return this.nameGM.value;
+    return this.forms.header.getName();
   }
 
   /**
    * The width of the map currently in the field
    */
   width(): number {
-    return parseFloat(this.widthGM.value);
+    return this.forms.header.getWidth();
   }
 
   /**
    * The height of the map currently in the field
    */
   height(): number {
-    return parseFloat(this.heightGM.value);
+    return this.forms.header.getHeight();
   }
 
   /**
@@ -733,7 +655,7 @@ export default class MapEditorForm {
    * The symmetry of the map currently selected
    */
   symmetry(): Symmetry {
-    return parseInt(this.symmetryGM.options[this.symmetryGM.selectedIndex].value);
+    return this.forms.symmetry.getSymmetry();
   }
 
   /**
