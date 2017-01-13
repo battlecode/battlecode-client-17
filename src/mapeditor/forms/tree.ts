@@ -59,6 +59,7 @@ export default class TreeForm implements UnitForm {
     this.x.type = "text";
     this.y.type = "text";
     this.radius.type = "text";
+    this.radius.value = String(cst.MIN_TREE_RADIUS);
     this.bullets.type = "text";
     this.bullets.value = "0";
     this.TREE_TYPES.forEach((type: schema.BodyType) => {
@@ -167,14 +168,16 @@ export default class TreeForm implements UnitForm {
       this.radius.value = String(
         Math.max(Math.min(cst.MAX_TREE_RADIUS, radius), cst.MIN_TREE_RADIUS)
       );
+      return;
     }
 
-    // Otherwise, the radius is 0 if invalid, or the minimum of the current
-    // radius and the maximum valid radius if valid
+    // Otherwise, the radius is 0 if invalid, the maximum valid radius if
+    // previously invalid, or the minimum of the current radius and the maximum
+    // valid radius otheriwse
     const maxRadius = Math.min(this.maxRadius(x, y, id), cst.MAX_TREE_RADIUS);
     if (maxRadius < cst.MIN_TREE_RADIUS) {
       this.radius.value = "0";
-    } else if (isNaN(radius)) {
+    } else if (isNaN(radius) || radius === 0) {
       this.radius.value = String(maxRadius);
     } else {
       this.radius.value = String(Math.min(maxRadius, radius));
