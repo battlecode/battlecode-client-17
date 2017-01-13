@@ -279,7 +279,9 @@ export default class MatchRunner {
       this.getTeamA(),
       this.getTeamB(),
       this.getMaps(),
-      cb
+      (err) => console.log('Error running client: '+err),
+      (stdoutdata) => console.log(stdoutdata),
+      (stderrdata) => console.warn(stderrdata)
     );
   }
 
