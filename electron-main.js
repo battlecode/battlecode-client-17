@@ -15,7 +15,16 @@ var mainWindow;
 
 function createWindow () {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1600, height: 1000});
+  mainWindow = new BrowserWindow({
+    width: 1600,
+    height: 1000,
+    fullScreenable: true,
+    title: 'Battlecode 2017',
+    icon: './src/img/logo.png',
+    webPreferences: {
+      defaultFontFamily: "sansSerif"
+    }
+  });
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
