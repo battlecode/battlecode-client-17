@@ -9,6 +9,8 @@ export type AllImages = {
     fullHealth: Image,
     lowHealth: Image,
     sapling: Image,
+    bullets: Image,
+    robot: Image
   },
   bullet: {
     fast: Image,
@@ -75,6 +77,8 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.tree, 'fullHealth', require('./img/map/full_health_tree.png'));
   img(result.tree, 'lowHealth', require('./img/map/low_health_tree.png'));
   img(result.tree, 'sapling', require('./img/map/sapling.png'));
+  img(result.tree, 'bullets', require('./img/map/tree_bullets.png'));
+  img(result.tree, 'robot', require('./img/map/tree_robots.png'));
 
   img(result.bullet, 'fast', require('./img/bullets/bullet_fast.png'));
   img(result.bullet, 'medium', require('./img/bullets/bullet_medium.png'));
