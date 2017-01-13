@@ -2,8 +2,7 @@ import {electron, os, fs, path, child_process} from './electron-modules';
 
 // Code that talks to the scaffold.
 
-const WINDOWS = process.platform === 'windows';
-const MAC = process.platform === 'mac os x';
+const WINDOWS = process.platform === 'win32';
 
 const GRADLE_WRAPPER = WINDOWS ? 'gradlew.bat' : 'gradlew';
 
@@ -97,7 +96,8 @@ export default class ScaffoldCommunicator {
           .map((file) => {
             const relPath = path.relative(this.sourcePath, file);
             return relPath.substring(0, relPath.length - (path.sep + 'RobotPlayer.java').length)
-                          .replace(new RegExp(WINDOWS? '\\\\' : '/', 'g'), '.');
+                          .replace(new RegExp(WINDOWS? '\\\\' : '/', 'g'), '.')
+                          .replace(new RegExp('/', 'g'), '.');
           })
       );
     });
