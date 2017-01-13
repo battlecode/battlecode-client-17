@@ -128,6 +128,7 @@ export default class MapRenderer {
       } else if (body.type === cst.ARCHON) {
         this.drawImage(archons[1], x, y, radius);
       }
+      this.drawGoodies(x, y, radius, body.containedBullets, body.containedBody);
     });
 
     symmetricBodies.forEach((body: MapUnit) => {
@@ -141,6 +142,7 @@ export default class MapRenderer {
       } else if (body.type === cst.ARCHON) {
         this.drawImage(archons[2], x, y, radius);
       }
+      this.drawGoodies(x, y, radius, body.containedBullets, body.containedBody);
     });
   }
 
@@ -186,6 +188,14 @@ export default class MapRenderer {
     this.ctx.fillStyle = "#ddd";
     this.ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
     this.ctx.fill();
+  }
+
+  /**
+   * Draws goodies centered at (x, y) with the given radius, if there are any
+   */
+  private drawGoodies(x: number, y: number, radius: number, bullets: number, body: schema.BodyType) {
+    if (bullets > 0) this.drawImage(this.imgs.tree.bullets, x, y, radius);
+    if (body !== cst.NONE) this.drawImage(this.imgs.tree.robot, x, y, radius);
   }
 
   /**
