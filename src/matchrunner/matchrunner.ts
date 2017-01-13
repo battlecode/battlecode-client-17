@@ -23,6 +23,7 @@ export default class MatchRunner {
   private loadingMaps: Text;
   private loadingMatch: Text;
   private isLoadingMatch: boolean;
+  private compileLogs: HTMLDivElement;
 
   // Options
   private readonly conf: Config;
@@ -165,6 +166,10 @@ export default class MatchRunner {
     this.runMatch.onclick = this.run;
     div.appendChild(this.runMatch);
 
+    // Compile error log
+    this.compileLogs = document.createElement("div");
+    div.appendChild(this.compileLogs);
+
     return div;
   }
 
@@ -265,21 +270,30 @@ export default class MatchRunner {
       return;
     }
 
+    this.compileLogs.innerHTML = "";
     this.loading.appendChild(this.loadingMatch);
     this.isLoadingMatch = true;
-    const cb = (err: Error | null, stdout: string, stderr: string) => {
-      this.loadingMatch.remove();
-      if (err) {
-        console.log(err);
-      }
-      console.log(stderr);
-      this.isLoadingMatch = false;
-    };
+    this.loadingMatch.remove();
     this.scaffold.runMatch(
       this.getTeamA(),
       this.getTeamB(),
       this.getMaps(),
-      cb
+      (err) => {
+        console.log(err.stack);
+        this.isLoadingMatch = false;
+      },
+      (stdoutdata) => {
+        const logs = document.createElement('p');
+        logs.innerHTML = stdoutdata.split('\n').join('<br/>');
+        logs.className = 'outLog';
+        this.compileLogs.appendChild(logs);
+      },
+      (stderrdata) => {
+        const logs = document.createElement('p');
+        logs.innerHTML = stderrdata.split('\n').join('<br/>');
+        logs.className = 'errorLog';
+        this.compileLogs.appendChild(logs);
+      }
     );
   }
 
