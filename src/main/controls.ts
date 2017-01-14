@@ -302,7 +302,7 @@ export default class Controls {
 
     // Edit the text
     this.speedReadout.textContent =
-      ` TIME: ${time}/${loadedTime} UPS: ${ups | 0} FPS: ${fps | 0}`;
+      ` TIME: ${time+1}/${loadedTime+1} UPS: ${ups | 0} FPS: ${fps | 0}`;
   }
 
   /**
