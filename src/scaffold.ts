@@ -150,7 +150,8 @@ export default class ScaffoldCommunicator {
    *
    * TODO what if the server hangs?
    */
-  runMatch(teamA: string, teamB: string, maps: string[], onErr: (err: Error) => void, onStdout: (data: string) => void, onStderr: (data: string) => void) {
+  runMatch(teamA: string, teamB: string, maps: string[], onErr: (err: Error) => void, onExitNoError: () => void,
+           onStdout: (data: string) => void, onStderr: (data: string) => void) {
     const proc = child_process.spawn(
       this.wrapperPath,
       [
@@ -167,7 +168,9 @@ export default class ScaffoldCommunicator {
     proc.stdout.on('data', (data) => onStdout(decoder.decode(data)));
     proc.stderr.on('data', (data) => onStderr(decoder.decode(data)));
     proc.on('close', (code) => {
-      if (code !== 0) {
+      if (code === 0) {
+        onExitNoError();
+      } else {
         onErr(new Error(`Non-zero exit code: ${code}`));
       }
     });

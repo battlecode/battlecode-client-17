@@ -282,6 +282,9 @@ export default class MatchRunner {
         console.log(err.stack);
         this.isLoadingMatch = false;
       },
+      () => {
+        this.isLoadingMatch = false;
+      },
       (stdoutdata) => {
         const logs = document.createElement('p');
         logs.innerHTML = stdoutdata.split('\n').join('<br/>');
