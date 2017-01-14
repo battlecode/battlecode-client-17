@@ -443,7 +443,7 @@ export default class MapEditorForm {
     // Bodies must not overlap
     this.originalBodies.forEach((unitA: MapUnit, idA: number) => {
       this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
-        if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
+        if (unitA.loc.distance(unitB.loc) < unitA.radius + unitB.radius) {
           errors.push (`IDs ${idA} and ${idB} are overlapping.`);
         }
       });
