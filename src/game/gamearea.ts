@@ -111,12 +111,14 @@ export default class GameArea {
 
     // The canvas can be anything in help mode
     if (mode === Mode.HELP) return;
-    
-    if (this.currentMode == Mode.SPLASH) {
-        if(!(mode === Mode.GAME)) {
-          return;
-        }
-    }
+	  
+	// The canvas should stay in splash screen unless the new mode is
+	// game editor
+	if (this.currentMode === Mode.SPLASH) {
+		if(!(mode === Mode.MAPEDITOR)) {
+			return;
+		}
+	}
 
     // Otherwise clear the canvas area...
     while (this.wrapper.firstChild) {

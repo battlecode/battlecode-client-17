@@ -84,7 +84,7 @@ export enum Mode {
 export function defaults(supplied?: any): Config {
   supplied = supplied || {};
   return {
-    gameVersion: supplied.gameVersion || "ANY",
+    gameVersion: supplied.gameVersion || "2017.1.2.2", //TODO: Change this on each release!
     fullscreen: supplied.fullscreen || false,
     width: supplied.width || 600,
     height: supplied.height || 600,
