@@ -77,6 +77,7 @@ export default class GameArea {
     // Set the version string from http://www.battlecode.org/contestants/latest/
     (async function (splashDiv, version) {
       
+				/*
       http.get({
         hostname: 'battlecode-maven.s3-website-us-east-1.amazonaws.com',
         port: 80,
@@ -99,6 +100,37 @@ export default class GameArea {
           splashDiv.appendChild(newVersion);
 
         }
+      });*/
+		
+      var options = {
+        host: 'battlecode-maven.s3-website-us-east-1.amazonaws.com',
+        path: '/org/battlecode/battlecode/maven-metadata.xml'
+      };
+
+      var req = http.get(options, function(res) {
+
+        let data = "";
+        res.on('data', function(chunk) {
+          data += chunk
+        }).on('end', function() {
+          
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(data, "application/xml");
+
+          var latest = doc.getElementsByTagName('release')[0].innerHTML;
+
+          if(latest.trim() != version.trim()) {
+
+            let newVersion = document.createElement("a");
+            newVersion.id = "splashNewVersion";
+            newVersion.href = "http://www.battlecode.org/contestants/releases/"
+            newVersion.target = "_blank";
+            newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + latest;
+            splashDiv.appendChild(newVersion);
+
+          }
+          
+        })
       });
       
     })(this.splashDiv, this.conf.gameVersion);
