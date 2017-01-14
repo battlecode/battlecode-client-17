@@ -61,6 +61,16 @@ export interface Config {
   indicators: boolean;
 
   /**
+   * Whether or not to display the sight radius
+   */
+  sightRadius: boolean;
+
+  /**
+   * Whether or not to display the bullet sight radius
+   */
+  bulletSightRadius: boolean;
+
+  /**
    * The mode of the game
    */
   mode: Mode;
@@ -96,6 +106,8 @@ export function defaults(supplied?: any): Config {
     healthBars: supplied.healthBars || true,
     circleBots: supplied.circleBots || false,
     indicators: supplied.indicators || true,
-    mode: supplied.mode || Mode.SPLASH
+    mode: supplied.mode || Mode.SPLASH,
+    sightRadius: supplied.sightRadius || false,
+    bulletSightRadius: supplied.bulletSightRadius || false
   };
 }

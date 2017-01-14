@@ -1,6 +1,6 @@
 {
   "name": "battlecode-client-17",
-  "version": "0.0.1",
+  "version": "1.1.7",
   "description": "Battlecode 2017 Client",
   "private": "true",
   "scripts": {
@@ -11,7 +11,7 @@
     "prod": "webpack",
     "watch": "echo '--- open localhost:8080 in your browser ---' && webpack-dev-server --env.dev",
     "electron": "webpack --env.electron --env.dev && electron .",
-    "prod-electron": "webpack --env.electron && build -mwl --dir"
+    "prod-electron": "webpack --env.electron && build -mwl --dir --ia32 --x64"
   },
   "repository": {
     "type": "git",
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/battlecode/battlecode-client-17#readme",
   "dependencies": {
-    "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#f287b374a32268ebbc5984ae22aa6286c259d0f0",
+    "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#7bf19912b098bcf6e3d637d90f050b27b6bac815",
     "victor": "^1.1.0"
   },
   "devDependencies": {
