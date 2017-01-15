@@ -73,7 +73,7 @@ function createWindow () {
   mainWindow.webContents.setFrameRate(60);
 
   // Register the event listeners for mainWindow that render and show it to the user
-  registerEventListenersForMainWindowDomReady();
+  registerEventListenersForMainWindow();
 
   // Tell the main context to start listening for renderer request events
   registerEventListenersForRendererRequestEvents();
@@ -82,10 +82,7 @@ function createWindow () {
 // Registers the event listeners that activate upon the MainWindow DOM loading completion (aka, the HTML has finished
 // being loaded). The event listeners begin the window render, and then show the window to the user upon the completion
 // of that render.
-function registerEventListenersForMainWindowDomReady(){
-  // Waits for window to finish loading the DOM (meaning the document is fully loaded) before setting up mainWindow
-  // event listeners related to user input (because the user can't interact with the window until we show it to them)
-  mainWindow.webContents.on('dom-ready', (event, client) => {
+function registerEventListenersForMainWindow(){
 
       //Wait for the window render to finish before showing the window to the user
       mainWindow.once('ready-to-show', function () {
@@ -115,7 +112,6 @@ function registerEventListenersForMainWindowDomReady(){
         event.preventDefault();
         electron.shell.openExternal(url);
       });
-  });
 }
 
 

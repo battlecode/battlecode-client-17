@@ -3,16 +3,16 @@ import * as cst from './constants';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
-import Sidebar from './html/sidebar';
-import Stats from './html/stats';
-import Controls from './html/controls';
-import Console from './html/console';
+import Sidebar from './main/sidebar';
+import Controls from './main/controls';
+import Stats from './game/sidebar/stats';
+import Console from './game/sidebar/console';
+import MatchQueue from './game/sidebar/matchqueue';
 import MapEditor from './mapeditor/mapeditor';
-import MatchQueue from './matchrunner/matchqueue';
 
-import GameArea from './game/gamearea';
+import GameArea from './game/gamearea/gamearea';
+import Renderer from './game/gamearea/renderer';
 import NextStep from './game/nextstep';
-import Renderer from './game/renderer';
 import TickCounter from './game/fps';
 import WebSocketListener from './websocket';
 
@@ -22,7 +22,7 @@ import {electron} from './electron-modules';
 
 // webpack magic
 // this loads the stylesheet and injects it into the dom
-require('./style.css');
+require('./static/css/style.css');
 
 // open devtools on f12
 document.addEventListener("keydown", function (e) {
@@ -90,7 +90,7 @@ export default class Client {
 
     this.root = root;
     this.root.id = "root";
-    this.conf = config.loadParametersOrDefaults(conf);
+    this.conf = config.defaults(conf);
 
     imageloader.loadAll(this.conf, (images: imageloader.AllImages) => {
       this.imgs = images;
@@ -350,7 +350,7 @@ export default class Client {
       teamIDs.push(meta.teams[team].teamID);
     }
     this.stats.initializeGame(teamNames, teamIDs);
-    this.console.indexLogs(match.logs);
+    this.console.setLogsRef(match.logs);
 
     // keep around to avoid reallocating
     const nextStep = new NextStep();
@@ -532,6 +532,12 @@ export default class Client {
           break;
         case 66: // "b" - Toggle Interpolation
           conf.interpolate = !conf.interpolate;
+          break;
+        case 78: // "n" - Toggle sight radius
+          conf.sightRadius = !conf.sightRadius;
+          break;
+        case 77: // "m" - Toggle bullet sight radius
+          conf.bulletSightRadius = !conf.bulletSightRadius;
           break;
       }
     };

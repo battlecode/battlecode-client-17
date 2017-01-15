@@ -6,7 +6,7 @@
   "scripts": {
     "test": "true",
     "clean": "rm -rf out outtest bc17",
-    "lint": "tslint \"/**/*.ts\" -e \"out/**\"",
+    "lint": "tslint \"/src/**/*.ts\" -e \"out/**\"",
     "build": "webpack",
     "prod": "webpack",
     "watch": "echo '--- open localhost:8080 in your browser ---' && webpack-dev-server --env.dev",
@@ -26,7 +26,7 @@
   "dependencies": {
     "@types/file-url": "^1.0.28",
     "@types/nomnom"  : "^0.0.28",
-    "battlecode-playback": "git+ssh://git@github.com/battlecode/battlecode-playback.git#7bf19912b098bcf6e3d637d90f050b27b6bac815",
+    "battlecode-playback": "battlecode/battlecode-playback#7bf19912b098bcf6e3d637d90f050b27b6bac815",
     "file-url": "^2.0.0",
     "nomnom": "^1.8.1",
     "victor": "^1.1.0"
@@ -46,7 +46,7 @@
     "tslint": "^3.15.1",
     "typescript": "^2.1.4",
     "url-loader": "^0.5.7",
-    "webpack": "^2.2.0-rc.2",
+    "webpack": "fulls1z3/webpack",
     "webpack-dev-server": "^2.2.0-rc.0",
     "webpack-merge": "^2.0.0"
   },
@@ -73,20 +73,14 @@
       }
     ],
     "mac": {
-      "target": [
-        "dir"
-      ],
+      "target": ["dir"],
       "category": "public.app-category.games"
     },
     "win": {
-      "target": [
-        "dir"
-      ]
+      "target": ["dir"]
     },
     "linux": {
-      "target": [
-        "dir"
-      ]
+      "target": ["dir"]
     }
   }
 }

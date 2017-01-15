@@ -3,6 +3,11 @@ import * as cst from '../constants';
 import {AllImages} from '../imageloader';
 import MapRenderer from './renderer';
 
+import HeaderForm from './forms/header';
+import SymmetryForm from './forms/symmetry';
+import TreeForm from './forms/tree';
+import ArchonForm from './forms/archon';
+
 import {schema, flatbuffers} from 'battlecode-playback';
 
 import {Symmetry, MapUnit} from './renderer';
@@ -20,29 +25,17 @@ export default class MapEditorForm {
   private readonly images: AllImages;
   private readonly canvas: HTMLCanvasElement;
   private readonly renderer: MapRenderer;
-  private archonForm: HTMLFormElement;
-  private treeForm: HTMLFormElement;
 
-  // Form elements
-  private nameGM: HTMLInputElement;
-  private widthGM: HTMLInputElement;
-  private heightGM: HTMLInputElement;
-  private symmetryGM: HTMLSelectElement;
+  // Forms
+  private readonly forms: {
+    header: HeaderForm,
+    symmetry: SymmetryForm,
+    tree: TreeForm,
+    archon: ArchonForm
+  }
 
-  private tree: HTMLInputElement;
   private archon: HTMLInputElement;
-
-  private idA: HTMLLabelElement;
-  private xA: HTMLInputElement;
-  private yA: HTMLInputElement;
-  private radiusA: HTMLInputElement;
-
-  private idT: HTMLLabelElement;
-  private xT: HTMLInputElement;
-  private yT: HTMLInputElement;
-  private radiusT: HTMLInputElement;
-  private bulletsT: HTMLInputElement;
-  private bodiesT: HTMLSelectElement;
+  private tree: HTMLInputElement;
 
   private addbutton: HTMLButtonElement;
   private deletebutton: HTMLButtonElement;
@@ -60,6 +53,21 @@ export default class MapEditorForm {
     this.images = imgs;
     this.canvas = canvas;
 
+    this.forms = {
+      header: new HeaderForm(() => {this.render()}),
+      symmetry: new SymmetryForm(() => {this.render()}),
+      tree: new TreeForm(
+        () => {return this.width()},
+        () => {return this.height()},
+        (x: number, y: number, id?: number) => {return this.maxRadius(x, y, id)}
+      ),
+      archon: new ArchonForm(
+        () => {return this.width()},
+        () => {return this.height()},
+        (x: number, y: number, id?: number) => {return this.maxRadius(x, y, id)}
+      )
+    };
+
     this.lastID = 1;
     this.div = this.initialDiv();
     this.originalBodies = new Map<number, MapUnit>();
@@ -73,29 +81,23 @@ export default class MapEditorForm {
         let body: MapUnit = this.originalBodies.get(id);
         if (body.type === cst.ARCHON) {
           this.archon.click();
-          this.setArchonForm(body.loc, id);
+          this.forms.archon.setForm(body.loc, body, id);
         } else if (body.type === cst.TREE_NEUTRAL) {
           this.tree.click();
-          this.setTreeForm(body.loc, body.radius, body.containedBullets,
-            body.containedBody, id);
+          this.forms.tree.setForm(body.loc, body, id);
         }
       }
     };
     const onclickBlank = (loc: Victor) => {
       if (this.archon.checked) {
-        this.setArchonForm(loc);
+        this.forms.archon.setForm(loc);
       } else {
-        let radius = this.getMaxRadius(loc.x, loc.y);
-        let formRadius = parseFloat(this.radiusT.value);
-        if (!isNaN(formRadius) && formRadius >= cst.MIN_TREE_RADIUS) {
-          radius = Math.min(formRadius, radius);
-        }
-        this.setTreeForm(loc, radius);
+        this.forms.tree.setForm(loc);
       }
     }
 
     this.renderer = new MapRenderer(canvas, imgs, conf, onclickUnit, onclickBlank);
-    this.setCanvasDimensions();
+    this.render();
   }
 
   /**
@@ -104,97 +106,15 @@ export default class MapEditorForm {
   private initialDiv(): HTMLDivElement {
     const div: HTMLDivElement = document.createElement("div");
 
-    div.appendChild(this.createHeaderForm());
-    div.appendChild(this.createSymmetryForm());
+    div.appendChild(this.forms.header.div);
+    div.appendChild(this.forms.symmetry.div);
     div.appendChild(this.createUnitOption());
 
-    this.archonForm = this.createArchonForm();
-    this.treeForm = this.createTreeForm();
-
-    div.appendChild(this.treeForm);
+    div.appendChild(this.forms.tree.div);
     div.appendChild(this.createFormButtons());
 
     div.appendChild(document.createElement("br"));
     return div;
-  }
-
-  /**
-   * Creates the form that collects match header information: name, width, height.
-   */
-  private createHeaderForm(): HTMLFormElement {
-    // HTML structure
-    const header: HTMLFormElement = document.createElement("form");
-    const mapname: HTMLDivElement = document.createElement("div");
-    const width: HTMLDivElement = document.createElement("div");
-    const height: HTMLDivElement = document.createElement("div");
-    header.appendChild(mapname);
-    header.appendChild(width);
-    header.appendChild(height);
-    header.appendChild(document.createElement("br"));
-
-    // Map name
-    this.nameGM = document.createElement("input");
-    this.nameGM.type = "text";
-    this.nameGM.value = "coolmap";
-    this.nameGM.maxLength = 50;
-    mapname.appendChild(document.createTextNode("Map name:"));
-    mapname.appendChild(this.nameGM);
-
-    // Map width
-    this.widthGM = document.createElement("input");
-    this.widthGM.type = "text";
-    this.widthGM.value = "50";
-    this.widthGM.onchange = () => {
-      // Width must be in the defined range
-      let value: number = parseFloat(this.widthGM.value);
-      value = Math.max(value, cst.MIN_DIMENSION);
-      value = Math.min(value, cst.MAX_DIMENSION);
-      this.widthGM.value = isNaN(value) ? "50" : String(value);
-      this.setCanvasDimensions();
-    };
-    width.appendChild(document.createTextNode("Width:"));
-    width.appendChild(this.widthGM);
-
-    // Map width
-    this.heightGM = document.createElement("input");
-    this.heightGM.type = "text";
-    this.heightGM.value = "50";
-    this.heightGM.onchange = () => {
-      // Height must be in the defined range
-      let value: number = parseFloat(this.heightGM.value);
-      value = Math.max(value, cst.MIN_DIMENSION);
-      value = Math.min(value, cst.MAX_DIMENSION);
-      this.heightGM.value = isNaN(value) ? "50" : String(value);
-      this.setCanvasDimensions();
-    };
-    height.appendChild(document.createTextNode("Height:"));
-    height.appendChild(this.heightGM);
-
-    return header;
-  }
-
-  private createSymmetryForm(): HTMLDivElement {
-    const form = document.createElement("div");
-    this.symmetryGM = document.createElement("select");
-    form.appendChild(document.createTextNode("Symmetry:"));
-    form.appendChild(this.symmetryGM);
-
-    // Add an option for each value in enum Symmetry
-    const options = [Symmetry.ROTATIONAL, Symmetry.HORIZONTAL, Symmetry.VERTICAL];
-    for (let option of options) {
-      let opt = document.createElement("option");
-      opt.value = String(option);
-      opt.appendChild(document.createTextNode(cst.symmetryToString(option)));
-      this.symmetryGM.appendChild(opt);
-    }
-
-    this.symmetryGM.onchange = () => {
-      this.render();
-    };
-
-    form.appendChild(document.createElement("br"));
-    form.appendChild(document.createElement("br"));
-    return form;
   }
 
   private createUnitOption(): HTMLDivElement {
@@ -224,152 +144,6 @@ export default class MapEditorForm {
     return div;
   }
 
-  private createArchonForm(): HTMLFormElement {
-    // HTML structure
-    const form: HTMLFormElement = document.createElement("form");
-    const id: HTMLDivElement = document.createElement("div");
-    const x: HTMLDivElement = document.createElement("div");
-    const y: HTMLDivElement = document.createElement("div");
-    const radius: HTMLDivElement = document.createElement("div");
-    form.appendChild(id);
-    form.appendChild(x);
-    form.appendChild(y);
-    form.appendChild(radius);
-    form.appendChild(document.createElement("br"));
-
-    // Archon ID
-    let idA = document.createElement("label");
-    idA.appendChild(document.createTextNode(""))
-    id.appendChild(document.createTextNode("ID:"));
-    id.appendChild(idA);
-
-    // X coordinate
-    let xA: HTMLInputElement = document.createElement("input");
-    xA.type = "text";
-    x.appendChild(document.createTextNode("X:"));
-    x.appendChild(xA);
-
-    // Y coordinate
-    let yA: HTMLInputElement = document.createElement("input");
-    yA.type = "text";
-    y.appendChild(document.createTextNode("Y:"));
-    y.appendChild(yA);
-
-    // Radius
-    let radiusA: HTMLInputElement = document.createElement("input");
-    radiusA.type = "text";
-    radiusA.disabled = true;
-    radiusA.value = "2";
-    radius.appendChild(document.createTextNode("Radius:"));
-    radius.appendChild(radiusA);
-
-    // Save HTML elements
-    this.idA = idA;
-    this.xA = xA;
-    this.yA = yA;
-    this.radiusA = radiusA;
-    return form;
-  }
-
-  private setArchonForm(loc: Victor, id?: number): void {
-    this.xA.value = String(loc.x);
-    this.yA.value = String(loc.y);
-
-    if (id === undefined) {
-      this.idA.textContent = "";
-      this.radiusA.value = String(this.getMaxRadius(loc.x, loc.y, id, true));
-    } else {
-      this.idA.textContent = String(id);
-      this.radiusA.value = String(cst.ARCHON_RADIUS);
-    }
-  }
-
-  private createTreeForm(): HTMLFormElement {
-    // HTML structure
-    const form: HTMLFormElement = document.createElement("form");
-    const id: HTMLDivElement = document.createElement("div");
-    const x: HTMLDivElement = document.createElement("div");
-    const y: HTMLDivElement = document.createElement("div");
-    const radius: HTMLDivElement = document.createElement("div");
-    const bullets: HTMLDivElement = document.createElement("div");
-    const body: HTMLDivElement = document.createElement("div");
-    form.appendChild(id);
-    form.appendChild(x);
-    form.appendChild(y);
-    form.appendChild(radius);
-    form.appendChild(bullets);
-    form.appendChild(body);
-    form.appendChild(document.createElement("br"));
-
-    // Tree ID
-    let idT = document.createElement("label");
-    idT.appendChild(document.createTextNode(""))
-    id.appendChild(document.createTextNode("ID:"));
-    id.appendChild(idT);
-
-    // X coordinate
-    let xT: HTMLInputElement = document.createElement("input");
-    xT.type = "text";
-    x.appendChild(document.createTextNode("X:"));
-    x.appendChild(xT);
-
-    // Y coordinate
-    let yT: HTMLInputElement = document.createElement("input");
-    yT.type = "text";
-    y.appendChild(document.createTextNode("Y:"));
-    y.appendChild(yT);
-
-    // Radius
-    let radiusT: HTMLInputElement = document.createElement("input");
-    radiusT.type = "text";
-    radius.appendChild(document.createTextNode("Radius:"));
-    radius.appendChild(radiusT);
-
-    // Bullets
-    let bulletsT: HTMLInputElement = document.createElement("input");
-    bulletsT.type = "text";
-    bulletsT.value = "0";
-    bullets.appendChild(document.createTextNode("Bullets:"));
-    bullets.appendChild(bulletsT);
-
-    // Tree body
-    const types = [cst.NONE, cst.ARCHON, cst.GARDENER, cst.LUMBERJACK,
-      cst.SOLDIER, cst.TANK, cst.SCOUT];
-    let bodyT: HTMLSelectElement = document.createElement("select");
-    body.appendChild(document.createTextNode("Body:"));
-    body.appendChild(bodyT);
-
-    // Create an option for each robot type
-    // bodyT.appendChild(document.createElement("option"));
-    for (let type of types) {
-      let option = document.createElement("option");
-      option.value = String(type);
-      option.appendChild(document.createTextNode(cst.bodyTypeToString(type)));
-      bodyT.appendChild(option);
-    }
-
-    // Save HTML elements
-    this.idT = idT;
-    this.xT = xT;
-    this.yT = yT;
-    this.radiusT = radiusT;
-    this.bulletsT = bulletsT;
-    this.bodiesT = bodyT;
-    return form;
-  }
-
-  private setTreeForm(loc: Victor, radius: number, bullets?: number | undefined,
-    body?: schema.BodyType | undefined, id?: number): void {
-    this.xT.value = String(loc.x);
-    this.yT.value = String(loc.y);
-    this.radiusT.value = String(radius);
-
-    if (bullets != undefined) this.bulletsT.value = String(bullets);
-    if (body != undefined) this.bodiesT.value = String(body);
-
-    this.idT.textContent = id === undefined ? "" : String(id);
-  }
-
   private createFormButtons(): HTMLDivElement {
     // HTML structure
     const buttons = document.createElement("div");
@@ -396,137 +170,50 @@ export default class MapEditorForm {
     this.tree.onchange = () => {
       // Change the displayed form
       if (this.tree.checked) {
-        this.div.replaceChild(this.treeForm, this.archonForm);
+        this.div.replaceChild(this.forms.tree.div, this.forms.archon.div);
       }
     };
     this.archon.onchange = () => {
       // Change the displayed form
       if (this.archon.checked) {
-        this.div.replaceChild(this.archonForm, this.treeForm);
+        this.div.replaceChild(this.forms.archon.div, this.forms.tree.div);
       }
-    };
-
-
-    // Coordinates must be on the map
-    this.xT.onchange = () => {
-      // X must be in the range [0, this.width]
-      let value: number = parseFloat(this.xT.value);
-      value = Math.max(value, 0);
-      value = Math.min(value, this.width());
-      this.xT.value = isNaN(value) ? "" : String(value);
-    };
-    this.xA.onchange = () => {
-      // X must be in the range [0, this.width]
-      let value: number = parseFloat(this.xA.value);
-      value = Math.max(value, 0);
-      value = Math.min(value, this.width());
-      this.xT.value = isNaN(value) ? "" : String(value);
-    };
-    this.yT.onchange = () => {
-      // Y must be in the range [0, this.height]
-      let value: number = parseFloat(this.yT.value);
-      value = Math.max(value, 0);
-      value = Math.min(value, this.height());
-      this.yT.value = isNaN(value) ? "" : String(value);
-    };
-    this.yA.onchange = () => {
-      // Y must be in the range [0, this.height]
-      let value: number = parseFloat(this.yA.value);
-      value = Math.max(value, 0);
-      value = Math.min(value, this.height());
-      this.yT.value = isNaN(value) ? "" : String(value);
-    };
-
-    // Tree of this radius must not overlap with other units
-    this.radiusT.onchange = () => {
-      let value: number = parseFloat(this.radiusT.value);
-      let x: number = parseFloat(this.xT.value);
-      let y: number = parseFloat(this.yT.value);
-      let id: number = parseInt(this.idT.textContent || "-1");
-      value = Math.max(value, cst.MIN_TREE_RADIUS);
-      value = Math.min(value, this.getMaxRadius(x, y, id));
-      this.radiusT.value = isNaN(value) ? "" : String(value);
-    };
-    // Archon must not overlap with other units
-    this.radiusA.onchange = () => {
-      let value: number = parseFloat(this.radiusT.value);
-      let x: number = parseFloat(this.xT.value);
-      let y: number = parseFloat(this.yT.value);
-      let id: number = parseInt(this.idT.textContent || "-1");
-      this.radiusT.value = isNaN(value) ? "" : String(this.getMaxRadius(x, y, id, true));
-    };
-
-    this.bulletsT.onchange = () => {
-      // Bullets must be a number >= 0
-      let value: number = parseFloat(this.bulletsT.value);
-      value = Math.max(value, 0);
-      this.bulletsT.value = isNaN(value) ? "" : String(value);
     };
 
     this.addbutton.onclick = () => {
-      let id, x, y, radius, bullets, body, type;
-
+      let unit: MapUnit | undefined;
+      let id: number | undefined;
       if (this.tree.checked) {
-        // Adding a tree
-        id = this.idT.textContent;
-        x = parseFloat(this.xT.value);
-        y = parseFloat(this.yT.value);
-        radius = parseFloat(this.radiusT.value);
-        bullets = parseFloat(this.bulletsT.value);
-        body = parseInt(this.bodiesT.options[this.bodiesT.selectedIndex].value);
-        type = cst.TREE_NEUTRAL;
+        unit = this.forms.tree.getUnit();
+        id = this.forms.tree.getID();
       } else {
-        // Adding an archon
-        id = this.idA.textContent;
-        x = parseFloat(this.xA.value);
-        y = parseFloat(this.yA.value);
-        radius = parseFloat(this.radiusA.value);
-        bullets = 0;
-        body = cst.NONE;
-        type = cst.ARCHON;
+        unit = this.forms.archon.getUnit(1);
+        id = this.forms.archon.getID();
       }
 
-      // Return if invalid input
-      if (isNaN(x) || isNaN(y) || isNaN(radius) || radius === 0) return;
-
-      if (id === "") {
+      if (unit && !id) {
         // Create a new unit
-        this.setUnit(this.lastID, {
-          loc: new Victor(x, y),
-          radius: radius,
-          type: type,
-          containedBullets: bullets,
-          containedBody: body
-        });
-
-        // Reset the form
-        if (type === cst.ARCHON) {
-          this.xA.value = "";
-          this.yA.value = "";
-        } else if (type === cst.TREE_NEUTRAL) {
-          this.xT.value = "";
-          this.yT.value = "";
-        }
-      } else if (id != null) {
+        this.setUnit(this.lastID, unit);
+        this.forms.archon.resetForm();
+        this.forms.tree.resetForm();
+      } else if (unit && id) {
         // Update existing unit
-        this.setUnit(parseInt(id), {
-          loc: new Victor(x, y),
-          radius: radius,
-          type: type,
-          containedBullets: bullets,
-          containedBody: body
-        });
+        this.setUnit(id, unit);
+        this.forms.archon.resetForm();
+        this.forms.tree.resetForm();
       }
     }
 
     this.deletebutton.onclick = () => {
-      // Delete a body is input is valid
-      let idToDelete = this.tree.checked ? this.idT.textContent : this.idA.textContent
-      if (idToDelete != null) {
-        let id = parseInt(idToDelete);
-        if (!isNaN(id)) {
-          this.deleteUnit(id);
-        }
+      let id: number | undefined;
+      if (this.tree.checked) {
+        id = this.forms.tree.getID();
+      } else {
+        id = this.forms.archon.getID();
+      }
+
+      if (id && !isNaN(id)) {
+        this.deleteUnit(id);
       }
     }
   }
@@ -539,7 +226,7 @@ export default class MapEditorForm {
    * If an id is given, does not consider the body with the corresponding id to
    * overlap with the given coordinates.
    */
-  private getMaxRadius(x: number, y: number, ignoreID?: number, archon?: boolean): number {
+  private maxRadius(x: number, y: number, ignoreID?: number): number {
     // Min distance to wall
     let maxRadius = Math.min(x, y, this.width() - x, this.height() -y);
     const loc = new Victor(x, y);
@@ -557,18 +244,7 @@ export default class MapEditorForm {
       }
     });
 
-    maxRadius = Math.max(0, maxRadius - cst.DELTA);
-    if (archon) {
-      if (this.onSymmetricLine(new Victor(x, y))) return 0;
-      return maxRadius >= cst.ARCHON_RADIUS ? cst.ARCHON_RADIUS : 0;
-    } else {
-      if (maxRadius < cst.MIN_TREE_RADIUS) {
-        // No tree can go here
-        return 0;
-      } else {
-        return Math.min(maxRadius, cst.MAX_TREE_RADIUS);
-      }
-    }
+    return Math.max(0, maxRadius - cst.DELTA);
   }
 
   /**
@@ -596,20 +272,12 @@ export default class MapEditorForm {
   }
 
   /**
-   * Sets the map editor canvas to the dimensions described in the map editor
-   * form, then re-renders. Scales the canvas to render at a higher resolution.
-   */
-  private setCanvasDimensions(): void {
-    const scale: number = 30; // arbitrary scaling factor
-    this.canvas.width = this.width() * scale;
-    this.canvas.height = this.height() * scale;
-    this.render();
-  }
-
-  /**
    * Re-renders the canvas based on the parameters of the map editor.
    */
   render() {
+    const scale: number = 50; // arbitrary scaling factor
+    this.canvas.width = this.width() * scale;
+    this.canvas.height = this.height() * scale;
     this.symmetricBodies = this.getSymmetricBodies();
     this.renderer.render(this.width(), this.height(), this.originalBodies, this.symmetricBodies);
   }
@@ -690,21 +358,21 @@ export default class MapEditorForm {
    * The name of the map currently in the field
    */
   name(): string {
-    return this.nameGM.value;
+    return this.forms.header.getName();
   }
 
   /**
    * The width of the map currently in the field
    */
   width(): number {
-    return parseFloat(this.widthGM.value);
+    return this.forms.header.getWidth();
   }
 
   /**
    * The height of the map currently in the field
    */
   height(): number {
-    return parseFloat(this.heightGM.value);
+    return this.forms.header.getHeight();
   }
 
   /**
@@ -733,7 +401,7 @@ export default class MapEditorForm {
    * The symmetry of the map currently selected
    */
   symmetry(): Symmetry {
-    return parseInt(this.symmetryGM.options[this.symmetryGM.selectedIndex].value);
+    return this.forms.symmetry.getSymmetry();
   }
 
   /**
@@ -775,7 +443,7 @@ export default class MapEditorForm {
     // Bodies must not overlap
     this.originalBodies.forEach((unitA: MapUnit, idA: number) => {
       this.symmetricBodies.forEach((unitB: MapUnit, idB: number) => {
-        if (unitA.loc.distance(unitB.loc) <= unitA.radius + unitB.radius) {
+        if (unitA.loc.distance(unitB.loc) < unitA.radius + unitB.radius) {
           errors.push (`IDs ${idA} and ${idB} are overlapping.`);
         }
       });
