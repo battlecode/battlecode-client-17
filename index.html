@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
         <title>Battlecode Client</title>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Graduate">
     </head>
     <body>
-        <div id='client'/>
-        <script type="text/javascript" src="bc17/bundle.js" charset="utf-8"></script>
+        <div id='client'></div>
+        <script type="text/javascript" src="./bc17/bundle.js"></script>
         <script type="text/javascript">
-            window.battleClient = window.battlecode.mount(
+            window.battleClient = window['battlecode'].mount(
                 document.getElementById('client'),
-                { websocketURL: "ws://localhost:6175" }
+                { Socketurl: "ws://localhost:6175" }
             );
         </script>
     </body>

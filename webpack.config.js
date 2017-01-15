@@ -13,7 +13,7 @@ var conf = {
   },
   output: {
     path: path.resolve(__dirname, 'bc17'),
-    publicPath: '/bc17/',
+    publicPath: './bc17/',
     filename: 'bundle.js'
   },
   resolve: {

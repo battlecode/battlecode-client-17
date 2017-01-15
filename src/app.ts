@@ -27,7 +27,9 @@ require('./style.css');
 // open devtools on f12
 document.addEventListener("keydown", function (e) {
   if (e.which === 123) {
-    electron.remote.getCurrentWindow().webContents.openDevTools();
+    if(process.env.ELECTRON === true ){
+      electron.remote.getCurrentWindow().webContents.openDevTools();
+    }
   }
 });
 
@@ -43,10 +45,9 @@ document.addEventListener("keydown", function (e) {
  * This architecture makes it easy to reuse the client on different web pages.
  */
 window['battlecode'] = {
-  mount: (root: HTMLElement, conf?: any): Client =>
-    new Client(root, conf),
-  schema: schema,
-  flatbuffers: flatbuffers
+    mount: (root: HTMLElement, conf?: any): Client => {return new Client(root, conf ? conf : {});},
+    schema: schema,
+    flatbuffers: flatbuffers
 };
 
 /**
@@ -84,20 +85,29 @@ export default class Client {
   // Allow us to run matches
   scaffold: ScaffoldCommunicator | null;
 
-  constructor(root: HTMLElement, conf?: any) {
+  constructor(root: HTMLElement, conf: any) {
     console.log('Battlecode client loading...');
 
     this.root = root;
     this.root.id = "root";
-    this.conf = config.defaults(conf);
+    this.conf = config.loadParametersOrDefaults(conf);
 
-    imageloader.loadAll(conf, (images: imageloader.AllImages) => {
+    imageloader.loadAll(this.conf, (images: imageloader.AllImages) => {
       this.imgs = images;
       this.root.appendChild(this.loadControls());
       this.root.appendChild(this.loadSidebar());
       this.root.appendChild(this.loadGameArea());
-      this.loadScaffold();
-      this.ready();
+
+      console.log('ELECTRON: ' + process.env.ELECTRON);
+
+      if(process.env.ELECTRON === true){
+        this.loadScaffold();
+        electron.ipcRenderer.on('client-ready', (event, message) => {
+             this.ready();
+        });
+      }else{
+        this.ready();
+      }
     });
 
     this.games = [];
@@ -110,6 +120,7 @@ export default class Client {
     }
   }
 
+
   /**
    * Set the current game.
    */
@@ -119,7 +130,7 @@ export default class Client {
     }
     this.clearScreen();
     this.currentGame = game;
-    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+    this.matchqueue.refreshGameList(this.games, this.getGameIndex(), this.getMatchIndex());
   }
 
   setMatch(match: number) {
@@ -133,8 +144,11 @@ export default class Client {
     // Restart game loop
     this.runMatch();
     this.controls.resetButtons();
-    this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
-    this.games[this.currentGame ? this.currentGame: 0].getMatch(this.currentMatch).seek(0);
+
+    const gameIndex = this.getGameIndex();
+
+    this.matchqueue.refreshGameList(this.games, gameIndex, this.currentMatch);
+    this.games[gameIndex].getMatch(this.currentMatch).seek(0);
   }
 
   /**
@@ -189,7 +203,6 @@ export default class Client {
    * Find a scaffold to run matches with.
    */
   loadScaffold() {
-    console.log('ELECTRON: '+process.env.ELECTRON);
     if (process.env.ELECTRON) {
       const scaffoldPath = ScaffoldCommunicator.findDefaultScaffoldPath();
 
@@ -206,32 +219,37 @@ export default class Client {
    * Marks the client as fully loaded.
    */
   ready() {
-    if (this.conf.matchFileURL) {
-      // Load a match file
-      console.log(`Loading provided match file: ${this.conf.matchFileURL}`);
-      const req = new XMLHttpRequest();
-      req.open('GET', this.conf.matchFileURL, true);
-      req.responseType = 'arraybuffer';
-      req.onerror = (event) => {
-        console.log(`Can't load provided match file: ${event.error}`);
-      };
-      req.onload = (event) => {
-        const resp = req.response;
-        if (resp) {
-          console.log('Loaded provided match file');
-          var lastGame = this.games.length
-          this.games[lastGame] = new Game();
-          this.games[lastGame].loadFullGameRaw(resp);
+    if(this.conf.matchFileURL){
+      if (process.env.ELECTRON === true) {
+        // Load a match file directly from the filesystem
+        console.log(`Loading provided match file: ${this.conf.matchFileURL}`);
+        var req =  new XMLHttpRequest();
+        req.open('GET', this.conf.matchFileURL, true);
+        req.responseType = 'arraybuffer';
+        req.onerror = (event) => {
+          console.log(`Can't load provided match file: ${event.error}`);
+        };
+        req.onload = (event) => {
+          const resp :ArrayBuffer = req.response;
+          if (resp) {
+            console.log('Loaded provided match file');
+            var lastGame = this.games.length
+            this.games[lastGame] = new Game();
+            this.games[lastGame].loadFullGameRaw(resp);
 
-          if (this.games.length === 1) {
-            // this will run the first match from the game
-            this.setGame(0);
-            this.setMatch(0);
+            if (this.games.length === 1) {
+              // this will run the first match from the game
+              this.setGame(0);
+              this.setMatch(0);
+            }
+
+            this.matchqueue.refreshGameList(this.games, this.getGameIndex(), this.getMatchIndex());
           }
-          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
-        }
-      };
-      req.send();
+        };
+        req.send();
+      }else{
+        console.warn("Using --match via URL (aka without electron) is unsupported. Use the file picker to select the file instead.");
+      }
     }
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
       var lastGame = this.games.length
@@ -243,7 +261,7 @@ export default class Client {
         this.setGame(0);
         this.setMatch(0);
       }
-      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+      this.matchqueue.refreshGameList(this.games, this.getGameIndex(), this.getMatchIndex());
     };
 
     if (this.listener != null) {
@@ -251,7 +269,7 @@ export default class Client {
         // What to do when we get a game from the websocket
         (game) => {
           this.games.push(game);
-          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+          this.matchqueue.refreshGameList(this.games, this.getGameIndex(), this.getMatchIndex());
         },
         // What to do with the websocket's first game's first match
         () => {
@@ -259,23 +277,34 @@ export default class Client {
           if (this.games.length === 1) {
             this.setGame(0);
             this.setMatch(0);
-            this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+            this.matchqueue.refreshGameList(this.games, this.getGameIndex(), this.getMatchIndex());
           }
         },
         // What to do with any other match
         () => {
-          this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch: 0);
+          this.matchqueue.refreshGameList(this.games, this.getGameIndex(), this.getMatchIndex());
         }
       );
     }
   }
 
+  // Resets the drawing surface
   clearScreen() {
     // TODO clear screen
     if (this.loopID !== null) {
       window.cancelAnimationFrame(this.loopID);
       this.loopID = null;
     }
+  }
+
+  // The index of the current game or 0 if the current game index is not available
+  private getGameIndex(): number{
+    return this.currentGame ? this.currentGame : 0;
+  }
+
+  // The index of the current match or 0 if the current match index is not available
+  private getMatchIndex(): number{
+    return this.currentMatch ? this.currentMatch : 0;
   }
 
   /**
@@ -298,6 +327,7 @@ export default class Client {
     }
   }
 
+  // Runs the rounds of a match until it is completed
   private runMatch() {
     console.log('Running match.');
 
@@ -338,8 +368,8 @@ export default class Client {
 
     // Configure renderer for this match
     // (radii, etc. may change between matches)
-    const renderer = new Renderer(this.gamearea.canvas, this.imgs,
-      this.conf, meta as Metadata, onRobotSelected, onMouseover);
+    const renderer = new Renderer(this.gamearea.canvas, this.imgs, this.conf, meta as Metadata,
+     onRobotSelected, onMouseover);
 
     // How fast the simulation should progress
     let goalUPS = 10;
@@ -360,7 +390,18 @@ export default class Client {
     let externalSeek = false;
 
     this.controls.onTogglePause = () => {
-      goalUPS = goalUPS === 0? 10 : 0;
+      let isPaused: boolean = (goalUPS === 0);
+      if(isPaused){
+        goalUPS = 10;
+        if(process.env.ELECTRON === true ){
+          electron.ipcRenderer.send('renderer-request','block-power-save');
+        }
+      }else{
+        goalUPS = 0;
+        if(process.env.ELECTRON === true ){
+          electron.ipcRenderer.send('renderer-request','unblock-power-save');
+        }
+      }
       rewinding = false;
     };
     this.controls.onToggleForward = () => {
@@ -398,13 +439,9 @@ export default class Client {
       const matchCount = this.games[this.currentGame as number].matchCount;
       if(this.currentMatch < matchCount - 1) {
         this.setMatch(this.currentMatch + 1);
-      } else {
-        if(this.currentGame < this.games.length - 1) {
-          this.setGame(this.currentGame + 1);
-          this.setMatch(0);
-        } else {
-          // Do nothing, at the end
-        }
+      } else if(this.currentGame < this.games.length - 1) {
+        this.setGame(this.currentGame + 1);
+        this.setMatch(0);
       }
     };
     this.matchqueue.onPreviousMatch = () => {
@@ -412,13 +449,9 @@ export default class Client {
 
       if(this.currentMatch > 0) {
         this.setMatch(this.currentMatch - 1);
-      } else {
-        if(this.currentGame > 0) {
-          this.setGame(this.currentGame - 1);
-          this.setMatch(this.games[this.currentGame as number].matchCount - 1);
-        } else {
-          // Do nothing, at the beginning
-        }
+      } else if(this.currentGame > 0) {
+        this.setGame(this.currentGame - 1);
+        this.setMatch(this.games[this.currentGame as number].matchCount - 1);
       }
 
     };
@@ -450,7 +483,7 @@ export default class Client {
         this.currentGame = game - 1;
       }
 
-      this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
+      this.matchqueue.refreshGameList(this.games, this.getGameIndex(), this.getMatchIndex());
     };
     this.matchqueue.gotoMatch = (game: number, match: number) => {
       this.setGame(game);
@@ -503,6 +536,10 @@ export default class Client {
       }
     };
 
+    if(process.env.ELECTRON === true ){
+      // Ask the main thread to start saving power by preventing display sleep
+      electron.ipcRenderer.send('renderer-request','block-power-save');
+    }
     // The main update loop
     const loop = (curTime) => {
       let delta = 0;
@@ -594,5 +631,10 @@ export default class Client {
 
     };
     this.loopID = window.requestAnimationFrame(loop);
+
+    if(process.env.ELECTRON === true ){
+      //Ask the main thread to stop saving power by preventing display sleep
+      electron.ipcRenderer.send('renderer-request','unblock-power-save');
+    }
   }
 }

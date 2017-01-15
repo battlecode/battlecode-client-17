@@ -1,2 +1,6 @@
 {
+  "extends" : "tslint:latest",
+  "rules" : {},
+  "jsRules" : {},
+  "rulesDirectory" : []
 }
