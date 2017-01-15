@@ -1,5 +1,5 @@
 import {schema} from 'battlecode-playback';
-import {Symmetry} from './mapeditor/renderer';
+import {Symmetry} from './mapeditor/index';
 
 // Body types
 export const ARCHON = schema.BodyType.ARCHON;

@@ -1,10 +1,11 @@
-import * as config from '../config';
-import * as cst from '../constants';
+import * as config from '../../config';
+import * as cst from '../../constants';
 
 import {GameWorld, schema} from 'battlecode-playback';
-import {GameMap} from './form';
-import {AllImages} from '../imageloader';
+import {AllImages} from '../../imageloader';
 import Victor = require('victor');
+
+import {GameMap} from '../index';
 
 export type MapUnit = {
   loc: Victor,

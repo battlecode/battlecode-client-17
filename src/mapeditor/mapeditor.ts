@@ -1,17 +1,12 @@
 import {Config} from '../config';
 import * as cst from '../constants';
 import {AllImages} from '../imageloader';
-import MapEditorForm from './form';
-import {MapUnit} from './renderer';
-import MapValidator from './validator';
 import ScaffoldCommunicator from '../scaffold';
-import MapGenerator from './generator';
 
 import {schema, flatbuffers} from 'battlecode-playback';
-
-import {GameMap} from './form';
-
 import Victor = require('victor');
+
+import {MapUnit, MapValidator, MapGenerator, MapEditorForm, GameMap} from './index';
 
 /**
  * Allows the user to download a .map17 file representing the map generated

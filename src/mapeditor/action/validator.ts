@@ -1,6 +1,6 @@
-import * as cst from '../constants';
-import {GameMap} from './form';
-import {MapUnit} from './renderer';
+import * as cst from '../../constants';
+
+import {GameMap, MapUnit} from '../index';
 
 /**
  * Validates a map created by the map editor. If a map is valid, then the map

@@ -1,10 +1,9 @@
 import * as cst from '../../constants';
 
-import {UnitForm} from './unitform';
-
 import {schema} from 'battlecode-playback';
-import {MapUnit} from '../renderer';
 import Victor = require('victor');
+
+import {UnitForm, MapUnit} from '../index';
 
 export default class TreeForm implements UnitForm {
 

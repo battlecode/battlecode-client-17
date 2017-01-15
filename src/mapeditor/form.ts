@@ -2,20 +2,10 @@ import {Config} from '../config';
 import * as cst from '../constants';
 import {AllImages} from '../imageloader';
 
-import MapRenderer from './renderer';
-import MapValidator from './validator';
-
-import {UnitForm} from './forms/unitform';
-import HeaderForm from './forms/header';
-import SymmetryForm from './forms/symmetry';
-import TreeForm from './forms/tree';
-import ArchonForm from './forms/archon';
-import RobotForm from './forms/robots';
-
 import {schema, flatbuffers} from 'battlecode-playback';
-
-import {Symmetry, MapUnit} from './renderer';
 import Victor = require('victor');
+
+import {MapRenderer, Symmetry, MapUnit, HeaderForm, SymmetryForm, TreeForm, ArchonForm, RobotForm, UnitForm} from './index';
 
 export type GameMap = {
   name: string,

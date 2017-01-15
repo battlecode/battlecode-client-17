@@ -1,8 +1,9 @@
-import * as cst from '../constants';
-import {GameMap} from './form';
-import {MapUnit} from './renderer';
+import * as cst from '../../constants';
+
 import {schema, flatbuffers} from 'battlecode-playback';
 import Victor = require('victor');
+
+import {MapUnit, GameMap} from '../index';
 
 // Bodies information
 export type BodiesSchema = {

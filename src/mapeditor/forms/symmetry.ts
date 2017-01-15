@@ -1,7 +1,8 @@
 import * as cst from '../../constants';
 
-import {MapUnit} from '../renderer';
 import Victor = require('victor');
+
+import {MapUnit} from '../index';
 
 export enum Symmetry {
   ROTATIONAL,

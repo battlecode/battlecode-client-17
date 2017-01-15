@@ -1,10 +1,9 @@
 import * as cst from '../../constants';
 
-import {UnitForm} from './unitform';
-
-import {MapUnit} from '../renderer';
 import {schema} from 'battlecode-playback';
 import Victor = require('victor');
+
+import {UnitForm, MapUnit} from '../index';
 
 export default class RobotForm implements UnitForm {
 
