@@ -215,15 +215,14 @@ input[type='file'] {
     padding-bottom: 15px;
 }
 
-#console {
+.console {
+    font-family: Monospace;
     border-radius: 10px;
     background-color: #333;
     color: #46ff00;
     padding: 15px;
     margin: 0px 5px;
-    font-family: Tahoma, sans-serif;
-    font-size: 11px;
-    height: 70vh; /* HELP: I'd prefer this be calc(100vh - ?px) but I can't get it to work */
+    font-size: 12px;
     text-align: left;
     overflow: scroll;
 }
@@ -242,16 +241,14 @@ input[type='file'] {
     margin: 8px 0px;
 }
 
-.errorLog {
-    color: red;
-    font-family: Monospace;
-    font-size: 12px;
-    text-align: left;
+#robotLogs {
+    height: 70vh;
 }
 
-.outLog {
-    color: gray;
-    font-family: Monospace;
-    font-size: 12px;
-    text-align: left;
+#compileLogs {
+    height: 160px;
+}
+
+.errorLog {
+    color: red;
 }

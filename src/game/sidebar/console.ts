@@ -96,7 +96,8 @@ export default class Console {
 
     // Add the console
     this.console = document.createElement("div");
-    this.console.id = "console";
+    this.console.id = "robotLogs";
+    this.console.className = "console";
     div.appendChild(this.console);
 
     return div;

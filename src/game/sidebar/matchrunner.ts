@@ -114,6 +114,14 @@ export default class MatchRunner {
     this.refreshButton = document.createElement("button");
     this.selectAllMaps = document.createElement("button");
 
+    // Compile error log
+    this.compileLogs = document.createElement("div");
+    this.compileLogs.className = "console";
+    this.compileLogs.id = "compileLogs";
+    this.compileLogs.innerHTML = "Compile messages..."
+    div.appendChild(this.compileLogs);
+    div.appendChild(document.createElement("br"));
+
     // Loading messages area
     this.loading.appendChild(this.loadingMaps);
     this.loading.style.fontStyle = "italic";
@@ -165,10 +173,6 @@ export default class MatchRunner {
     this.runMatch.id = "runMatch"
     this.runMatch.onclick = this.run;
     div.appendChild(this.runMatch);
-
-    // Compile error log
-    this.compileLogs = document.createElement("div");
-    div.appendChild(this.compileLogs);
 
     return div;
   }
@@ -288,14 +292,15 @@ export default class MatchRunner {
       (stdoutdata) => {
         const logs = document.createElement('p');
         logs.innerHTML = stdoutdata.split('\n').join('<br/>');
-        logs.className = 'outLog';
         this.compileLogs.appendChild(logs);
+        this.compileLogs.scrollTop = this.compileLogs.scrollHeight;
       },
       (stderrdata) => {
         const logs = document.createElement('p');
         logs.innerHTML = stderrdata.split('\n').join('<br/>');
         logs.className = 'errorLog';
         this.compileLogs.appendChild(logs);
+        this.compileLogs.scrollTop = this.compileLogs.scrollHeight;
       }
     );
   }
