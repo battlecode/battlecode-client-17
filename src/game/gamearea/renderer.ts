@@ -68,13 +68,8 @@ export default class Renderer {
 
     this.renderBackground(world);
 
-    if (lerpAmount != null && nextStep != null) {
-      this.renderBullets(world, lerpAmount);
-      this.renderBodies(world, nextStep, lerpAmount);
-    } else {
-      this.renderBullets(world, 0);
-      this.renderBodies(world);
-    }
+    this.renderBodies(world, nextStep, lerpAmount);
+    this.renderBullets(world, lerpAmount);
 
     this.renderIndicatorDotsLines(world);
     this.setMouseoverEvent(world);
@@ -129,68 +124,66 @@ export default class Renderer {
       nextXs = nextStep.bodies.arrays.x;
       nextYs = nextStep.bodies.arrays.y;
     }
+
+    // Calculate the real xs and ys
     realXs = new Float32Array(length)
     realYs = new Float32Array(length)
-
     for (let i = 0; i < length; i++) {
-      let x, y;
       if (nextStep && lerpAmount) {
         // Interpolated
-        x = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
-        y = this.flip(ys[i] + (nextYs[i] - ys[i]) * lerpAmount, minY, maxY);
-        realXs[i] = x;
-        realYs[i] = y;
+        realXs[i] = xs[i] + (nextXs[i] - xs[i]) * lerpAmount;
+        realYs[i] = this.flip(ys[i] + (nextYs[i] - ys[i]) * lerpAmount, minY, maxY);
       } else {
         // Not interpolated
-        x = xs[i];
-        y = this.flip(ys[i], minY, maxY);
-        realXs[i] = x;
-        realYs[i] = y;
+        realXs[i] = xs[i];
+        realYs[i] = this.flip(ys[i], minY, maxY);
       }
+    }
 
+    // Render the trees
+    for (let i = 0; i < length; i++) {
       const radius = radii[i];
       const team = teams[i];
       const type = types[i];
+      const x = realXs[i];
+      const y = realYs[i];
 
-      let img;
-
-      switch (type) {
-        case cst.TREE_NEUTRAL:
-          img = this.imgs.tree.fullHealth;
-          break;
-        case cst.TREE_BULLET:
-          img = this.imgs.robot.bulletTree[team];
-          break;
-        case cst.ARCHON:
-          img = this.imgs.robot.archon[team];
-          break;
-        case cst.GARDENER:
-          img = this.imgs.robot.gardener[team];
-          break;
-        case cst.LUMBERJACK:
-          img = this.imgs.robot.lumberjack[team];
-          break;
-        case cst.SOLDIER:
-          img = this.imgs.robot.soldier[team];
-          break;
-        case cst.TANK:
-          img = this.imgs.robot.tank[team];
-          break;
-        case cst.SCOUT:
-          img = this.imgs.robot.scout[team];
-          break;
-        default:
-          img = this.imgs.unknown;
-          break;
-      }
-      this.drawCircleBot(x, y, radius);
-      this.drawImage(img, x, y, radius);
-      this.drawSightRadii(x, y, type);
-      if (types[i] === cst.TREE_NEUTRAL) {
+      if (type === cst.TREE_NEUTRAL) {
+        const img = this.imgs.tree.fullHealth;
+        this.drawCircleBot(x, y, radius);
+        this.drawImage(img, x, y, radius);
+        this.drawSightRadii(x, y, type);
         this.drawGoodies(x, y, radius, treeBullets[i], treeBodies[i]);
+        this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
+          world.minCorner, world.maxCorner);
       }
-      this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
-        world.minCorner, world.maxCorner);
+
+      if (type === cst.TREE_BULLET) {
+        const img = this.imgs.robot.bulletTree[team];
+        this.drawCircleBot(x, y, radius);
+        this.drawImage(img, x, y, radius);
+        this.drawSightRadii(x, y, type);
+        this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
+          world.minCorner, world.maxCorner);
+      }
+    }
+
+    // Render the robots
+    for (let i = 0; i < length; i++) {
+      const radius = radii[i];
+      const team = teams[i];
+      const type = types[i];
+      const x = realXs[i];
+      const y = realYs[i];
+
+      if (type !== cst.TREE_NEUTRAL && type !== cst.TREE_BULLET) {
+        const img = this.imgs.robot[cst.bodyTypeToString(type)][team];
+        this.drawCircleBot(x, y, radius);
+        this.drawImage(img, x, y, radius);
+        this.drawSightRadii(x, y, type);
+        this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
+          world.minCorner, world.maxCorner);
+      }
     }
 
     this.setInfoStringEvent(world, realXs, realYs);
@@ -336,7 +329,7 @@ export default class Renderer {
     };
   }
 
-  private renderBullets(world: GameWorld, lerpAmount: number) {
+  private renderBullets(world: GameWorld, lerpAmount: number | undefined=0) {
     const bullets = world.bullets;
     const length = bullets.length;
     const xs = bullets.arrays.x;
