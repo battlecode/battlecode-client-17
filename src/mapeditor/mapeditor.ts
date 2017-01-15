@@ -41,11 +41,7 @@ export default class MapEditor {
     let div = document.createElement("div");
     div.id = "mapEditor";
 
-    div.appendChild(document.createTextNode(
-      "TIP: \"S\"=quick add, \"D\"=quick delete."));
     div.appendChild(document.createElement("br"));
-    div.appendChild(document.createElement("br"));
-
     div.appendChild(this.form.div);
 
     div.appendChild(this.validateButton());
@@ -55,6 +51,17 @@ export default class MapEditor {
     div.appendChild(document.createElement("br"));
 
     div.appendChild(this.exportButton());
+    div.appendChild(document.createElement("br"));
+
+    const helpDiv = document.createElement("div");
+    helpDiv.style.textAlign = "left";
+    div.appendChild(helpDiv);
+
+    helpDiv.innerHTML = `<i><br>Tip: "S"=quick add, "D"=quick delete.<br><br>
+      Note: In tournaments, a starting map consists only of neutral trees and
+      ${cst.MIN_NUMBER_OF_ARCHONS} to ${cst.MAX_NUMBER_OF_ARCHONS} archons per
+      team. The validator only checks for overlapping and off-map units.<br><br>
+      Note: The map editor currently does not support bullet trees.</i>`;
 
     return div;
   }
