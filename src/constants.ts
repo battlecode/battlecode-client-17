@@ -20,6 +20,7 @@ export const INDICATOR_LINE_WIDTH = .4;
 export const HEALTH_BAR_HEIGHT = .3;
 export const HEALTH_BAR_WIDTH = 2;
 export const HEALTH_BAR_WIDTH_HALF = HEALTH_BAR_WIDTH / 2;
+export const SIGHT_RADIUS_LINE_WIDTH = .15
 
 // Game canvas rendering parameters
 export const HIGH_SPEED_THRESH = (2*2) - .00001;
