@@ -42,14 +42,15 @@ export const MAX_NUMBER_OF_ARCHONS = 3;
 
 export function bodyTypeToString(bodyType: schema.BodyType) {
   switch(bodyType) {
-    case ARCHON:     return "archon";
-    case GARDENER:   return "gardener";
-    case LUMBERJACK: return "lumberjack";
-    case SOLDIER:    return "soldier";
-    case TANK:       return "tank";
-    case SCOUT:      return "scout";
-    case NONE:       return "";
-    default:         throw new Error("invalid body type");
+    case ARCHON:      return "archon";
+    case GARDENER:    return "gardener";
+    case LUMBERJACK:  return "lumberjack";
+    case SOLDIER:     return "soldier";
+    case TANK:        return "tank";
+    case SCOUT:       return "scout";
+    case TREE_BULLET: return "treeBullet";
+    case NONE:        return "";
+    default:          throw new Error("invalid body type");
   }
 }
 

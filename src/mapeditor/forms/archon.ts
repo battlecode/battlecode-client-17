@@ -174,7 +174,7 @@ export default class ArchonForm implements UnitForm {
     return !(isNaN(x) || isNaN(y) || isNaN(radius) || radius === 0);
   }
 
-  getUnit(teamID: number): MapUnit | undefined {
+  getUnit(teamID?): MapUnit | undefined {
     if (!this.isValid()) {
       return undefined;
     }
@@ -185,7 +185,7 @@ export default class ArchonForm implements UnitForm {
       type: cst.ARCHON,
       containedBullets: 0,
       containedBody: cst.NONE,
-      teamID: teamID
+      teamID: teamID || 1
     }
   }
 }

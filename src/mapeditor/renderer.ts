@@ -2,6 +2,7 @@ import * as config from '../config';
 import * as cst from '../constants';
 
 import {GameWorld, schema} from 'battlecode-playback';
+import {GameMap} from './form';
 import {AllImages} from '../imageloader';
 import Victor = require('victor');
 
@@ -60,24 +61,22 @@ export default class MapRenderer {
   }
 
   /**
-   * Renders a width x height (in world units) map with the given bodies
-   * and symmetry.
+   * Renders the game map.
    */
-  render(width: number, height: number, bodies: Map<number, MapUnit>,
-    symmetricBodies: Map<number, MapUnit>): void {
-    const scale = this.canvas.width / width;
-    this.width = width;
-    this.height = height;
+  render(map: GameMap): void {
+    const scale = this.canvas.width / map.width;
+    this.width = map.width;
+    this.height = map.height;
 
     // setup correct rendering
     this.ctx.save();
     this.ctx.scale(scale, scale);
 
     this.renderBackground();
-    this.renderBodies(height, bodies, symmetricBodies);
+    this.renderBodies(map);
 
     // restore default rendering
-    this.setEventListener(width, height, bodies, symmetricBodies);
+    this.setEventListener(map);
     this.ctx.restore();
   }
 
@@ -109,17 +108,15 @@ export default class MapRenderer {
   /**
    * Draw trees and units on the canvas
    */
-  private renderBodies(height: number,
-    bodies: Map<number, MapUnit>,
-    symmetricBodies: Map<number, MapUnit>) {
+  private renderBodies(map: GameMap) {
 
     const tree = this.imgs.tree.fullHealth;
     const archons = this.imgs.robot.archon;
 
     this.ctx.fillStyle = "#84bf4b";
-    bodies.forEach((body: MapUnit) => {
+    map.originalBodies.forEach((body: MapUnit) => {
       const x = body.loc.x;
-      const y = this.flip(body.loc.y, height);
+      const y = this.flip(body.loc.y, map.height);
       const radius = body.radius;
 
       this.drawCircleBot(x, y, radius);
@@ -131,9 +128,9 @@ export default class MapRenderer {
       this.drawGoodies(x, y, radius, body.containedBullets, body.containedBody);
     });
 
-    symmetricBodies.forEach((body: MapUnit) => {
+    map.symmetricBodies.forEach((body: MapUnit) => {
       const x = body.loc.x;
-      const y = this.flip(body.loc.y, height);
+      const y = this.flip(body.loc.y, map.height);
       const radius = body.radius;
 
       this.drawCircleBot(x, y, radius);
@@ -150,21 +147,20 @@ export default class MapRenderer {
    * Sets the map editor display to contain of the information of the selected
    * tree, or on the selected coordinate if there is no tree.
    */
-  private setEventListener(width: number, height: number,
-    bodies: Map<number, MapUnit>, symmetricBodies: Map<number, MapUnit>) {
+  private setEventListener(map: GameMap) {
     this.canvas.onmousedown = (event: MouseEvent) => {
-      let x = width * event.offsetX / this.canvas.offsetWidth;
-      let y = this.flip(height * event.offsetY / this.canvas.offsetHeight, height);
+      let x = map.width * event.offsetX / this.canvas.offsetWidth;
+      let y = this.flip(map.height * event.offsetY / this.canvas.offsetHeight, map.height);
       let loc = new Victor(x, y);
 
       // Get the ID of the selected unit
       let selectedID;
-      bodies.forEach(function(body: MapUnit, id: number) {
+      map.originalBodies.forEach(function(body: MapUnit, id: number) {
         if (loc.distance(body.loc) <= body.radius) {
           selectedID = id;
         }
       });
-      symmetricBodies.forEach(function(body: MapUnit, id: number) {
+      map.symmetricBodies.forEach(function(body: MapUnit, id: number) {
         if (loc.distance(body.loc) <= body.radius) {
           selectedID = id;
         }

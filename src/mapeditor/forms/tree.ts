@@ -28,6 +28,7 @@ export default class TreeForm implements UnitForm {
   private readonly TREE_TYPES = [
     cst.NONE, cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT
   ];
+  private readonly DEFAULT_TREE_RADIUS: string = "2";
 
   constructor(width: () => number, height: () => number,
     maxRadius: (x: number, y: number, ignoreID?: number) => number) {
@@ -59,7 +60,7 @@ export default class TreeForm implements UnitForm {
     this.x.type = "text";
     this.y.type = "text";
     this.radius.type = "text";
-    this.radius.value = String(cst.MIN_TREE_RADIUS);
+    this.radius.value = this.DEFAULT_TREE_RADIUS;
     this.bullets.type = "text";
     this.bullets.value = "0";
     this.TREE_TYPES.forEach((type: schema.BodyType) => {
