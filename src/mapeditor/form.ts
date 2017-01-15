@@ -43,6 +43,7 @@ export default class MapEditorForm {
   private readonly symmetry: SymmetryForm;
   private readonly tree: TreeForm;
   private readonly archon: ArchonForm;
+  private readonly robots: RobotForm;
 
   private inputArchon: HTMLInputElement;
   private inputTree: HTMLInputElement;
@@ -83,6 +84,7 @@ export default class MapEditorForm {
     this.symmetry = new SymmetryForm(() => {this.render()});
     this.tree = new TreeForm(cbWidth, cbHeight, cbMaxRadius);
     this.archon = new ArchonForm(cbWidth, cbHeight, cbMaxRadius);
+    this.robots = new RobotForm(cbWidth, cbHeight, cbMaxRadius);
 
     // Initialize the other fields
     this.lastID = 1;
@@ -96,11 +98,12 @@ export default class MapEditorForm {
         let body: MapUnit = this.originalBodies.get(id);
         if (body.type === cst.ARCHON) {
           this.inputArchon.click();
-          this.archon.setForm(body.loc, body, id);
         } else if (body.type === cst.TREE_NEUTRAL) {
           this.inputTree.click();
-          this.tree.setForm(body.loc, body, id);
+        } else {
+          this.inputRobots.click();
         }
+        this.getActiveForm().setForm(body.loc, body, id);
       }
     };
     const onclickBlank = (loc: Victor) => {
@@ -186,6 +189,13 @@ export default class MapEditorForm {
         this.forms.appendChild(this.archon.div);
       }
     };
+    this.inputRobots.onchange = () => {
+      // Change the displayed form
+      while (this.forms.firstChild) this.forms.removeChild(this.forms.firstChild);
+      if (this.inputRobots.checked) {
+        this.forms.appendChild(this.robots.div);
+      }
+    };
 
     this.buttonAdd.onclick = () => {
       const form: UnitForm = this.getActiveForm()
@@ -265,7 +275,8 @@ export default class MapEditorForm {
    */
   private getActiveForm(): UnitForm {
     if (this.inputTree.checked) return this.tree;
-    return this.archon;
+    if (this.inputArchon.checked) return this.archon;
+    return this.robots;
   }
 
   /**

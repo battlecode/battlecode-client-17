@@ -48,7 +48,7 @@ export function bodyTypeToString(bodyType: schema.BodyType) {
     case SOLDIER:     return "soldier";
     case TANK:        return "tank";
     case SCOUT:       return "scout";
-    case TREE_BULLET: return "treeBullet";
+    case TREE_BULLET: return "bulletTree";
     case NONE:        return "";
     default:          throw new Error("invalid body type");
   }

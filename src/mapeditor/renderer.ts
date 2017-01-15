@@ -110,21 +110,22 @@ export default class MapRenderer {
    */
   private renderBodies(map: GameMap) {
 
-    const tree = this.imgs.tree.fullHealth;
-    const archons = this.imgs.robot.archon;
-
     this.ctx.fillStyle = "#84bf4b";
     map.originalBodies.forEach((body: MapUnit) => {
       const x = body.loc.x;
       const y = this.flip(body.loc.y, map.height);
       const radius = body.radius;
+      const type = body.type;
+      let img: HTMLImageElement;
 
       this.drawCircleBot(x, y, radius);
-      if (body.type === cst.TREE_NEUTRAL) {
-        this.drawImage(tree, x, y, radius);
-      } else if (body.type === cst.ARCHON) {
-        this.drawImage(archons[1], x, y, radius);
+      if (type === cst.TREE_NEUTRAL) {
+        img = this.imgs.tree.fullHealth;
+      } else {
+        const teamID = body.teamID || 1;
+        img = this.imgs.robot[cst.bodyTypeToString(body.type)][teamID];
       }
+      this.drawImage(img, x, y, radius);
       this.drawGoodies(x, y, radius, body.containedBullets, body.containedBody);
     });
 
@@ -132,13 +133,15 @@ export default class MapRenderer {
       const x = body.loc.x;
       const y = this.flip(body.loc.y, map.height);
       const radius = body.radius;
+      let img: HTMLImageElement;
 
       this.drawCircleBot(x, y, radius);
       if (body.type === cst.TREE_NEUTRAL) {
-        this.drawImage(tree, x, y, radius);
-      } else if (body.type === cst.ARCHON) {
-        this.drawImage(archons[2], x, y, radius);
+        img = this.imgs.tree.fullHealth;
+      } else {
+        img = this.imgs.robot[cst.bodyTypeToString(body.type)][2];
       }
+      this.drawImage(img, x, y, radius);
       this.drawGoodies(x, y, radius, body.containedBullets, body.containedBody);
     });
   }
