@@ -219,7 +219,7 @@ export default class Controls {
   getUPS(): number {
     const handleWidth = this.sliderBtn.clientWidth / 2
     const buttonOffset = this.sliderBtn.offsetLeft + handleWidth
-    const ups = buttonOffset + 1;
+    const ups = 0.0001 * Math.pow(buttonOffset, 3) + 1;
     return ups;
   }
 
