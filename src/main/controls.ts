@@ -111,6 +111,7 @@ export default class Controls {
     let button = document.createElement("button");
     button.setAttribute("class", "custom-button");
     button.setAttribute("type", "button");
+    button.id = content;
 
     button.appendChild(this.imgs[content]);
 
@@ -275,6 +276,11 @@ export default class Controls {
    * Restart simulation.
    */
   restart() {
+    const isPlaying: boolean = this.imgs.playbackPause.style.display === "unset";
+    const pauseButton = document.getElementById("playbackPause");
+    if (isPlaying && pauseButton) {
+      pauseButton.click();
+    }
     this.onSeek(0);
   }
 
