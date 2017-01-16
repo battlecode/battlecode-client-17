@@ -9,6 +9,7 @@ export default class Controls {
   div: HTMLDivElement;
   wrapper: HTMLDivElement;
 
+  readonly timeReadout: Text;
   readonly speedReadout: Text;
   readonly locationReadout: Text;
   readonly infoString: HTMLTableDataCellElement;
@@ -45,7 +46,8 @@ export default class Controls {
 
   constructor(conf: Config, images: imageloader.AllImages) {
     this.div = this.baseDiv();
-    this.speedReadout = document.createTextNode('No match loaded');
+    this.timeReadout = document.createTextNode('No match loaded');
+    this.speedReadout = document.createTextNode('UPS: 0 FPS: 0');
     this.locationReadout = document.createTextNode('Location: (???, ???)');
 
     // initialize the images
@@ -66,11 +68,15 @@ export default class Controls {
     let timeline = document.createElement("td");
     timeline.appendChild(this.timeline());
     timeline.appendChild(document.createElement("br"));
-    timeline.appendChild(this.speedReadout);
+    timeline.appendChild(this.timeReadout);
 
+    // create the speed slider
     let slider = document.createElement("td");
     slider.vAlign = "top";
+    slider.style.padding = "0px 16px";
     slider.appendChild(this.slider());
+    slider.appendChild(document.createElement("br"));
+    slider.appendChild(this.speedReadout);
 
     // create the button controls
     let buttons = document.createElement("td");
@@ -316,8 +322,8 @@ export default class Controls {
     this.ctx.fillRect(0, 0, this.canvas.width * time / loadedTime, this.canvas.height)
 
     // Edit the text
-    this.speedReadout.textContent =
-      ` TIME: ${time+1}/${loadedTime+1} UPS: ${ups | 0} FPS: ${fps | 0}`;
+    this.timeReadout.textContent = `TIME: ${time+1}/${loadedTime+1}`;
+    this.speedReadout.textContent = `UPS: ${ups | 0} FPS: ${fps | 0}`;
   }
 
   /**
