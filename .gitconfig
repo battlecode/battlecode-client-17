@@ -2,5 +2,5 @@
 binary = true
 # npm install --save-dev exif-cli
 textconv = exif
-#caches blob results, but be sure to run git update-ref -d refs/notes/textconv/exif if exif-cli is updated
+#caches blob results, but be sure to run `git update-ref -d refs/notes/textconv/exif` if exif-cli is updated
 cachetextconv = true
