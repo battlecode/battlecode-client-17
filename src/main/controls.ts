@@ -38,10 +38,6 @@ export default class Controls {
     playbackStart: HTMLImageElement,
     playbackPause: HTMLImageElement,
     playbackStop: HTMLImageElement,
-    seekForward: HTMLImageElement,
-    skipForward: HTMLImageElement,
-    seekBackward: HTMLImageElement,
-    skipBackward: HTMLImageElement,
     goNext: HTMLImageElement,
     goPrevious: HTMLImageElement,
     upload: HTMLImageElement
@@ -58,10 +54,6 @@ export default class Controls {
       playbackStart: images.controls.playbackStart,
       playbackPause: images.controls.playbackPause,
       playbackStop: images.controls.playbackStop,
-      seekForward: images.controls.seekForward,
-      skipForward: images.controls.skipForward,
-      seekBackward: images.controls.seekBackward,
-      skipBackward: images.controls.skipBackward,
       goNext: images.controls.goNext,
       goPrevious: images.controls.goPrevious,
       upload: images.controls.upload
@@ -85,8 +77,6 @@ export default class Controls {
     buttons.vAlign = "top";
     buttons.appendChild(this.createButton("playbackPause", () => this.pause(), "playbackStart"));
     buttons.appendChild(this.createButton("playbackStop", () => this.restart()));
-    // buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
-    // buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
     buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
     buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
@@ -271,10 +261,6 @@ export default class Controls {
     // Reset buttons
     this.imgs["playbackStart"].style.display = "none";
     this.imgs["playbackPause"].style.display = "unset";
-    this.imgs["seekBackward"].style.display = "none";
-    this.imgs["skipBackward"].style.display = "unset";
-    this.imgs["seekForward"].style.display = "none";
-    this.imgs["skipForward"].style.display = "unset";
   }
 
   /**
@@ -292,42 +278,6 @@ export default class Controls {
     } else {
       this.imgs["playbackStart"].style.display = "unset";
       this.imgs["playbackPause"].style.display = "none";
-    }
-  }
-
-  /**
-   * Fast forward our simulation.
-   */
-  forward() {
-    // this.onToggleForward();
-
-    // toggle speeds between regular speed and fast forward
-    const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";
-    this.resetButtons();
-    if (isNowSkipping) {
-      this.imgs["seekForward"].style.display = "none";
-      this.imgs["skipForward"].style.display = "unset";
-    } else {
-      this.imgs["seekForward"].style.display = "unset";
-      this.imgs["skipForward"].style.display = "none";
-    }
-  }
-
-  /**
-   * Continuous rewind of the simulation
-   */
-  rewind() {
-    this.onToggleRewind();
-
-    // toggle speeds between rewind and regular speed
-    const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";
-    this.resetButtons();
-    if (isNowSkipping) {
-      this.imgs["seekBackward"].style.display = "none";
-      this.imgs["skipBackward"].style.display = "unset";
-    } else {
-      this.imgs["seekBackward"].style.display = "unset";
-      this.imgs["skipBackward"].style.display = "none";
     }
   }
 

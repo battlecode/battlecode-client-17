@@ -157,12 +157,6 @@ export default class Client {
         case 79: // "o" - Stop
         this.controls.restart();
         break;
-        case 37: // "LEFT" - Skip/Seek Backward
-        this.controls.rewind();
-        break;
-        case 39: // "RIGHT" - Skip/Seek Forward
-        this.controls.forward();
-        break;
       }
     };
     this.sidebar = new Sidebar(this.conf, this.imgs, onkeydownControls);
@@ -344,9 +338,6 @@ export default class Client {
     // How fast the simulation should progress
     let goalUPS = this.controls.getUPS();
 
-    // Keep track of rewinding for <= 0 turn case
-    let rewinding = false;
-
     // A variety of stuff to track how fast the simulation is going
     let rendersPerSecond = new TickCounter(.5, 100);
     let updatesPerSecond = new TickCounter(.5, 100);
@@ -361,15 +352,9 @@ export default class Client {
 
     this.controls.onTogglePause = () => {
       goalUPS = goalUPS === 0 ? this.controls.getUPS() : 0;
-      rewinding = false;
     };
     this.controls.onToggleForward = (UPS: number) => {
       goalUPS = goalUPS !== 0 ? UPS : 0;
-      rewinding = false;
-    };
-    this.controls.onToggleRewind = () => {
-      goalUPS = goalUPS === -100 ? 10 : -100;
-      rewinding = !rewinding;
     };
     this.controls.onSeek = (turn: number) => {
       externalSeek = true;
@@ -488,12 +473,6 @@ export default class Client {
         case 67: // "c" - Toggle Circle Bots
           conf.circleBots = !conf.circleBots;
           break;
-        case 70: // "f" - Skip/Seek Forward
-          controls.forward();
-          break;
-        case 82: // "r" - Skip/Seek Backward
-          controls.rewind();
-          break;
         case 86: // "v" - Toggle Indicator Dots and Lines
           conf.indicators = !conf.indicators;
           break;
@@ -519,9 +498,6 @@ export default class Client {
         if (match.current.turn === match.seekTo) {
           externalSeek = false;
         }
-      } else if (rewinding && match.current.turn <= 10) {
-        this.controls.rewind();
-        this.controls.pause();
       } else if (Math.abs(interpGameTime - match.current.turn) < 10) {
         // only update time if we're not seeking
         delta = goalUPS * (curTime - lastTime) / 1000;
