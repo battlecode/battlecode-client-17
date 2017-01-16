@@ -365,13 +365,17 @@ export default class Client {
       if(!(goalUPS == 0)) {
         this.controls.pause();
       }
-      this.controls.onSeek(match.current.turn + 1);
+      if (match.current.turn < match['_farthest'].turn) {
+        this.controls.onSeek(match.current.turn + 1);
+      }
     };
     this.controls.onStepBackward = () => {
       if(!(goalUPS == 0)) {
         this.controls.pause();
       }
-      this.controls.onSeek(match.current.turn - 1);
+      if (match.current.turn > 0) {
+        this.controls.onSeek(match.current.turn - 1);
+      }
     };
     this.matchqueue.onNextMatch = () => {
       console.log("NEXT MATCH");
