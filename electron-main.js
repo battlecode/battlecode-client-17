@@ -37,6 +37,13 @@ function createWindow () {
     // when you should devare the corresponding element.
     mainWindow = null;
   });
+
+  // Clicking on a URL with target="_blank" should use your computer's
+  // default browser.
+  mainWindow.webContents.on('new-window', function(event, url){
+    event.preventDefault();
+    electron.shell.openExternal(url);
+  });
 }
 
 // This method will be called when Electron has finished

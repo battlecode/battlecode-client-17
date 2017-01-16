@@ -2,8 +2,7 @@ import {electron, os, fs, path, child_process} from './electron-modules';
 
 // Code that talks to the scaffold.
 
-const WINDOWS = process.platform === 'windows';
-const MAC = process.platform === 'mac os x';
+const WINDOWS = process.platform === 'win32';
 
 const GRADLE_WRAPPER = WINDOWS ? 'gradlew.bat' : 'gradlew';
 
@@ -13,6 +12,7 @@ const SERVER_MAPS = [
   "DenseForest",
   "Enclosure",
   "Hurdle",
+  "LineOfFire",
   "MagicWood",
   "shrine",
   "SparseForest"
@@ -98,7 +98,8 @@ export default class ScaffoldCommunicator {
           .map((file) => {
             const relPath = path.relative(this.sourcePath, file);
             return relPath.replace(/.RobotPlayer\.[^/.]+$/, '')
-                          .replace(new RegExp(WINDOWS? '\\\\' : '/', 'g'), '.');
+                          .replace(new RegExp(WINDOWS? '\\\\' : '/', 'g'), '.')
+                          .replace(new RegExp('/', 'g'), '.');
           })
       );
     });
@@ -151,12 +152,35 @@ export default class ScaffoldCommunicator {
    *
    * TODO what if the server hangs?
    */
-  runMatch(teamA: string, teamB: string, maps: string[], cb: (err: Error | null, stdout: string, stderr: string) => void) {
-      child_process.exec(`"${this.wrapperPath}" run -PteamA=${teamA} -PteamB=${teamB} -Pmaps=${maps.join(',')}`,
-                        {cwd: this.scaffoldPath}, cb);
+  runMatch(teamA: string, teamB: string, maps: string[], onErr: (err: Error) => void, onExitNoError: () => void,
+           onStdout: (data: string) => void, onStderr: (data: string) => void) {
+    const proc = child_process.spawn(
+      this.wrapperPath,
+      [
+        `runFromClient`,
+        `-x`,
+        `unpackClient`,
+        `-PteamA=${teamA}`,
+        `-PteamB=${teamB}`,
+        `-Pmaps=${maps.join(',')}`,
+      ],
+      {cwd: this.scaffoldPath}
+    );
+    const decoder = new window['TextDecoder']();
+    proc.stdout.on('data', (data) => onStdout(decoder.decode(data)));
+    proc.stderr.on('data', (data) => onStderr(decoder.decode(data)));
+    proc.on('close', (code) => {
+      if (code === 0) {
+        onExitNoError();
+      } else {
+        onErr(new Error(`Non-zero exit code: ${code}`));
+      }
+    });
+    proc.on('error', (err) => {
+      onErr(err);
+    });
   }
 }
-
 
 /**
  * Walk a directory and return all the files found.
@@ -198,5 +222,3 @@ export function walk(dir: string, done: (err: Error | null, paths?: string[]) =>
     });
   });
 };
-
-window['walk'] = walk;
