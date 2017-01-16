@@ -456,15 +456,15 @@ export default class Client {
       this.setGame(game);
       this.setMatch(match);
     };
-    this.controls.canvas.addEventListener("mousedown", function(event) {
+    this.controls.canvas.onclick = function(event) {
       // jump to a frame when clicking the controls timeline
-      let width = event.offsetX;
-      let maxWidth = (<HTMLCanvasElement>this).width;
-      let turn = Math.floor(match['_farthest'].turn * width / maxWidth);
+      let width: number = (<HTMLCanvasElement>this).width;
+      let turn: number = event.offsetX / width * cst.MAX_ROUND_NUM;
+      turn = Math.round(Math.min(match['_farthest'].turn, turn));
       externalSeek = true;
       match.seek(turn);
       interpGameTime = turn;
-    }, false);
+    };
 
     // set key options
     const conf = this.conf;

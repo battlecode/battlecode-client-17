@@ -39,6 +39,7 @@ export const NUMBER_OF_TEAMS = 2;
 export const NUMBER_OF_INDICATOR_STRINGS = 3;
 export const MIN_NUMBER_OF_ARCHONS = 1;
 export const MAX_NUMBER_OF_ARCHONS = 3;
+export const MAX_ROUND_NUM = 3000;
 
 export function bodyTypeToString(bodyType: schema.BodyType) {
   switch(bodyType) {

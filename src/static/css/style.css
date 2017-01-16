@@ -169,14 +169,12 @@ input[type='file'] {
     padding: 10px;
 }
 
-/*
 #timelineCanvas {
-    height: 32;
-    width: 400;
-    background-color: #222;
+    height: 32px;
+    width: 400px;
+    background-color: #777;
     display: inline-block;
 }
-*/
 
 #helpDiv {
     text-align: left;
