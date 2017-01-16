@@ -1,9 +1,11 @@
-import * as config from '../config';
-import * as cst from '../constants';
+import * as config from '../../config';
+import * as cst from '../../constants';
 
 import {GameWorld, schema} from 'battlecode-playback';
-import {AllImages} from '../imageloader';
+import {AllImages} from '../../imageloader';
 import Victor = require('victor');
+
+import {GameMap} from '../index';
 
 export type MapUnit = {
   loc: Victor,
@@ -60,24 +62,22 @@ export default class MapRenderer {
   }
 
   /**
-   * Renders a width x height (in world units) map with the given bodies
-   * and symmetry.
+   * Renders the game map.
    */
-  render(width: number, height: number, bodies: Map<number, MapUnit>,
-    symmetricBodies: Map<number, MapUnit>): void {
-    const scale = this.canvas.width / width;
-    this.width = width;
-    this.height = height;
+  render(map: GameMap): void {
+    const scale = this.canvas.width / map.width;
+    this.width = map.width;
+    this.height = map.height;
 
     // setup correct rendering
     this.ctx.save();
     this.ctx.scale(scale, scale);
 
     this.renderBackground();
-    this.renderBodies(height, bodies, symmetricBodies);
+    this.renderBodies(map);
 
     // restore default rendering
-    this.setEventListener(width, height, bodies, symmetricBodies);
+    this.setEventListener(map);
     this.ctx.restore();
   }
 
@@ -109,39 +109,40 @@ export default class MapRenderer {
   /**
    * Draw trees and units on the canvas
    */
-  private renderBodies(height: number,
-    bodies: Map<number, MapUnit>,
-    symmetricBodies: Map<number, MapUnit>) {
-
-    const tree = this.imgs.tree.fullHealth;
-    const archons = this.imgs.robot.archon;
+  private renderBodies(map: GameMap) {
 
     this.ctx.fillStyle = "#84bf4b";
-    bodies.forEach((body: MapUnit) => {
+    map.originalBodies.forEach((body: MapUnit) => {
       const x = body.loc.x;
-      const y = this.flip(body.loc.y, height);
+      const y = this.flip(body.loc.y, map.height);
       const radius = body.radius;
+      const type = body.type;
+      let img: HTMLImageElement;
 
       this.drawCircleBot(x, y, radius);
-      if (body.type === cst.TREE_NEUTRAL) {
-        this.drawImage(tree, x, y, radius);
-      } else if (body.type === cst.ARCHON) {
-        this.drawImage(archons[1], x, y, radius);
+      if (type === cst.TREE_NEUTRAL) {
+        img = this.imgs.tree.fullHealth;
+      } else {
+        const teamID = body.teamID || 1;
+        img = this.imgs.robot[cst.bodyTypeToString(body.type)][teamID];
       }
+      this.drawImage(img, x, y, radius);
       this.drawGoodies(x, y, radius, body.containedBullets, body.containedBody);
     });
 
-    symmetricBodies.forEach((body: MapUnit) => {
+    map.symmetricBodies.forEach((body: MapUnit) => {
       const x = body.loc.x;
-      const y = this.flip(body.loc.y, height);
+      const y = this.flip(body.loc.y, map.height);
       const radius = body.radius;
+      let img: HTMLImageElement;
 
       this.drawCircleBot(x, y, radius);
       if (body.type === cst.TREE_NEUTRAL) {
-        this.drawImage(tree, x, y, radius);
-      } else if (body.type === cst.ARCHON) {
-        this.drawImage(archons[2], x, y, radius);
+        img = this.imgs.tree.fullHealth;
+      } else {
+        img = this.imgs.robot[cst.bodyTypeToString(body.type)][2];
       }
+      this.drawImage(img, x, y, radius);
       this.drawGoodies(x, y, radius, body.containedBullets, body.containedBody);
     });
   }
@@ -150,21 +151,20 @@ export default class MapRenderer {
    * Sets the map editor display to contain of the information of the selected
    * tree, or on the selected coordinate if there is no tree.
    */
-  private setEventListener(width: number, height: number,
-    bodies: Map<number, MapUnit>, symmetricBodies: Map<number, MapUnit>) {
+  private setEventListener(map: GameMap) {
     this.canvas.onmousedown = (event: MouseEvent) => {
-      let x = width * event.offsetX / this.canvas.offsetWidth;
-      let y = this.flip(height * event.offsetY / this.canvas.offsetHeight, height);
+      let x = map.width * event.offsetX / this.canvas.offsetWidth;
+      let y = this.flip(map.height * event.offsetY / this.canvas.offsetHeight, map.height);
       let loc = new Victor(x, y);
 
       // Get the ID of the selected unit
       let selectedID;
-      bodies.forEach(function(body: MapUnit, id: number) {
+      map.originalBodies.forEach(function(body: MapUnit, id: number) {
         if (loc.distance(body.loc) <= body.radius) {
           selectedID = id;
         }
       });
-      symmetricBodies.forEach(function(body: MapUnit, id: number) {
+      map.symmetricBodies.forEach(function(body: MapUnit, id: number) {
         if (loc.distance(body.loc) <= body.radius) {
           selectedID = id;
         }

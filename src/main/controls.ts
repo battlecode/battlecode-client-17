@@ -162,11 +162,7 @@ export default class Controls {
     let canvas = document.createElement("canvas");
     canvas.id = "timelineCanvas";
     canvas.width = 400;
-    canvas.height = 32;
-    canvas.style.backgroundColor = "#222";
-    canvas.style.display = "inline-block";
-    canvas.style.width = "400";
-    canvas.style.height = "32";
+    canvas.height = 1;
     this.ctx = canvas.getContext("2d");
     this.ctx.fillStyle = "white";
     this.canvas = canvas;
@@ -318,8 +314,12 @@ export default class Controls {
    */
   setTime(time: number, loadedTime: number, ups: number, fps: number) {
     // Redraw the timeline
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-    this.ctx.fillRect(0, 0, this.canvas.width * time / loadedTime, this.canvas.height)
+    const scale = this.canvas.width / cst.MAX_ROUND_NUM;
+    this.ctx.fillStyle = "#fff";
+    this.ctx.fillRect(0, 0, time * scale, this.canvas.height)
+    this.ctx.fillStyle = "#151515";
+    this.ctx.fillRect(time * scale, 0, (loadedTime - time) * scale, this.canvas.height)
+    this.ctx.clearRect(loadedTime * scale, 0, this.canvas.width, this.canvas.height)
 
     // Edit the text
     this.timeReadout.textContent = `TIME: ${time+1}/${loadedTime+1}`;

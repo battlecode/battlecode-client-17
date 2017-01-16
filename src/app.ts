@@ -5,17 +5,11 @@ import * as imageloader from './imageloader';
 
 import Sidebar from './main/sidebar';
 import Controls from './main/controls';
-import Stats from './game/sidebar/stats';
-import Console from './game/sidebar/console';
-import MatchQueue from './game/sidebar/matchqueue';
-import MapEditor from './mapeditor/mapeditor';
 
-import GameArea from './game/gamearea/gamearea';
-import Renderer from './game/gamearea/renderer';
-import NextStep from './game/nextstep';
-import TickCounter from './game/fps';
+import {Stats, Console, MatchQueue, GameArea, Renderer, NextStep, TickCounter} from './game/index';
+import {MapEditor} from './mapeditor/index';
+
 import WebSocketListener from './websocket';
-
 import ScaffoldCommunicator from './scaffold';
 
 import {electron} from './electron-modules';
@@ -445,15 +439,15 @@ export default class Client {
       this.setGame(game);
       this.setMatch(match);
     };
-    this.controls.canvas.addEventListener("mousedown", function(event) {
+    this.controls.canvas.onclick = function(event) {
       // jump to a frame when clicking the controls timeline
-      let width = event.offsetX;
-      let maxWidth = (<HTMLCanvasElement>this).width;
-      let turn = Math.floor(match['_farthest'].turn * width / maxWidth);
+      let width: number = (<HTMLCanvasElement>this).width;
+      let turn: number = event.offsetX / width * cst.MAX_ROUND_NUM;
+      turn = Math.round(Math.min(match['_farthest'].turn, turn));
       externalSeek = true;
       match.seek(turn);
       interpGameTime = turn;
-    }, false);
+    };
 
     // set key options
     const conf = this.conf;
