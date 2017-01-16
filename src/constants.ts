@@ -1,5 +1,5 @@
 import {schema} from 'battlecode-playback';
-import {Symmetry} from './mapeditor/renderer';
+import {Symmetry} from './mapeditor/index';
 
 // Body types
 export const ARCHON = schema.BodyType.ARCHON;
@@ -43,14 +43,15 @@ export const MAX_ROUND_NUM = 3000;
 
 export function bodyTypeToString(bodyType: schema.BodyType) {
   switch(bodyType) {
-    case ARCHON:     return "archon";
-    case GARDENER:   return "gardener";
-    case LUMBERJACK: return "lumberjack";
-    case SOLDIER:    return "soldier";
-    case TANK:       return "tank";
-    case SCOUT:      return "scout";
-    case NONE:       return "";
-    default:         throw new Error("invalid body type");
+    case ARCHON:      return "archon";
+    case GARDENER:    return "gardener";
+    case LUMBERJACK:  return "lumberjack";
+    case SOLDIER:     return "soldier";
+    case TANK:        return "tank";
+    case SCOUT:       return "scout";
+    case TREE_BULLET: return "bulletTree";
+    case NONE:        return "";
+    default:          throw new Error("invalid body type");
   }
 }
 

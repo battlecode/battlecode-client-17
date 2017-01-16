@@ -5,17 +5,11 @@ import * as imageloader from './imageloader';
 
 import Sidebar from './main/sidebar';
 import Controls from './main/controls';
-import Stats from './game/sidebar/stats';
-import Console from './game/sidebar/console';
-import MatchQueue from './game/sidebar/matchqueue';
-import MapEditor from './mapeditor/mapeditor';
 
-import GameArea from './game/gamearea/gamearea';
-import Renderer from './game/gamearea/renderer';
-import NextStep from './game/nextstep';
-import TickCounter from './game/fps';
+import {Stats, Console, MatchQueue, GameArea, Renderer, NextStep, TickCounter} from './game/index';
+import {MapEditor} from './mapeditor/index';
+
 import WebSocketListener from './websocket';
-
 import ScaffoldCommunicator from './scaffold';
 
 import {electron} from './electron-modules';

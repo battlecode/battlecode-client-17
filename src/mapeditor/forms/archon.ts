@@ -1,9 +1,8 @@
 import * as cst from '../../constants';
 
-import {UnitForm} from './unitform';
-
-import {MapUnit} from '../renderer';
 import Victor = require('victor');
+
+import {UnitForm, MapUnit} from '../index';
 
 export default class ArchonForm implements UnitForm {
 
@@ -174,7 +173,7 @@ export default class ArchonForm implements UnitForm {
     return !(isNaN(x) || isNaN(y) || isNaN(radius) || radius === 0);
   }
 
-  getUnit(teamID: number): MapUnit | undefined {
+  getUnit(teamID?): MapUnit | undefined {
     if (!this.isValid()) {
       return undefined;
     }
@@ -185,7 +184,7 @@ export default class ArchonForm implements UnitForm {
       type: cst.ARCHON,
       containedBullets: 0,
       containedBody: cst.NONE,
-      teamID: teamID
+      teamID: teamID || 1
     }
   }
 }
