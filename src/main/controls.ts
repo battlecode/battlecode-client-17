@@ -22,7 +22,7 @@ export default class Controls {
   // Yeah, it's pretty gross :/
   onGameLoaded: (data: ArrayBuffer) => void;
   onTogglePause: () => void;
-  onToggleForward: (UPS: number) => void;
+  onToggleUPS: () => void;
   onToggleRewind: () => void;
   onStepForward: () => void;
   onStepBackward: () => void;
@@ -191,10 +191,15 @@ export default class Controls {
     };
 
     const moveHandler = (e: MouseEvent) => {
+      const zeroOffset = 30;
+      const zeroBuffer = 4;
       var posX = e.pageX - startOffset;
       posX = Math.min(Math.max(0, posX), sliderWidth);
+
+      // Snap to 0 UPS if within buffer
+      posX = Math.abs(zeroOffset - posX) < zeroBuffer ? zeroOffset : posX;
       btn.style.left = `${posX}px`;
-      this.onToggleForward(this.getUPS());
+      this.onToggleUPS();
     }
 
     const stopHandler = () => {
@@ -213,10 +218,12 @@ export default class Controls {
    * Returns the UPS determined by the slider
    */
   getUPS(): number {
+    const zeroOffset = 30;
     const handleWidth = this.sliderBtn.clientWidth / 2
     const buttonOffset = this.sliderBtn.offsetLeft + handleWidth
-    const ups = 0.0001 * Math.pow(buttonOffset, 3) + 1;
-    return ups;
+    const upsMagnitude = 0.01 * Math.pow(buttonOffset - 30, 2);
+    const ups = buttonOffset < zeroOffset ? -upsMagnitude : upsMagnitude;
+    return Math.round(ups);
   }
 
   /**
@@ -252,17 +259,13 @@ export default class Controls {
       this.onGameLoaded(reader.result);
     };
     reader.readAsArrayBuffer(file);
-
-    // Reset buttons
-    this.resetButtons();
-    this.imgs["playbackStart"].style.display = "unset";
-    this.imgs["playbackPause"].style.display = "none";
   }
 
-  resetButtons() {
-    // Reset buttons
-    this.imgs["playbackStart"].style.display = "none";
-    this.imgs["playbackPause"].style.display = "unset";
+  /**
+   * Whether or not the simulation is paused.
+   */
+  isPaused() {
+    return this.imgs.playbackPause.style.display === "none";
   }
 
   /**
@@ -272,9 +275,7 @@ export default class Controls {
     this.onTogglePause();
 
     // toggle the play/pause button
-    const isNowPaused: boolean = this.imgs.playbackPause.style.display === "none";
-    this.resetButtons();
-    if (isNowPaused) {
+    if (this.isPaused()) {
       this.imgs["playbackStart"].style.display = "none";
       this.imgs["playbackPause"].style.display = "unset";
     } else {
@@ -287,9 +288,8 @@ export default class Controls {
    * Restart simulation.
    */
   restart() {
-    const isPlaying: boolean = this.imgs.playbackPause.style.display === "unset";
     const pauseButton = document.getElementById("playbackPause");
-    if (isPlaying && pauseButton) {
+    if (!this.isPaused() && pauseButton) {
       pauseButton.click();
     }
     this.onSeek(0);

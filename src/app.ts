@@ -347,8 +347,8 @@ export default class Client {
     this.controls.onTogglePause = () => {
       goalUPS = goalUPS === 0 ? this.controls.getUPS() : 0;
     };
-    this.controls.onToggleForward = (UPS: number) => {
-      goalUPS = goalUPS !== 0 ? UPS : 0;
+    this.controls.onToggleUPS = () => {
+      goalUPS = this.controls.isPaused() ? 0 : this.controls.getUPS();
     };
     this.controls.onSeek = (turn: number) => {
       externalSeek = true;
@@ -496,6 +496,8 @@ export default class Client {
         if (match.current.turn === match.seekTo) {
           externalSeek = false;
         }
+      } else if (goalUPS < 0 && match.current.turn === 0) {
+        this.controls.pause();
       } else if (Math.abs(interpGameTime - match.current.turn) < 10) {
         // only update time if we're not seeking
         delta = goalUPS * (curTime - lastTime) / 1000;
