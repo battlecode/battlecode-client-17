@@ -252,3 +252,30 @@ input[type='file'] {
 .errorLog {
     color: red;
 }
+
+.slide-control {
+    width: 150px;
+    height: 16px;
+    border:1px solid #d6d6d6;
+    background-color: #ffffff;
+    overflow: visible;
+    display:block;
+    position: relative;
+    margin-top: 8px;
+}
+
+.slide-control-button {
+    position:absolute;
+    z-index:2;
+    width:28px;
+    height:32px;
+    left:0;
+    margin-left: -14px;
+    top: -7px;
+    bottom:-32px;
+    background: #eee;
+}
+
+.slide-control-button:hover {
+    cursor: pointer;
+}

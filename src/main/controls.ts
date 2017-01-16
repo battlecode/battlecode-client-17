@@ -13,11 +13,15 @@ export default class Controls {
   readonly locationReadout: Text;
   readonly infoString: HTMLTableDataCellElement;
 
+  // UPS slider
+  private sliderBar: HTMLDivElement;
+  private sliderBtn: HTMLDivElement;
+
   // Callbacks initialized from outside Controls
   // Yeah, it's pretty gross :/
   onGameLoaded: (data: ArrayBuffer) => void;
   onTogglePause: () => void;
-  onToggleForward: () => void;
+  onToggleForward: (UPS: number) => void;
   onToggleRewind: () => void;
   onStepForward: () => void;
   onStepBackward: () => void;
@@ -72,13 +76,17 @@ export default class Controls {
     timeline.appendChild(document.createElement("br"));
     timeline.appendChild(this.speedReadout);
 
+    let slider = document.createElement("td");
+    slider.vAlign = "top";
+    slider.appendChild(this.slider());
+
     // create the button controls
     let buttons = document.createElement("td");
     buttons.vAlign = "top";
     buttons.appendChild(this.createButton("playbackPause", () => this.pause(), "playbackStart"));
     buttons.appendChild(this.createButton("playbackStop", () => this.restart()));
-    buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
-    buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
+    // buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
+    // buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
     buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
     buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
@@ -93,6 +101,7 @@ export default class Controls {
 
     table.appendChild(tr);
     tr.appendChild(timeline);
+    tr.appendChild(slider);
     tr.appendChild(buttons);
     tr.appendChild(infoString);
 
@@ -169,6 +178,56 @@ export default class Controls {
   }
 
   /**
+   * Creates the slider that adjusts UPS
+   */
+  private slider(): HTMLDivElement {
+    const div = document.createElement("div");
+    const slider = document.createElement("div");
+    slider.className = "slide-control";
+    const btn = document.createElement("div");
+    btn.className = "slide-control-button";
+
+    let startOffset, sliderWidth, handleWidth;
+
+    btn.onmousedown = function(e) {
+      e.preventDefault();
+      handleWidth = btn.clientWidth / 2;
+      startOffset = e.pageX - btn.offsetLeft - handleWidth;
+      sliderWidth = slider.clientWidth;
+      document.onmousemove = moveHandler;
+      document.onmouseup = stopHandler;
+    };
+
+    const moveHandler = (e: MouseEvent) => {
+      var posX = e.pageX - startOffset;
+      posX = Math.min(Math.max(0, posX), sliderWidth);
+      btn.style.left = `${posX}px`;
+      this.onToggleForward(this.getUPS());
+    }
+
+    const stopHandler = () => {
+      document.onmousemove = () => {};
+      document.onmouseup = () => {};
+    }
+
+    div.appendChild(slider);
+    slider.appendChild(btn);
+    this.sliderBar = slider;
+    this.sliderBtn = btn;
+    return div;
+  }
+
+  /**
+   * Returns the UPS determined by the slider
+   */
+  getUPS(): number {
+    const handleWidth = this.sliderBtn.clientWidth / 2
+    const buttonOffset = this.sliderBtn.offsetLeft + handleWidth
+    const ups = buttonOffset + 1;
+    return ups;
+  }
+
+  /**
    * Displays the correct controls depending on whether we are in game mode
    * or map editor mode
    */
@@ -240,7 +299,7 @@ export default class Controls {
    * Fast forward our simulation.
    */
   forward() {
-    this.onToggleForward();
+    // this.onToggleForward();
 
     // toggle speeds between regular speed and fast forward
     const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";

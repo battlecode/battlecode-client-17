@@ -342,7 +342,7 @@ export default class Client {
       this.conf, meta as Metadata, onRobotSelected, onMouseover);
 
     // How fast the simulation should progress
-    let goalUPS = 10;
+    let goalUPS = this.controls.getUPS();
 
     // Keep track of rewinding for <= 0 turn case
     let rewinding = false;
@@ -360,11 +360,11 @@ export default class Client {
     let externalSeek = false;
 
     this.controls.onTogglePause = () => {
-      goalUPS = goalUPS === 0? 10 : 0;
+      goalUPS = goalUPS === 0 ? this.controls.getUPS() : 0;
       rewinding = false;
     };
-    this.controls.onToggleForward = () => {
-      goalUPS = goalUPS === 300 ? 10 : 300;
+    this.controls.onToggleForward = (UPS: number) => {
+      goalUPS = goalUPS !== 0 ? UPS : 0;
       rewinding = false;
     };
     this.controls.onToggleRewind = () => {
