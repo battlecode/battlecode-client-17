@@ -5,8 +5,9 @@
   "private": "true",
   "scripts": {
     "test": "true",
-    "clean": "rm -rf out outtest bc17",
+    "clean": "rm -rf out outtest bc17 dist",
     "lint": "tslint \"/src/**/*.ts\" -e \"out/**\"",
+    "format-in-place": "js-beautify --editorconfig -f ./*.js ./*.html src/static/css/*.css -r && tsfmt -r",
     "build": "webpack",
     "prod": "webpack",
     "watch": "echo '--- open localhost:8080 in your browser ---' && webpack-dev-server --env.dev",
@@ -24,29 +25,34 @@
   },
   "homepage": "https://github.com/battlecode/battlecode-client-17#readme",
   "dependencies": {
-    "@types/file-url": "^1.0.28",
-    "@types/nomnom"  : "^0.0.28",
     "battlecode-playback": "battlecode/battlecode-playback#7bf19912b098bcf6e3d637d90f050b27b6bac815",
+    "electron": "^1.4.13",
+    "file-loader": "^0.9.0",
     "file-url": "^2.0.0",
     "nomnom": "^1.8.1",
+    "url-loader": "^0.5.7",
     "victor": "^1.1.0"
   },
   "devDependencies": {
     "@types/blue-tape": "^0.1.30",
     "@types/electron": "^1.4.30",
+    "@types/file-url": "^1.0.28",
+    "@types/nomnom": "^0.0.28",
     "@types/victor": "^0.2.28",
     "awesome-typescript-loader": "^3.0.0-beta.17",
     "copy-webpack-plugin": "^4.0.0",
     "css-loader": "^0.26.1",
-    "electron": "^1.4.13",
     "electron-builder": "^10.13.1",
-    "file-loader": "^0.9.0",
+    "exif-cli": "0.0.2",
+    "img-loader": "^1.3.1",
+    "js-beautify": "^1.6.8",
+    "minimatch": "^3.0.3",
     "style-loader": "^0.13.1",
     "ts-loader": "^0.8.2",
     "tslint": "^3.15.1",
     "typescript": "^2.1.4",
-    "url-loader": "^0.5.7",
-    "webpack": "fulls1z3/webpack",
+    "typescript-formatter": "^4.0.1",
+    "webpack": "fulls1z3/webpack.git#a5bad5a4798eed10eccb7edf2dabb15693ee9e4e",
     "webpack-dev-server": "^2.2.0-rc.0",
     "webpack-merge": "^2.0.0"
   },
@@ -73,14 +79,20 @@
       }
     ],
     "mac": {
-      "target": ["dir"],
+      "target": [
+        "dir"
+      ],
       "category": "public.app-category.games"
     },
     "win": {
-      "target": ["dir"]
+      "target": [
+        "dir"
+      ]
     },
     "linux": {
-      "target": ["dir"]
+      "target": [
+        "dir"
+      ]
     }
   }
 }

@@ -22,11 +22,51 @@ var conf = {
   },
   module: {
     rules: [
-      { test: /\.ts$/, loader: 'awesome-typescript-loader' },
-      { test: /\.(png|jpg)$/, loader: 'url-loader?limit=10000&name=[name]-[hash:base64:7].[ext]' },
-      { test: /\.css$/, loader: "style-loader!css-loader" }
+      { test: /\.(tsx?|d.ts)$/, loaders: [ 'awesome-typescript-loader' ] },
+      { test: /\.(jpe?g|png|gif|svg)$/i, loaders: ['url-loader?limit=10000&name=[name]-[hash:base64:7].[ext]', 'img-loader?minimize'] },
+      { test: /\.css$/, loaders: ['style-loader', 'css-loader'] }
     ]
-  }
+  },
+  plugins: [
+      new webpack.LoaderOptionsPlugin({
+        imgmin: {
+          gifsicle: {
+            interlaced: false,
+            optimizationLevel: 3,
+            colors: 256
+          },
+          jpegtran: {
+            progressive: true,
+            arithmetic: true
+          },
+          optipng: {
+            optimizationLevel: 4,
+            colorTypeReduction: true,
+            paletteReduction: true
+          },
+          pngquant: {
+            floyd: 0.5,
+            nofs: false,
+            posterize: false,
+            quality: "80-100",
+            speed: 2,
+            verbose: false
+          },
+          svgo: {
+            plugins: [
+              { cleanupAttrs: true },
+              { removeComments: true},
+              { removeMetadata: true},
+              { removeTitle: true },
+              { minifyStyles : true },
+              { convertTransform: true },
+              { convertPathData: true },
+              { mergePaths: true }
+            ]
+          }
+        }
+      })
+  ]
 };
 
 module.exports = function(env) {
@@ -41,7 +81,7 @@ module.exports = function(env) {
         new webpack.LoaderOptionsPlugin({
           minimize: false,
           debug: true
-        }),
+        })
       ]
     });
   } else {

@@ -1,0 +1,36 @@
+* text=auto
+
+.editorconfig           text    eol=lf
+.gitattributes          text    eol=lf
+.gitconfig              text    eol=lf
+.gitignore              text    eol=lf
+.jsbeautifyrc           text    eol=lf
+*.css                   text    eol=lf
+*.htm                   text    eol=lf    diff=html
+*.html                  text    eol=lf    diff=html
+*.js                    text    eol=lf
+*.json                  text    eol=lf
+*.js.map                text    eol=lf
+*.md                    text    eol=lf
+*.sh                    text    eol=lf
+*.ts                    text    eol=lf
+*.tsx                   text    eol=lf
+*.d.ts                  text    eol=lf
+*.txt                   text    eol=lf
+*.xml                   text    eol=lf
+*.yml                   text    eol=lf
+
+battlecode-client-17    binary
+*.asar                  binary
+*.bin                   binary
+*.dat                   binary
+*.dll                   binary
+*.exe                   binary
+*.gif                   binary  diff=exif
+*.jpg                   binary  diff=exif
+*.jpeg                  binary  diff=exif
+*.pak                   binary
+*.png                   binary  diff=exif
+*.so                    binary
+*.svg                   binary  diff=exif
+
