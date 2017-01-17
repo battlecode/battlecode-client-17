@@ -79,13 +79,13 @@ export interface Config {
   bulletSightRadius: boolean;
 
   /**
-   * The mode of the game
+   * The mode the GUI window should show when initialized
    */
   mode: Mode;
 }
 
 /**
- * Different game modes that determine what is displayed on the client
+ * Different modes that determine what is displayed on the client
  */
 export enum Mode {
   GAME,
@@ -184,7 +184,7 @@ export function defaults(supplied: any): Config {
         default: Mode.GAME,
         transform: function(input){ return transformStringToModeEnum(input)},
         type: 'string',
-        help: '\n\tWhether or not to display indicator dots and lines',
+        help: '\n\tWhat mode should the GUI window show when initialized',
         metavar: '<GAME or HELP or MAPEDITOR or CONSOLE or QUEUE>'
     })
     .option('gameVersion',
