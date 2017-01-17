@@ -76,31 +76,6 @@ export default class GameArea {
     
     // Set the version string from http://www.battlecode.org/contestants/latest/
     (async function (splashDiv, version) {
-      
-				/*
-      http.get({
-        hostname: 'battlecode-maven.s3-website-us-east-1.amazonaws.com',
-        port: 80,
-        path: '/org/battlecode/battlecode/maven-metadata.xml',
-        agent: false
-      }, (res) => {
-        console.log(res);
-        var parser = new DOMParser();
-        var doc = parser.parseFromString("", "application/xml");
-
-        var latest = doc.getElementsByTagName('release')[0].innerHTML;
-
-        if(latest.trim() != version.trim()) {
-
-          let newVersion = document.createElement("a");
-          newVersion.id = "splashNewVersion";
-          newVersion.href = "http://www.battlecode.org/contestants/releases/"
-          newVersion.target = "_blank";
-          newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + latest;
-          splashDiv.appendChild(newVersion);
-
-        }
-      });*/
 		
       var options = {
         host: 'battlecode-maven.s3-website-us-east-1.amazonaws.com',
@@ -108,7 +83,6 @@ export default class GameArea {
       };
 
       var req = http.get(options, function(res) {
-
         let data = "";
         res.on('data', function(chunk) {
           data += chunk
@@ -116,18 +90,15 @@ export default class GameArea {
           
           var parser = new DOMParser();
           var doc = parser.parseFromString(data, "application/xml");
-
           var latest = doc.getElementsByTagName('release')[0].innerHTML;
 
           if(latest.trim() != version.trim()) {
-
             let newVersion = document.createElement("a");
             newVersion.id = "splashNewVersion";
             newVersion.href = "http://www.battlecode.org/contestants/releases/"
             newVersion.target = "_blank";
             newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + latest;
             splashDiv.appendChild(newVersion);
-
           }
           
         })
@@ -143,28 +114,24 @@ export default class GameArea {
    */
   setCanvas = () => {
     var mode = this.conf.mode;
-	  
-	console.log("Desired mode: " + mode);
-	console.log("Current mode: " + this.currentMode);
 
     // The canvas can be anything in help mode
     if (mode === Mode.HELP) return;
 	  
-	// The canvas should stay in splash screen unless the new mode is
-	// game editor
-	if (this.currentMode === Mode.SPLASH) {
-		if(!(mode === Mode.MAPEDITOR) && this.client.games.length === 0) {
-			return;
-		}
-	}
-	
-	if (this.currentMode === Mode.MAPEDITOR) {
-		if(this.client.games.length == 0) {
-			if(!(mode === Mode.MAPEDITOR)) {
-				mode = Mode.SPLASH;
-			}
-		}
-	}
+    // The canvas should stay in splash screen unless the new mode is game editor
+    if (this.currentMode === Mode.SPLASH) {
+      if(!(mode === Mode.MAPEDITOR) && this.client.games.length === 0) {
+        return;
+      }
+    }
+
+    if (this.currentMode === Mode.MAPEDITOR) {
+      if(this.client.games.length == 0) {
+        if(!(mode === Mode.MAPEDITOR)) {
+          mode = Mode.SPLASH;
+        }
+      }
+    }
 
     // Otherwise clear the canvas area...
     while (this.wrapper.firstChild) {
