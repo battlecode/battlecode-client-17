@@ -156,7 +156,7 @@ export default class Controls {
   private timeline() {
     let canvas = document.createElement("canvas");
     canvas.id = "timelineCanvas";
-    canvas.width = 400;
+    canvas.width = 500;
     canvas.height = 1;
     this.ctx = canvas.getContext("2d");
     this.ctx.fillStyle = "white";
@@ -193,8 +193,14 @@ export default class Controls {
     const file = files[0];
     console.log(file);
     const reader = new FileReader();
-    reader.onload = () => {
-      this.onGameLoaded(reader.result);
+    const readerStateDone :number = 2;
+    reader.onloadend = () => {
+      if(reader.readyState !== readerStateDone){
+        console.error("Failed to load the match file");
+        reader.abort();
+      }else{
+        this.onGameLoaded(reader.result);
+      }
     };
     reader.readAsArrayBuffer(file);
 
@@ -298,17 +304,23 @@ export default class Controls {
    * Redraws the timeline and sets the current round displayed in the controls.
    */
   setTime(time: number, loadedTime: number, ups: number, fps: number) {
-    // Redraw the timeline
-    const scale = this.canvas.width / cst.MAX_ROUND_NUM;
-    this.ctx.fillStyle = "#fff";
-    this.ctx.fillRect(0, 0, time * scale, this.canvas.height)
-    this.ctx.fillStyle = "#151515";
-    this.ctx.fillRect(time * scale, 0, (loadedTime - time) * scale, this.canvas.height)
-    this.ctx.clearRect(loadedTime * scale, 0, this.canvas.width, this.canvas.height)
+
+    // A TimeWidth unit represents 1 round turn on the progress bar width-scaled based upon
+    const timeWidthUnit = this.canvas.width / cst.MAX_ROUND_NUM;
+    // The width of this matches current round count
+    const currentTimeWidth = Math.floor(timeWidthUnit * (time + 1));
+    // The width of this matches total round count
+    const currentLoadedTimeWidth = Math.floor((loadedTime + 1) * timeWidthUnit);
+
+    this.ctx.fillStyle = "#777777";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = "#333333";
+    this.ctx.fillRect(0, 0, currentLoadedTimeWidth, this.canvas.height);
+    this.ctx.fillStyle = "#efefef";
+    this.ctx.fillRect(currentTimeWidth, 0, timeWidthUnit, this.canvas.height);
 
     // Edit the text
-    this.speedReadout.textContent =
-      ` TIME: ${time+1}/${loadedTime+1} UPS: ${ups | 0} FPS: ${fps | 0}`;
+    this.speedReadout.textContent = ` TIME: ${time+1}/${loadedTime +1} UPS: ${ups | 0} FPS: ${fps | 0}`;
   }
 
   /**

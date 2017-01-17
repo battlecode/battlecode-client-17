@@ -45,6 +45,9 @@ export default class Renderer {
     }
 
     this.ctx['imageSmoothingEnabled'] = false;
+    this.ctx['mozImageSmoothingEnabled'] = this.ctx['imageSmoothingEnabled'];
+    this.ctx['webkitImageSmoothingEnabled'] = this.ctx['imageSmoothingEnabled'];
+    this.ctx['msImageSmoothingEnabled'] = this.ctx['imageSmoothingEnabled'];
 
     this.bgPattern = this.ctx.createPattern(imgs.background, 'repeat');
     //this.treeMedHealth = metadata.types[schema.BodyType.TREE_NEUTRAL].maxHealth / 2;
@@ -97,6 +100,11 @@ export default class Renderer {
     const scale = 20;
 
     this.ctx.scale(1/scale, 1/scale);
+
+    if(!this.bgPattern || !this.ctx.fillStyle){
+      // fallback to simply clearing the background so we don't get image trails
+      this.ctx.clearRect(minX*scale, minY*scale, width*scale, height*scale);
+    }
 
     // scale the background pattern
     this.ctx.fillRect(minX*scale, minY*scale, width*scale, height*scale);

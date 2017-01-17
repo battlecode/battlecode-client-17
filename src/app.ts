@@ -242,7 +242,7 @@ export default class Client {
         };
         req.send();
       }else{
-        console.warn("Using --match via URL (aka without electron) is unsupported. Use the file picker to select the file instead.");
+        console.warn("Using --match without electron is unsupported. Use the file picker to select the file instead.");
       }
     }
     this.controls.onGameLoaded = (data: ArrayBuffer) => {
@@ -358,6 +358,7 @@ export default class Client {
     };
     const onMouseover = (x: number, y: number) => {
       this.controls.setLocation(x, y);
+
     };
 
     // Configure renderer for this match
@@ -540,6 +541,13 @@ export default class Client {
       // Ask the main thread to start saving power by preventing display sleep
       electron.ipcRenderer.send('renderer-request','block-power-save');
     }
+
+    //set the timeline up
+    this.controls.setTime(match.current.turn,
+                                match['_farthest'].turn,
+                                updatesPerSecond.tps,
+                                rendersPerSecond.tps);
+
     // The main update loop
     const loop = (curTime) => {
       let delta = 0;
@@ -573,7 +581,7 @@ export default class Client {
 
       // run simulation
       // this may look innocuous, but it's a large chunk of the run time
-      match.compute(5 /* ms */);
+      match.compute(Math.floor(1000 / goalUPS));
 
       // update the info string in controls
       if (lastSelectedID !== undefined) {

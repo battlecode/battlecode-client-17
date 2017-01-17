@@ -49,7 +49,7 @@ var conf = {
           },
           jpegtran: {
             progressive: true,
-            arithmetic: true
+            arithmetic: false
           },
           optipng: {
             optimizationLevel: 4,

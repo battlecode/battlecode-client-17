@@ -69,6 +69,8 @@ form {
     max-width: calc(100vw - 320px);
     margin-top:auto;
     margin-bottom:auto;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 #gamearea {
@@ -171,9 +173,10 @@ input[type='file'] {
 
 #timelineCanvas {
     height: 32px;
-    width: 400px;
+    width: 500px;
     background-color: #777;
     display: inline-block;
+    cursor: pointer;
 }
 
 #helpDiv {
