@@ -5,16 +5,29 @@ var webpack = require('webpack');
 var merge = require('webpack-merge');
 var path = require('path');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
+var ImageminPlugin = require('imagemin-webpack-plugin').default
 
 var conf = {
   context: path.resolve(__dirname, 'src'),
   entry: {
     app: './app.ts',
   },
+  devServer: {
+    compress: true,
+    host: "localhost",
+    port: 8080,
+    hot: true,
+    noInfo: true,
+    watchOptions: {
+      aggregateTimeout: 500,
+      ignored: "/node_modules/"
+    }
+  },
   output: {
     path: path.resolve(__dirname, 'bc17'),
     publicPath: '/bc17/',
-    filename: 'bundle.js'
+    filename: 'bundle.js',
+    sourceMapFilename: '[file].map'
   },
   resolve: {
     // add `.ts` as a resolvable extension.
@@ -23,13 +36,12 @@ var conf = {
   module: {
     rules: [
       { test: /\.(tsx?|d.ts)$/, loaders: [ 'awesome-typescript-loader' ] },
-      { test: /\.(jpe?g|png|gif|svg)$/i, loaders: ['url-loader?limit=10000&name=[name]-[hash:base64:7].[ext]', 'img-loader?minimize'] },
+      { test: /\.(jpe?g|png|gif|svg)$/i, loaders: ['url-loader?limit=10000&name=[name]-[hash:base64:7].[ext]'] },
       { test: /\.css$/, loaders: ['style-loader', 'css-loader'] }
     ]
   },
   plugins: [
-      new webpack.LoaderOptionsPlugin({
-        imgmin: {
+      new ImageminPlugin({
           gifsicle: {
             interlaced: false,
             optimizationLevel: 3,
@@ -64,8 +76,8 @@ var conf = {
               { mergePaths: true }
             ]
           }
-        }
-      })
+      }),
+      new webpack.optimize.OccurrenceOrderPlugin(true)
   ]
 };
 
@@ -75,7 +87,10 @@ module.exports = function(env) {
   if (env.dev) {
     // we're in dev
     conf = merge(conf, {
-      devtool: 'source-map',
+      devtool: 'cheap-module-eval-source-map',
+      output: {
+          pathinfo: true
+      },
       plugins: [
         new webpack.HotModuleReplacementPlugin(),
         new webpack.LoaderOptionsPlugin({
@@ -87,12 +102,39 @@ module.exports = function(env) {
   } else {
     // we're compiling for prod
     conf = merge(conf, {
+      devtool: 'source-map',
       plugins: [
-        new webpack.optimize.UglifyJsPlugin(),
+        new webpack.optimize.UglifyJsPlugin({
+            outSourceMap: "bundle.js.map",
+            compress: {
+              sequences: true,
+              properties: true,
+              dead_code: true,
+              drop_debugger: true,
+              unsafe: true,
+              conditionals: true,
+              evaluate: true,
+              booleans: true,
+              loops: true,
+              unused: true,
+              hoist_funs: true,
+              if_return: true,
+              join_vars: true,
+              cascade: true,
+              collapse_vars: true,
+              reduce_vars: true,
+              warnings: false,
+              keep_fnames: true,
+              passes: 3
+            },
+            mangle: {
+              keep_fnames: true
+            }
+        }),
         new webpack.LoaderOptionsPlugin({
           minimize: true,
           debug: false
-        }),
+        })
       ]
     });
   }
