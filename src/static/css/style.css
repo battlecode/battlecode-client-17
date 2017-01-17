@@ -250,3 +250,30 @@ input[type='file'] {
 .errorLog {
     color: red;
 }
+
+.slide-control {
+    width: 110px;
+    height: 8px;
+    background-color: #222;
+    overflow: visible;
+    display:block;
+    position: relative;
+    margin-top: 12px;
+}
+
+.slide-control-button {
+    position:absolute;
+    z-index:2;
+    width:24px;
+    height:32px;
+    left:62px;
+    margin-left: -12px;
+    top: -10px;
+    bottom:-32px;
+    border-radius: 8px;
+    background: #eee;
+}
+
+.slide-control-button:hover {
+    cursor: pointer;
+}
