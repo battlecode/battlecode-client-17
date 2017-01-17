@@ -20,7 +20,7 @@ global.appParameters = {params: process.argv};
 initApp();
 
 
-//Setup the application, including the event listeners that trigger the creation of the GUI
+// Setup the application, including the event listeners that trigger the creation of the GUI
 function initApp() {
 
     //Place any electron methods that need to be executed before the ready event here:
@@ -57,8 +57,8 @@ function createWindow () {
 
   // Create the browser window but don't show it to the user yet
   mainWindow = new BrowserWindow({width: 1600, height: 1000, show: false, defaultEncoding: 'UTF-8'});
- //blinkFeatures: 'ExperimentalV8Extras,HeapCompaction,LazyParseCSS,SlimmingPaintV2,SlimmingPaintStrictCullRectClipping,PassPaintVisualRectToCompositor,CompositorWorker,CSSInBodyDoesNotBlockPaint'
-  // and load the index.html of the app.
+
+  // Load the index.html of the app.
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',

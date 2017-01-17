@@ -4,6 +4,7 @@
     "allowJs": true,
     "alwaysStrict": true,
     "forceConsistentCasingInFileNames": true,
+    "preserveConstEnums": true,
     "lib": "DOM,ES5",
     "newLine": "lf",
     "pretty": true,

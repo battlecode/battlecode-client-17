@@ -1,5 +1,5 @@
-var nomnom = require('nomnom');
-var fileUrl = require('file-url');
+const nomnom = require('nomnom');
+const fileUrl = require('file-url');
 
 if(process.env.ELECTRON === true ){
   var electron = require('electron');
@@ -100,16 +100,13 @@ export enum Mode {
  * directly supplied configurations, then user supplied paramaters, then sensible default values.
  */
 export function defaults(supplied: any): Config {
-  console.log('Processing script parameters');
 
-  var scriptParameters: any;
+  //load parameters from url parameters of current page by default
+  var scriptParameters: any = window.location.search.substr(1).split('&');
 
   if(process.env.ELECTRON === true ){
-    //load parameters from command line parameters given to electron executable
+    //load parameters from command line parameters if running via electron
     scriptParameters = electron.remote.getGlobal('appParameters').params.slice(1);
-  }else{
-    //load parameters from url parameters of current page
-    scriptParameters = window.location.search.substr(1).split('&');
   }
 
   console.log("Raw parameters: " + JSON.stringify(scriptParameters));
@@ -131,7 +128,7 @@ export function defaults(supplied: any): Config {
         abbr: 'w',
         full: 'width',
         default: 600,
-        callback: function(input){verifyPositiveIntString(input, '--width [-w]')},
+        callback: function(input){ return verifyPositiveIntString(input, '--width [-w]')},
         type: 'number',
         help: '\n\tThe width dimension of the client window',
         metavar: '<positive-number>'
@@ -141,7 +138,7 @@ export function defaults(supplied: any): Config {
         abbr: 'h',
         full: 'height',
         default: 600,
-        callback: function(input){verifyPositiveIntString(input, '--height [-h]')},
+        callback: function(input){ return verifyPositiveIntString(input, '--height [-h]')},
         type: 'number',
         help: '\n\tThe height dimension of the client window',
         metavar: '<positive-number>'
@@ -201,7 +198,7 @@ export function defaults(supplied: any): Config {
         abbr: 't',
         full: 'turns',
         default: 20,
-        callback: function(input){verifyPositiveIntString(input, '--turns [-t]')},
+        callback: function(input){ return verifyPositiveIntString(input, '--turns [-t]')},
         type: 'number',
         help: '\n\tThe number of turns to evaluate per second (not the same as FPS)',
         metavar: '<positive-number>'
@@ -211,7 +208,7 @@ export function defaults(supplied: any): Config {
         abbr: 's',
         full: 'socket',
         default: null,
-        callback: function(input){verifyStringIsValidURL(input, '--socket [-s]')},
+        callback: function(input){ return verifyStringIsValidURL(input, '--socket [-s]')},
         type: 'string',
         help: '\n\tThe URL to bind for the websocket used for communication between the server and client',
         metavar: '<url>'
@@ -221,7 +218,6 @@ export function defaults(supplied: any): Config {
         abbr: 'm',
         full: 'match',
         default: null,
-        callback: function(input){verifyStringIsValidURL(input, '--match [-m]')},
         transform: function(input){ return transformStringFilePathToURL(input)},
         type: 'string',
         help: '\n\tA relative path to a match file which you want opened immediately upon starting (this does not work in the browser!)',
@@ -232,7 +228,7 @@ export function defaults(supplied: any): Config {
         abbr: 'p',
         full: 'pollrate',
         default: 500,
-        callback: function(input){verifyPositiveIntString(input, '--pollrate [-p]')},
+        callback: function(input){ return verifyPositiveIntString(input, '--pollrate [-p]')},
         type: 'number',
         help: '\n\tHow often to poll the server via websocket in ms',
         metavar: '<positive-number>'
@@ -270,8 +266,6 @@ export function defaults(supplied: any): Config {
     .printer(function(str, code){printUsageMessage(str,code)})
     .parse(scriptParameters);
 
-    console.log('Refined parameters: '+ JSON.stringify(parameters));
-
      const defaults: Config =
      {
        gameVersion: <string> suppliedOrParameter(supplied.Gameversion, parameters.gameVersion),
@@ -291,7 +285,7 @@ export function defaults(supplied: any): Config {
        mode: <Mode> suppliedOrParameter(supplied.Mode, parameters.mode)
       };
 
-     console.log('Usable parameters/defaults: ' + JSON.stringify(defaults));
+     console.log('Config defaults: ' + JSON.stringify(defaults));
 
      return defaults;
 
@@ -300,7 +294,7 @@ export function defaults(supplied: any): Config {
 // Writes the given string to the process output stream and exits the process using the given exit code
 // Or if in browser simply writes to console
 function printUsageMessage (str: string, code: number) {
-   if(process.env.ELECTRON === true ){
+   if(process.env.ELECTRON === true){
     electron.remote.process.stdout.write(str);
 
     const errorCode: number = code || 0;
@@ -314,8 +308,8 @@ function printUsageMessage (str: string, code: number) {
 // If that verification fails it uses the given option identifier to print an error message
 function verifyPositiveIntString(input: string, id: string) {
      const inputAsInt: number = parseInt(input);
-     if (inputAsInt === NaN || inputAsInt < 1) {
-        return id + ' must be a positive number!';
+     if(inputAsInt === NaN || inputAsInt < 1) {
+       return id + ' must be a positive number!';
      }
 }
 
@@ -332,14 +326,7 @@ function verifyStringIsValidURL(input: string, id: string){
 function transformStringFilePathToURL(input: string): string | null{
     const url: string = fileUrl(input);
 
-    console.log("Attempting to use match: path= " + input + " url= " + url );
-
-    if(url){
-        return url;
-    }
-    else {
-        return null;
-    }
+    return url ? url : null;
 }
 
 // Verifies the given string can be successfully converted into a value of the Mode enum
@@ -351,9 +338,5 @@ function transformStringToModeEnum(input: string){
 // Returns the suppliedValue if it exists, otherwise it returns the user proved parameter value if it exists,
 // otherwise it returns a default value for the parameter.
 function suppliedOrParameter(suppliedValue: any, parameter: any): any{
-    if(suppliedValue){
-      return suppliedValue;
-    }else{
-      return parameter;
-    }
+    return suppliedValue ? suppliedValue : parameter;
 }

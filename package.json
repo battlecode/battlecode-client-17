@@ -52,7 +52,8 @@
     "tslint": "^3.15.1",
     "typescript": "^2.1.4",
     "typescript-formatter": "^4.0.1",
-    "webpack": "fulls1z3/webpack.git#a5bad5a4798eed10eccb7edf2dabb15693ee9e4e",
+    "uglify-js": "mishoo/UglifyJS2#harmony",
+    "webpack": "^v2.2.0-rc.7",
     "webpack-dev-server": "^2.2.0-rc.0",
     "webpack-merge": "^2.0.0"
   },
