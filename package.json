@@ -12,7 +12,7 @@
     "prod": "webpack",
     "watch": "echo '--- open localhost:8080 in your browser ---' && webpack-dev-server --env.dev",
     "electron": "webpack --env.electron --env.dev && electron .",
-    "prod-electron": "webpack --env.electron && build -wl --dir --ia32 --x64"
+    "prod-electron": "webpack --env.electron && build -mwl --dir --ia32 --x64"
   },
   "repository": {
     "type": "git",
