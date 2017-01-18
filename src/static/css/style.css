@@ -225,11 +225,9 @@ input[type='file'] {
     overflow: scroll;
 }
 
-#mapListContainer {
-    text-align: left;
-    margin-top: 8px;
-    margin-bottom: 8px;
-    padding-left: 48px;
+#mapsDiv {
+    height: 200px;
+    overflow: scroll;
 }
 
 #runMatch {
@@ -244,7 +242,7 @@ input[type='file'] {
 }
 
 #compileLogs {
-    height: 160px;
+    height: 120px;
 }
 
 .errorLog {
@@ -276,4 +274,22 @@ input[type='file'] {
 
 .slide-control-button:hover {
     cursor: pointer;
+}
+
+.map-label {
+    margin: 0px 36px;
+    font-size: 14px;
+    border: 1px solid #151515;
+    padding: 3px 10px;
+    text-align: left;
+    background-color: #555;
+}
+
+.map-label:hover {
+    cursor: pointer;
+}
+
+.map-label.selected {
+    color: black;
+    background-color: #46ff00;
 }
