@@ -36,7 +36,7 @@ export default class MapFilter {
 
   // The scaffold
   private scaffold: ScaffoldCommunicator;
-  private cb = (err: Error | null, maps?: string[]) => {
+  private cb = (err: Error | null, maps?: Set<string>) => {
     // There was an error
     if (err) {
       console.log(err);
@@ -77,9 +77,9 @@ export default class MapFilter {
   /**
    * Indexes maps internally by alphabetical order.
    */
-  private indexMaps(maps: string[]): void {
+  private indexMaps(maps: Set<string>): void {
     this.maps = new Array();
-    for (let map of maps) {
+    maps.forEach((map: string) => {
       const checkbox = document.createElement("input");
       const label = document.createElement("label");
       const div = document.createElement("div");
@@ -110,8 +110,9 @@ export default class MapFilter {
         label: label,
         div: div
       });
-    }
+    });
 
+    // Sort the maps in alphabetical order
     this.maps.sort(function(a: MapSchema, b: MapSchema) {
       const aName: string = a.name.toLowerCase();
       const bName: string = b.name.toLowerCase();
@@ -226,7 +227,7 @@ export default class MapFilter {
     const types: MapType[] = this.getTypes();
 
     this.maps.forEach((map: MapSchema) => {
-      const matchedType: boolean = types.indexOf(map.type) !== -1;
+      const matchedType: boolean = types.includes(map.type);
       const matchedName: boolean = regex === undefined ||
         map.name.toLowerCase().search(regex) !== -1;
       map.label.style.display = matchedType && matchedName ? "unset" : "none";

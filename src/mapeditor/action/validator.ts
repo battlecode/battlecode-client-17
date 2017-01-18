@@ -27,6 +27,11 @@ export default class MapValidator {
   static isValid(map: GameMap): boolean {
     let errors = new Array();
 
+    // Map must not have the same name as a server map
+    if (cst.SERVER_MAPS.includes(map.name)) {
+      errors.push(`The map cannot have the same name as a server map!`);
+    }
+
     // Bodies must be on the map
     // Invariant: bodies in originalBodies don't overlap with each other, and
     //            bodies in symmetricBodies don't overlap with each other
