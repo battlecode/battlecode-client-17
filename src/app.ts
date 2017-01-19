@@ -14,6 +14,8 @@ import ScaffoldCommunicator from './scaffold';
 
 import {electron} from './electron-modules';
 
+import {Tournament, readTournament} from './tournament';
+
 // webpack magic
 // this loads the stylesheet and injects it into the dom
 require('./static/css/style.css');
@@ -68,6 +70,12 @@ export default class Client {
   listener: WebSocketListener | null;
 
   games: Game[];
+
+  tournament?: Tournament;
+
+  // used by tournament logic
+  // ...yeah, it's pretty ugly
+  onMatchDone: (() => void) | null;
 
   currentGame: number | null;
   currentMatch: number | null;
@@ -255,6 +263,24 @@ export default class Client {
         }
       );
     }
+
+    this.controls.onTournamentLoaded = (path: string) => {
+      if (!process.env.ELECTRON) {
+        console.error("Can't load tournament outside of electron!");
+        return;
+      }
+      readTournament(path, (err, tournament) => {
+        if (err) {
+          console.error(`Can't load tournament: ${err}`);
+          return;
+        }
+
+        if (tournament) {
+          this.tournament = tournament;
+          this.tournamentGameStart();
+        }
+      });
+    };
   }
 
   clearScreen() {
@@ -284,6 +310,43 @@ export default class Client {
       });
     }
   }
+
+  private tournamentGameStart() {
+    if (this.tournament) {
+      if (!this.tournament) throw new Error("What?");
+
+      if (this.tournament.current().team2_name == "BYE") {
+        this.tournament.next();
+        this.tournamentGameStart();
+        return;
+      }
+
+      this.tournament.readCurrent((err, data) => {
+        if (err) throw err;
+        if (!data) throw new Error("No match loaded from tournament?");
+
+        this.games = [new Game()];
+        this.games[0].loadFullGameRaw(data);
+        this.setGame(0);
+        this.setMatch(0);
+      });
+    }
+  }
+
+  private tournamentGameEnd() {
+    if (this.tournament) {
+      console.log("Finished game "+this.tournament.current().id);
+      if (this.conf.tournamentOnGameDone) {
+        this.conf.tournamentOnGameDone(this.tournament.current().id);
+      }
+      if (this.tournament.hasNext()) {
+        this.clearScreen();
+        this.tournament.next();
+        this.tournamentGameStart();
+      }
+    }
+  }
+
 
   private runMatch() {
     console.log('Running match.');
@@ -381,6 +444,11 @@ export default class Client {
       if(this.currentMatch < matchCount - 1) {
         this.setMatch(this.currentMatch + 1);
       } else {
+        // TOURNAMENT MODE
+        if (this.tournament) {
+          this.tournamentGameEnd();
+          return;
+        }
         if(this.currentGame < this.games.length - 1) {
           this.setGame(this.currentGame + 1);
           this.setMatch(0);
@@ -405,7 +473,6 @@ export default class Client {
 
     };
     this.matchqueue.removeGame = (game: number) => {
-
       if (game > this.currentGame) {
         this.games.splice(game, 1);
       } else if (this.currentGame == game) {

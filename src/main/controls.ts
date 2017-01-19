@@ -2,6 +2,8 @@ import {Config, Mode} from '../config';
 import * as imageloader from '../imageloader';
 import * as cst from '../constants';
 
+import {path} from '../electron-modules';
+
 /**
  * Game controls: pause/unpause, fast forward, rewind
  */
@@ -21,6 +23,7 @@ export default class Controls {
   // Callbacks initialized from outside Controls
   // Yeah, it's pretty gross :/
   onGameLoaded: (data: ArrayBuffer) => void;
+  onTournamentLoaded: (path: string) => void;
   onTogglePause: () => void;
   onToggleUPS: () => void;
   onToggleRewind: () => void;
@@ -141,7 +144,7 @@ export default class Controls {
     let upload = document.createElement('input');
     upload.id = "file-upload";
     upload.setAttribute('type', 'file');
-    upload.accept = '.bc17';
+    upload.accept = '.bc17,.json';
     upload.onchange = () => this.loadMatch(upload.files as FileList);
     uploadLabel.appendChild(upload);
 
@@ -251,14 +254,18 @@ export default class Controls {
    * Upload a battlecode match file.
    */
   loadMatch(files: FileList) {
-    console.log(files);
     const file = files[0];
     console.log(file);
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.onGameLoaded(reader.result);
-    };
-    reader.readAsArrayBuffer(file);
+    if (file.path.endsWith(".json")) {
+      this.onTournamentLoaded(path.dirname(file.path));
+      // TODO handle non-tournament json files
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.onGameLoaded(reader.result);
+      };
+      reader.readAsArrayBuffer(file);
+    }
   }
 
   /**
