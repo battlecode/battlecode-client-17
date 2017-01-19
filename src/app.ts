@@ -3,7 +3,7 @@ import * as cst from './constants';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
-import {Sidebar, Controls, Splash, Team} from './main/index';
+import {Sidebar, Controls, Splash} from './main/index';
 import {Stats, Console, MatchQueue, GameArea, Renderer, NextStep, TickCounter} from './game/index';
 import {MapEditor} from './mapeditor/index';
 
@@ -314,20 +314,7 @@ export default class Client {
     if (this.tournament) {
       if (!this.tournament) throw new Error("What?");
 
-      //Splash.addScreen(root,
-      //{
-      //  name: "Team A",
-      //  id: 342,
-      //  avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
-      //},
-      //{
-      //  name: "Team B",
-      //  id: 342,
-      //  avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
-      //}, 7, 8);
-      // Splash.removeScreen();
-      // this.stats.resetScore();
-
+      Splash.addScreen(this.conf, this.root, this.tournament.current(), this.tournament.rounds)
       if (this.tournament.current().team2_name == "BYE") {
         this.tournament.next();
         this.tournamentGameStart();

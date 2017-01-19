@@ -1,8 +1,5 @@
-export type Team = {
-  name: string,
-  id: number,
-  avatar: string, // external URL
-};
+import {Config} from '../config';
+import {TournamentGame} from '../tournament';
 
 /**
  * The splash screen for tournaments. Appears between every game (not match)
@@ -84,19 +81,18 @@ export default class Splash {
     }
   }
 
-  static addScreen(root: HTMLElement, teamA: Team, teamB: Team,
-    currentRound: number, maxRound: number): void {
+  static addScreen(conf: Config, root: HTMLElement, game: TournamentGame, maxRound: number): void {
     this.loadScreen();
 
-    this.header.innerText = this.getBracketString(currentRound, maxRound);
+    this.header.innerText = this.getBracketString(game.round, maxRound);
 
-    this.avatarA.src = teamA.avatar;
-    this.nameAndIDA.innerText = `${teamA.name} (#${teamA.id})`;
-    this.avatarB.src = teamB.avatar;
-    this.nameAndIDB.innerText = `${teamB.name} (#${teamB.id})`;
+    this.avatarA.src = conf.tournamentGetAvatar(game.team1_id) || "";
+    this.nameAndIDA.innerText = `${game.team1_name} (#${game.team1_id})`;
+    this.avatarB.src = conf.tournamentGetAvatar(game.team1_id) || "";
+    this.nameAndIDB.innerText = `${game.team2_name} (#${game.team2_id})`;
 
     root.appendChild(this.screen)
-    // setTimeout(function() {Splash.screen.remove()}, 5000);
+    setTimeout(function() {Splash.screen.remove()}, 3000);
   }
 
   static removeScreen() {
