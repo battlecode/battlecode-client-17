@@ -3,9 +3,7 @@ import * as cst from './constants';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
-import Sidebar from './main/sidebar';
-import Controls from './main/controls';
-
+import {Sidebar, Controls, Splash, Team} from './main/index';
 import {Stats, Console, MatchQueue, GameArea, Renderer, NextStep, TickCounter} from './game/index';
 import {MapEditor} from './mapeditor/index';
 
@@ -17,6 +15,7 @@ import {electron} from './electron-modules';
 // webpack magic
 // this loads the stylesheet and injects it into the dom
 require('./static/css/style.css');
+require('./static/css/tournament.css');
 
 // open devtools on f12
 document.addEventListener("keydown", function (e) {
@@ -102,6 +101,20 @@ export default class Client {
         this.conf.pollEvery
       );
     }
+
+    Splash.addScreen(root,
+    {
+      name: "Team A",
+      id: 342,
+      avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
+    },
+    {
+      name: "Team B",
+      id: 342,
+      avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
+    },
+    "Round 2 of 3");
+    // Splash.removeScreen();
   }
 
   /**
