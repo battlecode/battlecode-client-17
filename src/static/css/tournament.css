@@ -7,7 +7,7 @@
 
     background-color: black;
     color: white;
-    font-size: 32px;
+    font-size: 40px;
     font-family: Graduate;
     text-align: center;
     z-index: 5;
@@ -15,30 +15,40 @@
 
 .blackout-container {
     margin-top: 10vh;
-    margin-left: 20vw;
-    margin-right: 20vw;
+    margin-left: 16vw;
+    margin-right: 16vw;
 }
 
-.column {
-    float: left;
-    position: relative;
+.tournament-header {
+    font-size: 64px;
 }
 
 .column-left {
-    width: 16vw;
+    float: left;
+    width: 47%;
 }
 
 .column-center {
-    width: 8vw;
-    left: 16vw;
+    display: inline-block;
+    width: 6%;
+    line-height: 20vw;
 }
 
 .column-right {
-    width: 16vw;
-    left: 24vw;
+    float: right;
+    width: 47%;
 }
 
 .avatar {
-    width: 16vw;
-    height: auto;
+    width: 20vw;
+    height: 20vw;
+    margin-bottom: 32px;
 }
+
+/*.avatar.red {
+    border: 20px solid #db3627;
+}
+
+.avatar.blue {
+    border: 20px solid #4f7ee6;
+}*/
