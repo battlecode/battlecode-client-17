@@ -139,7 +139,7 @@ input[type='file'] {
 
 .teamHeader {
     padding: 14px;
-    font-size: 20px;
+    font-size: 28px;
     margin-top: 5px;
     margin-bottom: 10px;
 }
@@ -197,7 +197,7 @@ input[type='file'] {
     background-color: #151515;
     color: white;
     text-align: center;
-    font-size: 16px;
+    font-size: 20px;
     font-family: "Graduate";
 
     /* Inner formatting */

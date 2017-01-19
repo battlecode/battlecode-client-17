@@ -7,7 +7,7 @@
 
     background-color: black;
     color: white;
-    font-size: 40px;
+    font-size: 54px;
     font-family: Graduate;
     text-align: center;
     z-index: 5;
@@ -20,7 +20,7 @@
 }
 
 .tournament-header {
-    font-size: 64px;
+    font-size: 72px;
 }
 
 .column-left {
