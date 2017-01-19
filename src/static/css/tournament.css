@@ -1,0 +1,44 @@
+.blackout {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+
+    background-color: black;
+    color: white;
+    font-size: 32px;
+    font-family: Graduate;
+    text-align: center;
+    z-index: 5;
+}
+
+.blackout-container {
+    margin-top: 10vh;
+    margin-left: 20vw;
+    margin-right: 20vw;
+}
+
+.column {
+    float: left;
+    position: relative;
+}
+
+.column-left {
+    width: 16vw;
+}
+
+.column-center {
+    width: 8vw;
+    left: 16vw;
+}
+
+.column-right {
+    width: 16vw;
+    left: 24vw;
+}
+
+.avatar {
+    width: 16vw;
+    height: auto;
+}
