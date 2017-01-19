@@ -324,10 +324,10 @@ export default class Client {
       //  name: "Team B",
       //  id: 342,
       //  avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
-      //},
-      //"Round 2 of 3");
+      //}, 7, 8);
       // Splash.removeScreen();
-  
+      // this.stats.resetScore();
+
       if (this.tournament.current().team2_name == "BYE") {
         this.tournament.next();
         this.tournamentGameStart();

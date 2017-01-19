@@ -70,17 +70,33 @@ export default class Splash {
     }
   }
 
-  static addScreen(root: HTMLElement, teamA: Team, teamB: Team, text: string) {
-    Splash.loadScreen();
+  /**
+   * "Round m of n". Display "Quarterfinals", "Semifinals", and "Finals"
+   * accordingly.
+   */
+  private static getBracketString(currentRound: number, maxRound: number): string {
+    const difference = maxRound - currentRound;
+    switch(difference) {
+      case 0: return "Finals (Top 2)";
+      case 1: return "Semifinals (Top 4)";
+      case 2: return "Quarterfinals (Top 8)";
+      default: return `Round ${currentRound} of ${maxRound}`;
+    }
+  }
 
-    Splash.header.innerText = text;
+  static addScreen(root: HTMLElement, teamA: Team, teamB: Team,
+    currentRound: number, maxRound: number): void {
+    this.loadScreen();
 
-    Splash.avatarA.src = teamA.avatar;
-    Splash.nameAndIDA.innerText = `${teamA.name} (#${teamA.id})`;
-    Splash.avatarB.src = teamB.avatar;
-    Splash.nameAndIDB.innerText = `${teamB.name} (#${teamB.id})`;
+    this.header.innerText = this.getBracketString(currentRound, maxRound);
 
-    root.appendChild(Splash.screen);
+    this.avatarA.src = teamA.avatar;
+    this.nameAndIDA.innerText = `${teamA.name} (#${teamA.id})`;
+    this.avatarB.src = teamB.avatar;
+    this.nameAndIDB.innerText = `${teamB.name} (#${teamB.id})`;
+
+    root.appendChild(this.screen)
+    // setTimeout(function() {Splash.screen.remove()}, 5000);
   }
 
   static removeScreen() {
