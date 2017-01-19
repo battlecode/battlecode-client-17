@@ -56,7 +56,9 @@ export default class Stats {
       let teamAvatarNode = document.createElement('img');
       teamAvatarNode.src = avatar;
       teamAvatarNode.className = "teamAvatar";
-      teamHeader.appendChild(teamAvatarNode);
+      let teamAvatarDiv = document.createElement('div');
+      teamAvatarDiv.appendChild(teamAvatarNode);
+      teamHeader.appendChild(teamAvatarDiv);
     }
 
     let teamNameNode = document.createTextNode(teamName);
