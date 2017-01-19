@@ -29,7 +29,7 @@ export default class MapFilter {
   private readonly filterType: Map<MapType, HTMLInputElement>;
 
   // Map types available (NOTE: Update after each tournament)
-  private readonly types: MapType[] = [MapType.DEFAULT, MapType.CUSTOM];
+  private readonly types: MapType[] = [MapType.DEFAULT, MapType.CUSTOM, MapType.SPRINT];
 
   // All the maps displayed on the client
   private maps: Array<MapSchema>;
@@ -193,6 +193,25 @@ export default class MapFilter {
       case "MagicWood": return MapType.DEFAULT;
       case "shrine": return MapType.DEFAULT;
       case "SparseForest": return MapType.DEFAULT;
+      case "Arena": return MapType.SPRINT;
+      case "Barbell": return MapType.SPRINT;
+      case "Boxed": return MapType.SPRINT;
+      case "Bullseye": return MapType.SPRINT;
+      case "Chess": return MapType.SPRINT;
+      case "Clusters": return MapType.SPRINT;
+      case "Cramped": return MapType.SPRINT;
+      case "CrossFire": return MapType.SPRINT;
+      case "DigMeOut": return MapType.SPRINT;
+      case "GiantForest": return MapType.SPRINT;
+      case "LilForts": return MapType.SPRINT;
+      case "Maniple": return MapType.SPRINT;
+      case "MyFirstMap": return MapType.SPRINT;
+      case "OMGTree": return MapType.SPRINT;
+      case "PasscalsTriangles": return MapType.SPRINT;
+      case "Shrubbery": return MapType.SPRINT;
+      case "Sprinkles": return MapType.SPRINT;
+      case "Standoff": return MapType.SPRINT;
+      case "Waves": return MapType.SPRINT;
       default: return MapType.CUSTOM;
     }
   }

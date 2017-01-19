@@ -50,7 +50,26 @@ export const SERVER_MAPS = [
   "LineOfFire",
   "MagicWood",
   "shrine",
-  "SparseForest"
+  "SparseForest",
+  "Arena",
+  "Barbell",
+  "Boxed",
+  "Bullseye",
+  "Chess",
+  "Clusters",
+  "Cramped",
+  "CrossFire",
+  "DigMeOut",
+  "GiantForest",
+  "LilForts",
+  "Maniple",
+  "MyFirstMap",
+  "OMGTree",
+  "PasscalsTriangles",
+  "Shrubbery",
+  "Sprinkles",
+  "Standoff",
+  "Waves"
 ];
 
 export function bodyTypeToString(bodyType: schema.BodyType) {
