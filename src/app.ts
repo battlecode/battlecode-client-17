@@ -365,11 +365,28 @@ export default class Client {
     // Reset the stats bar
     let teamNames = new Array();
     let teamIDs = new Array();
+    let teamAvatars = new Array();
     for (let team in meta.teams) {
       teamNames.push(meta.teams[team].name);
-      teamIDs.push(meta.teams[team].teamID);
+      const id = meta.teams[team].teamID;
+
+      teamIDs.push(id);
+
+      if (this.tournament && this.conf.tournamentGetAvatar) {
+        if (id == 1) {
+          teamAvatars.push(this.conf.tournamentGetAvatar(this.tournament.current().team1_id));
+        } else {
+          teamAvatars.push(this.conf.tournamentGetAvatar(this.tournament.current().team2_id));
+        }
+      }
     }
-    this.stats.initializeGame(teamNames, teamIDs);
+
+    // so uh
+    // it just kinda
+    // happens to work? that team A lines up with team B
+    // ...
+
+    this.stats.initializeGame(teamNames, teamIDs, teamAvatars);
     this.console.setLogsRef(match.logs);
 
     // keep around to avoid reallocating
@@ -514,6 +531,7 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     };
+    this.controls.onNextMatch = () => this.matchqueue.onNextMatch();
 
     // set key options
     const conf = this.conf;

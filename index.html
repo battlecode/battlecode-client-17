@@ -8,9 +8,18 @@
         <div id='client'/>
         <script type="text/javascript" src="bc17/bundle.js" charset="utf-8"></script>
         <script type="text/javascript">
+            function pad(num, size) {
+                var s = num+"";
+                while (s.length < size) s = "0" + s;
+                return s;
+            }
             window.battleClient = window.battlecode.mount(
                 document.getElementById('client'),
-                { websocketURL: "ws://localhost:6175" }
+                {
+                  tournamentGetAvatar: function(id) {
+                    return "avatars/team"+pad(id, 4)+".png";
+                  }
+                }
             );
         </script>
     </body>

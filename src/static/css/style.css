@@ -277,3 +277,8 @@ input[type='file'] {
 .slide-control-button:hover {
     cursor: pointer;
 }
+
+.teamAvatar {
+  width: 70px;
+  height: 70px;
+}

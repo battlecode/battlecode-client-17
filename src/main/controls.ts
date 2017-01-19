@@ -30,6 +30,7 @@ export default class Controls {
   onStepForward: () => void;
   onStepBackward: () => void;
   onSeek: (frame: number) => void;
+  onNextMatch: () => void;
 
   // qualities of progress bar
   canvas: HTMLCanvasElement;
@@ -44,7 +45,8 @@ export default class Controls {
     playbackStop: HTMLImageElement,
     goNext: HTMLImageElement,
     goPrevious: HTMLImageElement,
-    upload: HTMLImageElement
+    upload: HTMLImageElement,
+    matchForward: HTMLImageElement
   };
 
   constructor(conf: Config, images: imageloader.AllImages) {
@@ -61,8 +63,13 @@ export default class Controls {
       playbackStop: images.controls.playbackStop,
       goNext: images.controls.goNext,
       goPrevious: images.controls.goPrevious,
-      upload: images.controls.upload
+      upload: images.controls.upload,
+      matchForward: document.createElement('img')
     }
+    // this is needed for silly reasons
+    // we've already used this ImageElement at another location on the page, so we can't use it here
+    // TODO fix
+    this.imgs.matchForward.src = require('../static/img/controls/skip-forward.png');
 
     let table = document.createElement("table");
     let tr = document.createElement("tr");
@@ -89,6 +96,7 @@ export default class Controls {
     buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
     buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
+    buttons.appendChild(this.createButton("matchForward", () => this.onNextMatch()));
     buttons.appendChild(document.createElement("br"));
     buttons.appendChild(this.locationReadout);
 
@@ -121,6 +129,7 @@ export default class Controls {
     button.setAttribute("type", "button");
     button.id = content;
 
+    console.log(this.imgs, content);
     button.appendChild(this.imgs[content]);
 
     if (hiddenContent != null) {

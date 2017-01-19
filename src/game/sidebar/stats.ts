@@ -48,9 +48,16 @@ export default class Stats {
   /**
    * Colored banner labeled with the given teamName
    */
-  private teamHeaderNode(teamName: string, inGameID: number) {
+  private teamHeaderNode(teamName: string, inGameID: number, avatar?: string) {
     let teamHeader: HTMLDivElement = document.createElement("div");
     teamHeader.className += ' teamHeader';
+
+    if (avatar) {
+      let teamAvatarNode = document.createElement('img');
+      teamAvatarNode.src = avatar;
+      teamAvatarNode.className = "teamAvatar";
+      teamHeader.appendChild(teamAvatarNode);
+    }
 
     let teamNameNode = document.createTextNode(teamName);
     teamHeader.style.backgroundColor = hex[inGameID];
@@ -115,7 +122,7 @@ export default class Stats {
   /**
    * Clear the current stats bar and reinitialize it with the given teams.
    */
-  initializeGame(teamNames: Array<string>, teamIDs: Array<number>){
+  initializeGame(teamNames: Array<string>, teamIDs: Array<number>, teamAvatars?: Array<string>){
     // Remove the previous match info
     while (this.div.firstChild) {
       this.div.removeChild(this.div.firstChild);
@@ -129,6 +136,7 @@ export default class Stats {
       // Collect identifying information
       let teamID = teamIDs[index];
       let teamName = teamNames[index];
+      let teamAvatar = teamAvatars? teamAvatars[index] : undefined;
       let inGameID = index + 1; // teams start at index 1
 
       // A div element containing all stats information about this team
@@ -154,7 +162,7 @@ export default class Stats {
       this.statTds[teamID] = initialStats;
 
       // Add the team name banner, the robot count table, and the stats table
-      teamDiv.appendChild(this.teamHeaderNode(teamName, inGameID));
+      teamDiv.appendChild(this.teamHeaderNode(teamName, inGameID, teamAvatar));
       teamDiv.appendChild(this.robotTable(teamID, inGameID));
       teamDiv.appendChild(this.overallStatsTable(teamID, inGameID));
       teamDiv.appendChild(document.createElement("br"));
