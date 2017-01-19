@@ -109,20 +109,6 @@ export default class Client {
         this.conf.pollEvery
       );
     }
-
-    Splash.addScreen(root,
-    {
-      name: "Team A",
-      id: 342,
-      avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
-    },
-    {
-      name: "Team B",
-      id: 342,
-      avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
-    },
-    "Round 2 of 3");
-    // Splash.removeScreen();
   }
 
   /**
@@ -328,6 +314,20 @@ export default class Client {
     if (this.tournament) {
       if (!this.tournament) throw new Error("What?");
 
+      //Splash.addScreen(root,
+      //{
+      //  name: "Team A",
+      //  id: 342,
+      //  avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
+      //},
+      //{
+      //  name: "Team B",
+      //  id: 342,
+      //  avatar: "http://spaceplace.nasa.gov/templates/featured/sun/sunburn300.png"
+      //},
+      //"Round 2 of 3");
+      // Splash.removeScreen();
+  
       if (this.tournament.current().team2_name == "BYE") {
         this.tournament.next();
         this.tournamentGameStart();
