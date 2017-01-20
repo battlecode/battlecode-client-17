@@ -204,29 +204,35 @@ export default class Sidebar {
       case Mode.GAME:
         this.innerDiv.appendChild(this.stats.div);
         // Reset the onkeydown event listener
+        
         document.onkeydown = (event) => {
           this.onkeydownControls(event);
-          switch (event.keyCode) {
-            case 72: // "h" - Toggle Health Bars
-            this.conf.healthBars = !this.conf.healthBars;
-            break;
-            case 67: // "c" - Toggle Circle Bots
-            this.conf.circleBots = !this.conf.circleBots;
-            break;
-            case 86: // "v" - Toggle Indicator Dots and Lines
-            this.conf.indicators = !this.conf.indicators;
-            break;
-            case 66: // "b" - Toggle Interpolation
-            this.conf.interpolate = !this.conf.interpolate;
-            break;
-            case 78: // "n" - Toggle sight radius
-            this.conf.sightRadius = !this.conf.sightRadius;
-            break;
-            case 77: // "m" - Toggle bullet sight radius
-            this.conf.bulletSightRadius = !this.conf.bulletSightRadius;
-            break;
+          var input = document.activeElement.nodeName == "INPUT";
+          if(!input) {
+            console.log(input);
+            switch (event.keyCode) {
+              case 72: // "h" - Toggle Health Bars
+                this.conf.healthBars = !this.conf.healthBars;
+                break;
+              case 67: // "c" - Toggle Circle Bots
+                this.conf.circleBots = !this.conf.circleBots;
+                break;
+              case 86: // "v" - Toggle Indicator Dots and Lines
+                this.conf.indicators = !this.conf.indicators;
+                break;
+              case 66: // "b" - Toggle Interpolation
+                this.conf.interpolate = !this.conf.interpolate;
+                break;
+              case 78: // "n" - Toggle sight radius
+                this.conf.sightRadius = !this.conf.sightRadius;
+                break;
+              case 77: // "m" - Toggle bullet sight radius
+                this.conf.bulletSightRadius = !this.conf.bulletSightRadius;
+                break;
+            }
           }
         };
+        
         break;
       case Mode.HELP:
         this.innerDiv.appendChild(this.help);
