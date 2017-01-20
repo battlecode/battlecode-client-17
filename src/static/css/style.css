@@ -79,6 +79,7 @@ form {
 
 #canvas-wrapper {
     margin-top: -75px;
+    min-width: 569px;
 }
 
 #export {
@@ -342,4 +343,9 @@ input[type='file'] {
 .map-label.selected {
     color: black;
     background-color: #46ff00;
+}
+
+#battlecode-splash {
+    position: absolute;
+    z-index: -1
 }

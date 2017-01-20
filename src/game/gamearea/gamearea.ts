@@ -117,25 +117,15 @@ export default class GameArea {
 
     // The canvas can be anything in help mode
     if (mode === Mode.HELP) return;
-	  
-    // The canvas should stay in splash screen unless the new mode is game editor
-    if (this.currentMode === Mode.SPLASH) {
-      if(!(mode === Mode.MAPEDITOR) && this.client.games.length === 0) {
-        return;
-      }
-    }
-
-    if (this.currentMode === Mode.MAPEDITOR) {
-      if(this.client.games.length == 0) {
-        if(!(mode === Mode.MAPEDITOR)) {
-          mode = Mode.SPLASH;
-        }
-      }
-    }
 
     // Otherwise clear the canvas area...
-    while (this.wrapper.firstChild) {
-      this.wrapper.removeChild(this.wrapper.firstChild);
+    // Keep splash screen, as it is always behind
+    var children = this.wrapper.children
+    for(var i = 0; i < children.length; i++) {
+      var child = children[i]
+      if (child != this.splashDiv) {
+        this.wrapper.removeChild(children[i])
+      }
     }
 
     // ...and add the correct one
@@ -143,7 +133,7 @@ export default class GameArea {
       this.wrapper.appendChild(this.mapEditorCanvas);
       this.currentMode = Mode.MAPEDITOR;
     } else if (mode === Mode.SPLASH) {
-      this.wrapper.appendChild(this.splashDiv);
+      //this.wrapper.appendChild(this.splashDiv);
       this.currentMode = Mode.SPLASH;
     } else {
       this.wrapper.appendChild(this.canvas);
