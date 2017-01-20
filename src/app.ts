@@ -451,38 +451,43 @@ export default class Client {
     // set key options
     const conf = this.conf;
     document.onkeydown = function(event) {
-      switch (event.keyCode) {
-        case 80: // "p" - Pause/Unpause
-          controls.pause();
-          break;
-        case 79: // "o" - Stop
-          controls.restart();
-          break;
-        case 37: // "LEFT" - Step Backward
-          controls.stepBackward();
-          break;
-        case 39: // "RIGHT" - Step Forward
-          controls.stepForward();
-          break;
-        case 72: // "h" - Toggle Health Bars
-          conf.healthBars = !conf.healthBars;
-          break;
-        case 67: // "c" - Toggle Circle Bots
-          conf.circleBots = !conf.circleBots;
-          break;
-        case 86: // "v" - Toggle Indicator Dots and Lines
-          conf.indicators = !conf.indicators;
-          break;
-        case 66: // "b" - Toggle Interpolation
-          conf.interpolate = !conf.interpolate;
-          break;
-        case 78: // "n" - Toggle sight radius
-          conf.sightRadius = !conf.sightRadius;
-          break;
-        case 77: // "m" - Toggle bullet sight radius
-          conf.bulletSightRadius = !conf.bulletSightRadius;
-          break;
+      
+      var input = document.activeElement.nodeName == "INPUT";
+      if(!input) {
+        switch (event.keyCode) {
+          case 80: // "p" - Pause/Unpause
+            controls.pause();
+            break;
+          case 79: // "o" - Stop
+            controls.restart();
+            break;
+          case 37: // "LEFT" - Step Backward
+            controls.stepBackward();
+            break;
+          case 39: // "RIGHT" - Step Forward
+            controls.stepForward();
+            break;
+          case 72: // "h" - Toggle Health Bars
+            conf.healthBars = !conf.healthBars;
+            break;
+          case 67: // "c" - Toggle Circle Bots
+            conf.circleBots = !conf.circleBots;
+            break;
+          case 86: // "v" - Toggle Indicator Dots and Lines
+            conf.indicators = !conf.indicators;
+            break;
+          case 66: // "b" - Toggle Interpolation
+            conf.interpolate = !conf.interpolate;
+            break;
+          case 78: // "n" - Toggle sight radius
+            conf.sightRadius = !conf.sightRadius;
+            break;
+          case 77: // "m" - Toggle bullet sight radius
+            conf.bulletSightRadius = !conf.bulletSightRadius;
+            break;
+        }
       }
+      
     };
 
     // The main update loop

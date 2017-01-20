@@ -45,19 +45,19 @@
 }
 
 .active-match {
-  background: #ffffff;
-  padding: 4px;
-  border-radius: 4px;
+    background: #ffffff;
+    padding: 4px;
+    border-radius: 4px;
 }
 
 .inactive-match {
-  padding: 4px;
-  cursor: pointer;
+    padding: 4px;
+    cursor: pointer;
 }
 
 #mapEditor {
-  font-family: Tahoma, sans-serif;
-  font-size: 14px;
+    font-family: Tahoma, sans-serif;
+    font-size: 14px;
 }
 
 form {
@@ -72,9 +72,9 @@ form {
 }
 
 #gamearea {
-  display:flex;
-  align-items: center; /* Vertical center alignment */
-  justify-content: center; /* Horizontal center alignment */
+    display:flex;
+    align-items: center; /* Vertical center alignment */
+    justify-content: center; /* Horizontal center alignment */
 }
 
 #canvas-wrapper {
@@ -82,8 +82,8 @@ form {
 }
 
 #export {
-  font-size: 24px;
-  width: 90%;
+    font-size: 24px;
+    width: 90%;
 }
 
 #root {
@@ -223,6 +223,33 @@ input[type='file'] {
     font-size: 12px;
     text-align: left;
     overflow: scroll;
+}
+
+.mapInputBox {
+    padding: 8px 8px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.mapInputLabel {
+    text-align: right;
+    margin-right: 12px;
+  
+}
+
+#gameEditorHeaderTable {
+    margin-left: 16px;
+}
+
+#mapListContainer {
+    text-align: left;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding-left: 48px;
+
 }
 
 #mapsDiv {
