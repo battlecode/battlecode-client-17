@@ -1,22 +1,11 @@
 import {electron, os, fs, path, child_process} from './electron-modules';
+import {SERVER_MAPS} from './constants';
 
 // Code that talks to the scaffold.
 
-const WINDOWS = process.platform === 'windows';
-const MAC = process.platform === 'mac os x';
+const WINDOWS = process.platform === 'win32';
 
 const GRADLE_WRAPPER = WINDOWS ? 'gradlew.bat' : 'gradlew';
-
-// Maps available in the server.
-const SERVER_MAPS = [
-  "Barrier",
-  "DenseForest",
-  "Enclosure",
-  "Hurdle",
-  "MagicWood",
-  "shrine",
-  "SparseForest"
-].sort();
 
 /**
  * Talk to the scaffold!
@@ -92,11 +81,14 @@ export default class ScaffoldCommunicator {
       return cb(
         null,
         files
-          .filter((file) => file.endsWith(path.sep + 'RobotPlayer.java') || file.endsWith(path.sep + 'RobotPlayer.scala'))
+          .filter((file) => file.endsWith(path.sep + 'RobotPlayer.java')
+            || file.endsWith(path.sep + 'RobotPlayer.kt')
+            || file.endsWith(path.sep + 'RobotPlayer.scala'))
           .map((file) => {
             const relPath = path.relative(this.sourcePath, file);
-            return relPath.substring(0, relPath.length - (path.sep + 'RobotPlayer.java').length)
-                          .replace(new RegExp(WINDOWS? '\\\\' : '/', 'g'), '.');
+            return relPath.replace(/.RobotPlayer\.[^/.]+$/, '')
+                          .replace(new RegExp(WINDOWS? '\\\\' : '/', 'g'), '.')
+                          .replace(new RegExp('/', 'g'), '.');
           })
       );
     });
@@ -105,14 +97,14 @@ export default class ScaffoldCommunicator {
   /**
    * Asynchronously get a list of map paths.
    */
-  getMaps(cb: (err: Error | null, maps?: string[]) => void) {
+  getMaps(cb: (err: Error | null, maps?: Set<string>) => void) {
     fs.stat(this.mapPath, (err, stat) => {
       if (err != null) {
         // map path doesn't exist
-        return cb(null, SERVER_MAPS);
+        return cb(null, new Set(SERVER_MAPS));
       }
       if (!stat || !stat.isDirectory()) {
-        return cb(null, SERVER_MAPS);
+        return cb(null, new Set(SERVER_MAPS));
       }
 
       fs.readdir(this.mapPath, (err, files) => {
@@ -121,9 +113,9 @@ export default class ScaffoldCommunicator {
         }
 
         // paths are relative for readdir
-        return cb(null, files.filter((file) => file.endsWith('.map17'))
+        return cb(null, new Set(files.filter((file) => file.endsWith('.map17'))
                   .map((file) => file.substring(0, file.length - 6))
-                  .concat(SERVER_MAPS).sort());
+                  .concat(SERVER_MAPS)));
       });
     });
   }
@@ -149,12 +141,35 @@ export default class ScaffoldCommunicator {
    *
    * TODO what if the server hangs?
    */
-  runMatch(teamA: string, teamB: string, maps: string[], cb: (err: Error | null, stdout: string, stderr: string) => void) {
-      child_process.exec(`"${this.wrapperPath}" runFromClient -PteamA=${teamA} -PteamB=${teamB} -Pmaps=${maps.join(',')}`,
-                        {cwd: this.scaffoldPath}, cb);
+  runMatch(teamA: string, teamB: string, maps: string[], onErr: (err: Error) => void, onExitNoError: () => void,
+           onStdout: (data: string) => void, onStderr: (data: string) => void) {
+    const proc = child_process.spawn(
+      this.wrapperPath,
+      [
+        `runFromClient`,
+        `-x`,
+        `unpackClient`,
+        `-PteamA=${teamA}`,
+        `-PteamB=${teamB}`,
+        `-Pmaps=${maps.join(',')}`,
+      ],
+      {cwd: this.scaffoldPath}
+    );
+    const decoder = new window['TextDecoder']();
+    proc.stdout.on('data', (data) => onStdout(decoder.decode(data)));
+    proc.stderr.on('data', (data) => onStderr(decoder.decode(data)));
+    proc.on('close', (code) => {
+      if (code === 0) {
+        onExitNoError();
+      } else {
+        onErr(new Error(`Non-zero exit code: ${code}`));
+      }
+    });
+    proc.on('error', (err) => {
+      onErr(err);
+    });
   }
 }
-
 
 /**
  * Walk a directory and return all the files found.
@@ -196,5 +211,3 @@ export function walk(dir: string, done: (err: Error | null, paths?: string[]) =>
     });
   });
 };
-
-window['walk'] = walk;
