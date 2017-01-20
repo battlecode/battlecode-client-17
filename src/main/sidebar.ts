@@ -209,25 +209,26 @@ export default class Sidebar {
           this.onkeydownControls(event);
           var input = document.activeElement.nodeName == "INPUT";
           if(!input) {
+            console.log(input);
             switch (event.keyCode) {
               case 72: // "h" - Toggle Health Bars
-              this.conf.healthBars = !this.conf.healthBars;
-              break;
+                this.conf.healthBars = !this.conf.healthBars;
+                break;
               case 67: // "c" - Toggle Circle Bots
-              this.conf.circleBots = !this.conf.circleBots;
-              break;
+                this.conf.circleBots = !this.conf.circleBots;
+                break;
               case 86: // "v" - Toggle Indicator Dots and Lines
-              this.conf.indicators = !this.conf.indicators;
-              break;
+                this.conf.indicators = !this.conf.indicators;
+                break;
               case 66: // "b" - Toggle Interpolation
-              this.conf.interpolate = !this.conf.interpolate;
-              break;
+                this.conf.interpolate = !this.conf.interpolate;
+                break;
               case 78: // "n" - Toggle sight radius
-              this.conf.sightRadius = !this.conf.sightRadius;
-              break;
+                this.conf.sightRadius = !this.conf.sightRadius;
+                break;
               case 77: // "m" - Toggle bullet sight radius
-              this.conf.bulletSightRadius = !this.conf.bulletSightRadius;
-              break;
+                this.conf.bulletSightRadius = !this.conf.bulletSightRadius;
+                break;
             }
           }
         };

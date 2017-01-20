@@ -75,16 +75,17 @@ export default class MapEditor {
       if(!input) {
         switch (event.keyCode) {
           case 67: // "c" - Toggle Circle Bots
-          this.conf.circleBots = !this.conf.circleBots;
-          this.form.render();
-          break;
+            this.conf.circleBots = !this.conf.circleBots;
+            this.form.render();
+            break;
           case 83: // "s" - Set (Add/Update)c
-          this.form.buttonAdd.click();
-          break;
+            this.form.buttonAdd.click();
+            break;
           case 68: // "d" - Delete
-          this.form.buttonDelete.click();
-          break;
+            this.form.buttonDelete.click();
+            break;
         }
+      }
     };
   }
 
