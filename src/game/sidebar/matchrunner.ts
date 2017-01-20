@@ -1,7 +1,7 @@
 import {Config} from '../../config';
 
 import ScaffoldCommunicator from '../../scaffold';
-
+import {MapFilter} from '../index';
 
 /**
  * The interface to run matches from the scaffold.
@@ -19,9 +19,6 @@ export default class MatchRunner {
   private divScaffold: HTMLDivElement;
 
   // Because Gradle is slow
-  private loading: HTMLDivElement;
-  private loadingMaps: Text;
-  private loadingMatch: Text;
   private isLoadingMatch: boolean;
   private compileLogs: HTMLDivElement;
 
@@ -32,20 +29,20 @@ export default class MatchRunner {
   private scaffold: ScaffoldCommunicator;
   private cb: () => void; // callback for loading the scaffold
 
+  // The maps
+  private maps: MapFilter;
+
   // Match information
   private teamA: HTMLSelectElement;
   private teamB: HTMLSelectElement;
-  private mapsContainer: HTMLDivElement;
-  private maps: Array<HTMLInputElement>;
   private selectAllMaps: HTMLButtonElement;
+  private deselectAllMaps: HTMLButtonElement;
   private runMatch: HTMLButtonElement;
   private refreshButton: HTMLButtonElement
 
   constructor(conf: Config, cb: () => void) {
     this.conf = conf;
     this.cb = cb;
-    this.loadingMaps = document.createTextNode("Loading maps...please wait.");
-    this.loadingMatch = document.createTextNode("Loading match...please wait.");
     this.isLoadingMatch = false;
 
     // The scaffold is loaded...
@@ -63,8 +60,8 @@ export default class MatchRunner {
     this.scaffold = scaffold;
 
     // Populate the form
-    this.scaffold.getPlayers(this.teamCallback);
-    this.scaffold.getMaps(this.mapCallback);
+    this.maps.addScaffold(scaffold);
+    this.refresh();
 
     // Hide existing elements and show divScaffold
     this.divNoElectron.style.display = "none";
@@ -106,18 +103,20 @@ export default class MatchRunner {
     let div = document.createElement("div");
     div.style.display = "none";
 
-    this.loading = document.createElement("div");
     this.teamA = document.createElement("select");
     this.teamB = document.createElement("select");
-    this.mapsContainer = document.createElement("div");
     this.runMatch = document.createElement("button");
     this.refreshButton = document.createElement("button");
     this.selectAllMaps = document.createElement("button");
+    this.deselectAllMaps = document.createElement("button");
 
-    // Loading messages area
-    this.loading.appendChild(this.loadingMaps);
-    this.loading.style.fontStyle = "italic";
-    div.appendChild(this.loading);
+    // Compile error log
+    this.compileLogs = document.createElement("div");
+    this.compileLogs.className = "console";
+    this.compileLogs.id = "compileLogs";
+    this.compileLogs.innerHTML = "Compile messages..."
+    div.appendChild(this.compileLogs);
+    div.appendChild(document.createElement("br"));
 
     // Team A selector
     const divA = document.createElement("div");
@@ -137,20 +136,24 @@ export default class MatchRunner {
     div.appendChild(document.createElement("br"));
     div.appendChild(document.createTextNode("Select a map: "));
     div.appendChild(document.createElement("br"));
-    div.appendChild(this.mapsContainer);
-    this.mapsContainer.id = "mapListContainer";
+    this.maps = new MapFilter();
+    div.appendChild(this.maps.div);
 
     // Select all maps button
     this.selectAllMaps.type = "button";
     this.selectAllMaps.appendChild(document.createTextNode("Select All"));
     this.selectAllMaps.onclick = () => {
-      var boxes = this.mapsContainer.getElementsByTagName("INPUT");
-      for(var i = 0; i < boxes.length; i++) {
-        var box = <HTMLInputElement> boxes[i];
-        box.checked = true;
-      }
+      this.maps.selectAll();
     };
     div.appendChild(this.selectAllMaps);
+
+    // Deselect all maps button
+    this.deselectAllMaps.type = "button";
+    this.deselectAllMaps.appendChild(document.createTextNode("Deselect All"));
+    this.deselectAllMaps.onclick = () => {
+      this.maps.deselectAll();
+    };
+    div.appendChild(this.deselectAllMaps);
 
     // Refresh Button
     this.refreshButton.type = "button";
@@ -165,10 +168,6 @@ export default class MatchRunner {
     this.runMatch.id = "runMatch"
     this.runMatch.onclick = this.run;
     div.appendChild(this.runMatch);
-
-    // Compile error log
-    this.compileLogs = document.createElement("div");
-    div.appendChild(this.compileLogs);
 
     return div;
   }
@@ -233,35 +232,6 @@ export default class MatchRunner {
   }
 
   /**
-   * In the scaffold can find maps, populate the client
-   */
-  private mapCallback = (err: Error | null, maps?: string[]) => {
-    // There was an error
-    if (err) {
-      console.log(err);
-      return;
-    }
-
-    // Found the maps
-    if (maps) {
-      this.loadingMaps.remove();
-      this.maps = new Array();
-      // Create a checkbox for each map...
-      for (let map of maps) {
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.value = map;
-
-        // ...and put the checkbox in the UI
-        this.maps.push(checkbox);
-        this.mapsContainer.appendChild(checkbox);
-        this.mapsContainer.appendChild(document.createTextNode(map));
-        this.mapsContainer.appendChild(document.createElement("br"));
-      }
-    }
-  }
-
-  /**
    * If the scaffold can run a match, add the functionality to the run button
    */
   private run = () => {
@@ -271,9 +241,7 @@ export default class MatchRunner {
     }
 
     this.compileLogs.innerHTML = "";
-    this.loading.appendChild(this.loadingMatch);
     this.isLoadingMatch = true;
-    this.loadingMatch.remove();
     this.scaffold.runMatch(
       this.getTeamA(),
       this.getTeamB(),
@@ -288,14 +256,15 @@ export default class MatchRunner {
       (stdoutdata) => {
         const logs = document.createElement('p');
         logs.innerHTML = stdoutdata.split('\n').join('<br/>');
-        logs.className = 'outLog';
         this.compileLogs.appendChild(logs);
+        this.compileLogs.scrollTop = this.compileLogs.scrollHeight;
       },
       (stderrdata) => {
         const logs = document.createElement('p');
         logs.innerHTML = stderrdata.split('\n').join('<br/>');
         logs.className = 'errorLog';
         this.compileLogs.appendChild(logs);
+        this.compileLogs.scrollTop = this.compileLogs.scrollHeight;
       }
     );
   }
@@ -311,16 +280,10 @@ export default class MatchRunner {
     while (this.teamB.firstChild) {
       this.teamB.removeChild(this.teamB.firstChild);
     }
-    while (this.mapsContainer.firstChild) {
-      this.mapsContainer.removeChild(this.mapsContainer.firstChild);
-    }
-
-    // Add loading message
-    this.loading.appendChild(this.loadingMaps);
 
     // Refresh
     this.scaffold.getPlayers(this.teamCallback);
-    this.scaffold.getMaps(this.mapCallback);
+    this.maps.refresh();
   }
 
   /**********************************
@@ -335,12 +298,6 @@ export default class MatchRunner {
   }
 
   private getMaps(): string[] {
-    const maps: string[] = new Array();
-    for (let map of this.maps) {
-      if (map.checked) {
-        maps.push(map.value);
-      }
-    }
-    return maps;
+    return this.maps.getMaps();
   }
 }

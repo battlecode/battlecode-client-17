@@ -1,5 +1,5 @@
 import {schema} from 'battlecode-playback';
-import {Symmetry} from './mapeditor/renderer';
+import {Symmetry} from './mapeditor/index';
 
 // Body types
 export const ARCHON = schema.BodyType.ARCHON;
@@ -39,17 +39,50 @@ export const NUMBER_OF_TEAMS = 2;
 export const NUMBER_OF_INDICATOR_STRINGS = 3;
 export const MIN_NUMBER_OF_ARCHONS = 1;
 export const MAX_NUMBER_OF_ARCHONS = 3;
+export const MAX_ROUND_NUM = 3000;
+
+// Maps available in the server.
+export const SERVER_MAPS = [
+  "Barrier",
+  "DenseForest",
+  "Enclosure",
+  "Hurdle",
+  "LineOfFire",
+  "MagicWood",
+  "shrine",
+  "SparseForest",
+  "Arena",
+  "Barbell",
+  "Boxed",
+  "Bullseye",
+  "Chess",
+  "Clusters",
+  "Cramped",
+  "CrossFire",
+  "DigMeOut",
+  "GiantForest",
+  "LilForts",
+  "Maniple",
+  "MyFirstMap",
+  "OMGTree",
+  "PasscalsTriangles",
+  "Shrubbery",
+  "Sprinkles",
+  "Standoff",
+  "Waves"
+];
 
 export function bodyTypeToString(bodyType: schema.BodyType) {
   switch(bodyType) {
-    case ARCHON:     return "archon";
-    case GARDENER:   return "gardener";
-    case LUMBERJACK: return "lumberjack";
-    case SOLDIER:    return "soldier";
-    case TANK:       return "tank";
-    case SCOUT:      return "scout";
-    case NONE:       return "";
-    default:         throw new Error("invalid body type");
+    case ARCHON:      return "archon";
+    case GARDENER:    return "gardener";
+    case LUMBERJACK:  return "lumberjack";
+    case SOLDIER:     return "soldier";
+    case TANK:        return "tank";
+    case SCOUT:       return "scout";
+    case TREE_BULLET: return "bulletTree";
+    case NONE:        return "";
+    default:          throw new Error("invalid body type");
   }
 }
 

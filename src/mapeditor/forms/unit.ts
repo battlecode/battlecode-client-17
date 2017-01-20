@@ -1,5 +1,6 @@
-import {MapUnit} from '../renderer';
 import Victor = require('victor');
+
+import {MapUnit} from '../index';
 
 export interface UnitForm {
 

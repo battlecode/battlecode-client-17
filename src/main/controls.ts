@@ -9,15 +9,20 @@ export default class Controls {
   div: HTMLDivElement;
   wrapper: HTMLDivElement;
 
+  readonly timeReadout: Text;
   readonly speedReadout: Text;
   readonly locationReadout: Text;
   readonly infoString: HTMLTableDataCellElement;
+
+  // UPS slider
+  private sliderBar: HTMLDivElement;
+  private sliderBtn: HTMLDivElement;
 
   // Callbacks initialized from outside Controls
   // Yeah, it's pretty gross :/
   onGameLoaded: (data: ArrayBuffer) => void;
   onTogglePause: () => void;
-  onToggleForward: () => void;
+  onToggleUPS: () => void;
   onToggleRewind: () => void;
   onStepForward: () => void;
   onStepBackward: () => void;
@@ -34,10 +39,6 @@ export default class Controls {
     playbackStart: HTMLImageElement,
     playbackPause: HTMLImageElement,
     playbackStop: HTMLImageElement,
-    seekForward: HTMLImageElement,
-    skipForward: HTMLImageElement,
-    seekBackward: HTMLImageElement,
-    skipBackward: HTMLImageElement,
     goNext: HTMLImageElement,
     goPrevious: HTMLImageElement,
     upload: HTMLImageElement
@@ -45,7 +46,8 @@ export default class Controls {
 
   constructor(conf: Config, images: imageloader.AllImages) {
     this.div = this.baseDiv();
-    this.speedReadout = document.createTextNode('No match loaded');
+    this.timeReadout = document.createTextNode('No match loaded');
+    this.speedReadout = document.createTextNode('UPS: 0 FPS: 0');
     this.locationReadout = document.createTextNode('Location: (???, ???)');
 
     // initialize the images
@@ -54,10 +56,6 @@ export default class Controls {
       playbackStart: images.controls.playbackStart,
       playbackPause: images.controls.playbackPause,
       playbackStop: images.controls.playbackStop,
-      seekForward: images.controls.seekForward,
-      skipForward: images.controls.skipForward,
-      seekBackward: images.controls.seekBackward,
-      skipBackward: images.controls.skipBackward,
       goNext: images.controls.goNext,
       goPrevious: images.controls.goPrevious,
       upload: images.controls.upload
@@ -70,15 +68,21 @@ export default class Controls {
     let timeline = document.createElement("td");
     timeline.appendChild(this.timeline());
     timeline.appendChild(document.createElement("br"));
-    timeline.appendChild(this.speedReadout);
+    timeline.appendChild(this.timeReadout);
+
+    // create the speed slider
+    let slider = document.createElement("td");
+    slider.vAlign = "top";
+    slider.style.padding = "0px 16px";
+    slider.appendChild(this.slider());
+    slider.appendChild(document.createElement("br"));
+    slider.appendChild(this.speedReadout);
 
     // create the button controls
     let buttons = document.createElement("td");
     buttons.vAlign = "top";
     buttons.appendChild(this.createButton("playbackPause", () => this.pause(), "playbackStart"));
     buttons.appendChild(this.createButton("playbackStop", () => this.restart()));
-    buttons.appendChild(this.createButton("skipBackward", () => this.rewind(), "seekBackward"));
-    buttons.appendChild(this.createButton("skipForward", () => this.forward(), "seekForward"));
     buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
     buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
@@ -93,6 +97,7 @@ export default class Controls {
 
     table.appendChild(tr);
     tr.appendChild(timeline);
+    tr.appendChild(slider);
     tr.appendChild(buttons);
     tr.appendChild(infoString);
 
@@ -111,6 +116,7 @@ export default class Controls {
     let button = document.createElement("button");
     button.setAttribute("class", "custom-button");
     button.setAttribute("type", "button");
+    button.id = content;
 
     button.appendChild(this.imgs[content]);
 
@@ -156,15 +162,68 @@ export default class Controls {
     let canvas = document.createElement("canvas");
     canvas.id = "timelineCanvas";
     canvas.width = 400;
-    canvas.height = 32;
-    canvas.style.backgroundColor = "#222";
-    canvas.style.display = "inline-block";
-    canvas.style.width = "400";
-    canvas.style.height = "32";
+    canvas.height = 1;
     this.ctx = canvas.getContext("2d");
     this.ctx.fillStyle = "white";
     this.canvas = canvas;
     return canvas;
+  }
+
+  /**
+   * Creates the slider that adjusts UPS
+   */
+  private slider(): HTMLDivElement {
+    const div = document.createElement("div");
+    const slider = document.createElement("div");
+    slider.className = "slide-control";
+    const btn = document.createElement("div");
+    btn.className = "slide-control-button";
+
+    let startOffset, sliderWidth, handleWidth;
+
+    btn.onmousedown = function(e) {
+      e.preventDefault();
+      handleWidth = btn.clientWidth / 2;
+      startOffset = e.pageX - btn.offsetLeft - handleWidth;
+      sliderWidth = slider.clientWidth;
+      document.onmousemove = moveHandler;
+      document.onmouseup = stopHandler;
+    };
+
+    const moveHandler = (e: MouseEvent) => {
+      const zeroOffset = 30;
+      const zeroBuffer = 4;
+      var posX = e.pageX - startOffset;
+      posX = Math.min(Math.max(0, posX), sliderWidth);
+
+      // Snap to 0 UPS if within buffer
+      posX = Math.abs(zeroOffset - posX) < zeroBuffer ? zeroOffset : posX;
+      btn.style.left = `${posX}px`;
+      this.onToggleUPS();
+    }
+
+    const stopHandler = () => {
+      document.onmousemove = () => {};
+      document.onmouseup = () => {};
+    }
+
+    div.appendChild(slider);
+    slider.appendChild(btn);
+    this.sliderBar = slider;
+    this.sliderBtn = btn;
+    return div;
+  }
+
+  /**
+   * Returns the UPS determined by the slider
+   */
+  getUPS(): number {
+    const zeroOffset = 30;
+    const handleWidth = this.sliderBtn.clientWidth / 2
+    const buttonOffset = this.sliderBtn.offsetLeft + handleWidth
+    const upsMagnitude = 0.01 * Math.pow(buttonOffset - 30, 2);
+    const ups = buttonOffset < zeroOffset ? -upsMagnitude : upsMagnitude;
+    return Math.round(ups);
   }
 
   /**
@@ -200,21 +259,13 @@ export default class Controls {
       this.onGameLoaded(reader.result);
     };
     reader.readAsArrayBuffer(file);
-
-    // Reset buttons
-    this.resetButtons();
-    this.imgs["playbackStart"].style.display = "unset";
-    this.imgs["playbackPause"].style.display = "none";
   }
 
-  resetButtons() {
-    // Reset buttons
-    this.imgs["playbackStart"].style.display = "none";
-    this.imgs["playbackPause"].style.display = "unset";
-    this.imgs["seekBackward"].style.display = "none";
-    this.imgs["skipBackward"].style.display = "unset";
-    this.imgs["seekForward"].style.display = "none";
-    this.imgs["skipForward"].style.display = "unset";
+  /**
+   * Whether or not the simulation is paused.
+   */
+  isPaused() {
+    return this.imgs.playbackPause.style.display === "none";
   }
 
   /**
@@ -224,9 +275,7 @@ export default class Controls {
     this.onTogglePause();
 
     // toggle the play/pause button
-    const isNowPaused: boolean = this.imgs.playbackPause.style.display === "none";
-    this.resetButtons();
-    if (isNowPaused) {
+    if (this.isPaused()) {
       this.imgs["playbackStart"].style.display = "none";
       this.imgs["playbackPause"].style.display = "unset";
     } else {
@@ -236,45 +285,13 @@ export default class Controls {
   }
 
   /**
-   * Fast forward our simulation.
-   */
-  forward() {
-    this.onToggleForward();
-
-    // toggle speeds between regular speed and fast forward
-    const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";
-    this.resetButtons();
-    if (isNowSkipping) {
-      this.imgs["seekForward"].style.display = "none";
-      this.imgs["skipForward"].style.display = "unset";
-    } else {
-      this.imgs["seekForward"].style.display = "unset";
-      this.imgs["skipForward"].style.display = "none";
-    }
-  }
-
-  /**
-   * Continuous rewind of the simulation
-   */
-  rewind() {
-    this.onToggleRewind();
-
-    // toggle speeds between rewind and regular speed
-    const isNowSkipping: boolean = this.imgs.skipForward.style.display === "none";
-    this.resetButtons();
-    if (isNowSkipping) {
-      this.imgs["seekBackward"].style.display = "none";
-      this.imgs["skipBackward"].style.display = "unset";
-    } else {
-      this.imgs["seekBackward"].style.display = "unset";
-      this.imgs["skipBackward"].style.display = "none";
-    }
-  }
-
-  /**
    * Restart simulation.
    */
   restart() {
+    const pauseButton = document.getElementById("playbackPause");
+    if (!this.isPaused() && pauseButton) {
+      pauseButton.click();
+    }
     this.onSeek(0);
   }
 
@@ -297,12 +314,16 @@ export default class Controls {
    */
   setTime(time: number, loadedTime: number, ups: number, fps: number) {
     // Redraw the timeline
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-    this.ctx.fillRect(0, 0, this.canvas.width * time / loadedTime, this.canvas.height)
+    const scale = this.canvas.width / cst.MAX_ROUND_NUM;
+    this.ctx.fillStyle = "#fff";
+    this.ctx.fillRect(0, 0, time * scale, this.canvas.height)
+    this.ctx.fillStyle = "#151515";
+    this.ctx.fillRect(time * scale, 0, (loadedTime - time) * scale, this.canvas.height)
+    this.ctx.clearRect(loadedTime * scale, 0, this.canvas.width, this.canvas.height)
 
     // Edit the text
-    this.speedReadout.textContent =
-      ` TIME: ${time+1}/${loadedTime+1} UPS: ${ups | 0} FPS: ${fps | 0}`;
+    this.timeReadout.textContent = `TIME: ${time+1}/${loadedTime+1}`;
+    this.speedReadout.textContent = `UPS: ${ups | 0} FPS: ${fps | 0}`;
   }
 
   /**

@@ -5,29 +5,34 @@ import Victor = require('victor');
 
 import {UnitForm, MapUnit} from '../index';
 
-export default class TreeForm implements UnitForm {
+export default class RobotForm implements UnitForm {
 
   // The public div
   readonly div: HTMLDivElement;
 
-  // Neutral tree settings
+  // Form elements for archon settings
   readonly id: HTMLLabelElement;
+  readonly type: HTMLSelectElement;
+  readonly team: HTMLSelectElement;
   readonly x: HTMLInputElement;
   readonly y: HTMLInputElement;
   readonly radius: HTMLInputElement;
-  readonly bullets: HTMLInputElement;
-  readonly body: HTMLSelectElement;
 
   // Callbacks on input change
   readonly width: () => number;
   readonly height: () => number;
   readonly maxRadius: (x: number, y: number, ignoreID?: number) => number;
 
-  // Constants
-  private readonly TREE_TYPES = [
-    cst.NONE, cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT
+  // Constant
+  // NOTE: Bullet trees cannot be spawned until we get server support
+  private readonly ROBOT_TYPES: schema.BodyType[] = [
+    cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT
   ];
-  private readonly DEFAULT_TREE_RADIUS: string = "2";
+  private readonly TEAMS = {
+    "1": "Red",
+    "2": "Blue"
+  };
+  private readonly ARCHON_RADIUS: number = cst.radiusFromBodyType(cst.ARCHON);
 
   constructor(width: () => number, height: () => number,
     maxRadius: (x: number, y: number, ignoreID?: number) => number) {
@@ -40,11 +45,11 @@ export default class TreeForm implements UnitForm {
     // Create HTML elements
     this.div = document.createElement("div");
     this.id = document.createElement("label");
+    this.type = document.createElement("select");
+    this.team = document.createElement("select");
     this.x = document.createElement("input");
     this.y = document.createElement("input");
     this.radius = document.createElement("input");
-    this.bullets = document.createElement("input");
-    this.body = document.createElement("select");
 
     // Create the form
     this.loadInputs();
@@ -59,40 +64,53 @@ export default class TreeForm implements UnitForm {
     this.x.type = "text";
     this.y.type = "text";
     this.radius.type = "text";
-    this.radius.value = this.DEFAULT_TREE_RADIUS;
-    this.bullets.type = "text";
-    this.bullets.value = "0";
-    this.TREE_TYPES.forEach((type: schema.BodyType) => {
+    this.radius.disabled = true;
+    this.radius.value = String(cst.radiusFromBodyType(cst.ARCHON));
+    this.ROBOT_TYPES.forEach((type: schema.BodyType) => {
       const option = document.createElement("option");
       option.value = String(type);
       option.appendChild(document.createTextNode(cst.bodyTypeToString(type)));
-      this.body.appendChild(option);
+      this.type.appendChild(option);
     });
+    for (let team in this.TEAMS) {
+      const option = document.createElement("option");
+      option.value = String(team);
+      option.appendChild(document.createTextNode(this.TEAMS[team]));
+      this.team.appendChild(option);
+    }
   }
 
   /**
-   * Creates the HTML form that collects tree information.
+   * Creates the HTML form that collects archon information.
    */
   private createForm(): HTMLFormElement {
     // HTML structure
     const form: HTMLFormElement = document.createElement("form");
     const id: HTMLDivElement = document.createElement("div");
+    const type: HTMLDivElement = document.createElement("div");
+    const team: HTMLDivElement = document.createElement("div");
     const x: HTMLDivElement = document.createElement("div");
     const y: HTMLDivElement = document.createElement("div");
     const radius: HTMLDivElement = document.createElement("div");
-    const bullets: HTMLDivElement = document.createElement("div");
-    const body: HTMLDivElement = document.createElement("div");
     form.appendChild(id);
+    form.appendChild(type);
+    form.appendChild(team);
     form.appendChild(x);
     form.appendChild(y);
     form.appendChild(radius);
-    form.appendChild(bullets);
-    form.appendChild(body);
     form.appendChild(document.createElement("br"));
 
-    // Tree ID
+    // Robot ID
     id.appendChild(document.createTextNode("ID:"));
     id.appendChild(this.id);
+
+    // Robot type
+    type.appendChild(document.createTextNode("Type:"));
+    type.appendChild(this.type);
+
+    // Team
+    team.appendChild(document.createTextNode("Team:"));
+    team.appendChild(this.team);
 
     // X coordinate
     x.appendChild(document.createTextNode("X:"));
@@ -106,14 +124,6 @@ export default class TreeForm implements UnitForm {
     radius.appendChild(document.createTextNode("Radius:"));
     radius.appendChild(this.radius);
 
-    // Bullets
-    bullets.appendChild(document.createTextNode("Bullets:"));
-    bullets.appendChild(this.bullets);
-
-    // Tree body
-    body.appendChild(document.createTextNode("Body:"));
-    body.appendChild(this.body);
-
     return form;
   }
 
@@ -121,6 +131,10 @@ export default class TreeForm implements UnitForm {
    * Add callbacks to the form elements.
    */
   private loadCallbacks(): void {
+    // The radius must adjust for the new type
+    this.type.onchange = () => {
+      this.updateRadius();
+    }
 
     // X must be in the range [0, this.width]
     this.x.onchange = () => {
@@ -139,18 +153,6 @@ export default class TreeForm implements UnitForm {
       this.y.value = isNaN(value) ? "" : String(value);
       this.updateRadius();
     };
-
-    // Tree of this radius must not overlap with other units
-    this.radius.onchange = () => {
-      this.updateRadius();
-    };
-
-    // Bullets must be a number >= 0
-    this.bullets.onchange = () => {
-      let value: number = this.getBullets();
-      value = Math.max(value, 0);
-      this.bullets.value = isNaN(value) ? "0" : String(value);
-    };
   }
 
   /**
@@ -160,28 +162,28 @@ export default class TreeForm implements UnitForm {
     const id = this.getID();
     const x = this.getX();
     const y = this.getY();
-    const radius = this.getRadius();
+    const radius = cst.radiusFromBodyType(this.getType());
 
-    // If either x or y is blank, the radius must be between cst.MIN_TREE_RADIUS
-    // and cst.MAX_TREE_RADIUS
+    // If either x or y is blank, default to the type radius
     if (isNaN(x) || isNaN(y)) {
-      this.radius.value = String(
-        Math.max(Math.min(cst.MAX_TREE_RADIUS, radius), cst.MIN_TREE_RADIUS)
-      );
-      return;
+      this.radius.value = String(radius);
     }
 
-    // Otherwise, the radius is 0 if invalid, the maximum valid radius if
-    // previously invalid, or the minimum of the current radius and the maximum
-    // valid radius otheriwse
-    const maxRadius = Math.min(this.maxRadius(x, y, id), cst.MAX_TREE_RADIUS);
-    if (maxRadius < cst.MIN_TREE_RADIUS) {
+    // Otherwise, the radius is 0 if invalid, or the radius of the type
+    const maxRadius = this.maxRadius(x, y, id);
+    if (maxRadius < radius) {
       this.radius.value = "0";
-    } else if (isNaN(radius) || radius === 0) {
-      this.radius.value = String(maxRadius);
     } else {
-      this.radius.value = String(Math.min(maxRadius, radius));
+      this.radius.value = String(radius);
     }
+  }
+
+  private getType(): schema.BodyType {
+    return parseInt(this.type.options[this.type.selectedIndex].value);
+  }
+
+  private getTeam(): number {
+    return parseInt(this.team.options[this.team.selectedIndex].value);
   }
 
   private getX(): number {
@@ -196,14 +198,6 @@ export default class TreeForm implements UnitForm {
     return parseFloat(this.radius.value);
   }
 
-  private getBullets(): number {
-    return parseFloat(this.bullets.value);
-  }
-
-  private getBody(): schema.BodyType {
-    return parseInt(this.body.options[this.body.selectedIndex].value);
-  }
-
   getID(): number | undefined {
     const id = parseInt(this.id.textContent || "NaN");
     return isNaN(id) ? undefined : id;
@@ -212,34 +206,29 @@ export default class TreeForm implements UnitForm {
   resetForm(): void {
     this.x.value = "";
     this.y.value = "";
+    this.radius.value = String(cst.radiusFromBodyType(this.getType()));
   }
 
-  setForm(loc: Victor, unit?: MapUnit, id?: number): void {
-
+  setForm(loc: Victor, body?: MapUnit, id?: number): void {
     this.x.value = String(loc.x);
     this.y.value = String(loc.y);
-
-    if (unit && id) {
-      this.id.textContent = String(id);
-      this.radius.value = String(unit.radius);
-      this.bullets.value = String(unit.containedBullets);
-      this.body.value = String(unit.containedBody);
-    } else {
-      this.id.textContent = "";
-      this.updateRadius();
+    this.id.textContent = id === undefined ? "" : String(id);
+    if (body && id) {
+      this.type.value = String(body.type);
+      this.team.value = String(body.teamID);
     }
+    this.updateRadius();
   }
 
   isValid(): boolean {
     const x = this.getX();
     const y = this.getY();
     const radius = this.getRadius();
-    const bullets = this.getBullets();
 
-    return !(isNaN(x) || isNaN(y) || isNaN(radius) || isNaN(bullets) || radius === 0);
+    return !(isNaN(x) || isNaN(y) || isNaN(radius) || radius === 0);
   }
 
-  getUnit(): MapUnit | undefined {
+  getUnit(id: number): MapUnit | undefined {
     if (!this.isValid()) {
       return undefined;
     }
@@ -247,10 +236,10 @@ export default class TreeForm implements UnitForm {
     return {
       loc: new Victor(this.getX(), this.getY()),
       radius: this.getRadius(),
-      type: cst.TREE_NEUTRAL,
-      containedBullets: this.getBullets(),
-      containedBody: this.getBody(),
-      teamID: 0
+      type: this.getType(),
+      containedBullets: 0,
+      containedBody: cst.NONE,
+      teamID: this.getTeam()
     }
   }
 }

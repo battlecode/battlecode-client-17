@@ -32,10 +32,6 @@ export type AllImages = {
     playbackPause: Image,
     playbackStart: Image,
     playbackStop: Image,
-    seekBackward: Image,
-    seekForward: Image,
-    skipBackward: Image,
-    skipForward: Image,
     matchForward: Image,
     matchBackward: Image,
     upload: Image
@@ -117,10 +113,6 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.controls, 'playbackPause', require(dirname + 'controls/playback-pause.png'));
   img(result.controls, 'playbackStart', require(dirname + 'controls/playback-start.png'));
   img(result.controls, 'playbackStop', require(dirname + 'controls/playback-stop.png'));
-  img(result.controls, 'seekBackward', require(dirname + 'controls/seek-backward.png'));
-  img(result.controls, 'seekForward', require(dirname + 'controls/seek-forward.png'));
-  img(result.controls, 'skipBackward', require(dirname + 'controls/skip-backward.png'));
-  img(result.controls, 'skipForward', require(dirname + 'controls/skip-forward.png'));
   img(result.controls, 'matchBackward', require(dirname + 'controls/skip-backward.png'));
   img(result.controls, 'matchForward', require(dirname + 'controls/skip-forward.png'));
   img(result.controls, 'upload', require(dirname + 'controls/upload.png'));

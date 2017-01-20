@@ -5,17 +5,11 @@ import * as imageloader from './imageloader';
 
 import Sidebar from './main/sidebar';
 import Controls from './main/controls';
-import Stats from './game/sidebar/stats';
-import Console from './game/sidebar/console';
-import MatchQueue from './game/sidebar/matchqueue';
-import MapEditor from './mapeditor/mapeditor';
 
-import GameArea from './game/gamearea/gamearea';
-import Renderer from './game/gamearea/renderer';
-import NextStep from './game/nextstep';
-import TickCounter from './game/fps';
+import {Stats, Console, MatchQueue, GameArea, Renderer, NextStep, TickCounter} from './game/index';
+import {MapEditor} from './mapeditor/index';
+
 import WebSocketListener from './websocket';
-
 import ScaffoldCommunicator from './scaffold';
 
 import {electron} from './electron-modules';
@@ -132,7 +126,6 @@ export default class Client {
 
     // Restart game loop
     this.runMatch();
-    this.controls.resetButtons();
     this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch);
     this.games[this.currentGame ? this.currentGame: 0].getMatch(this.currentMatch).seek(0);
   }
@@ -156,12 +149,6 @@ export default class Client {
         break;
         case 79: // "o" - Stop
         this.controls.restart();
-        break;
-        case 37: // "LEFT" - Skip/Seek Backward
-        this.controls.rewind();
-        break;
-        case 39: // "RIGHT" - Skip/Seek Forward
-        this.controls.forward();
         break;
       }
     };
@@ -346,10 +333,7 @@ export default class Client {
       this.conf, meta as Metadata, onRobotSelected, onMouseover);
 
     // How fast the simulation should progress
-    let goalUPS = 10;
-
-    // Keep track of rewinding for <= 0 turn case
-    let rewinding = false;
+    let goalUPS = this.controls.getUPS();
 
     // A variety of stuff to track how fast the simulation is going
     let rendersPerSecond = new TickCounter(.5, 100);
@@ -364,16 +348,10 @@ export default class Client {
     let externalSeek = false;
 
     this.controls.onTogglePause = () => {
-      goalUPS = goalUPS === 0? 10 : 0;
-      rewinding = false;
+      goalUPS = goalUPS === 0 ? this.controls.getUPS() : 0;
     };
-    this.controls.onToggleForward = () => {
-      goalUPS = goalUPS === 300 ? 10 : 300;
-      rewinding = false;
-    };
-    this.controls.onToggleRewind = () => {
-      goalUPS = goalUPS === -100 ? 10 : -100;
-      rewinding = !rewinding;
+    this.controls.onToggleUPS = () => {
+      goalUPS = this.controls.isPaused() ? 0 : this.controls.getUPS();
     };
     this.controls.onSeek = (turn: number) => {
       externalSeek = true;
@@ -384,13 +362,17 @@ export default class Client {
       if(!(goalUPS == 0)) {
         this.controls.pause();
       }
-      this.controls.onSeek(match.current.turn + 1);
+      if (match.current.turn < match['_farthest'].turn) {
+        this.controls.onSeek(match.current.turn + 1);
+      }
     };
     this.controls.onStepBackward = () => {
       if(!(goalUPS == 0)) {
         this.controls.pause();
       }
-      this.controls.onSeek(match.current.turn - 1);
+      if (match.current.turn > 0) {
+        this.controls.onSeek(match.current.turn - 1);
+      }
     };
     this.matchqueue.onNextMatch = () => {
       console.log("NEXT MATCH");
@@ -465,15 +447,15 @@ export default class Client {
       this.setGame(game);
       this.setMatch(match);
     };
-    this.controls.canvas.addEventListener("mousedown", function(event) {
+    this.controls.canvas.onclick = function(event) {
       // jump to a frame when clicking the controls timeline
-      let width = event.offsetX;
-      let maxWidth = (<HTMLCanvasElement>this).width;
-      let turn = Math.floor(match['_farthest'].turn * width / maxWidth);
+      let width: number = (<HTMLCanvasElement>this).width;
+      let turn: number = event.offsetX / width * cst.MAX_ROUND_NUM;
+      turn = Math.round(Math.min(match['_farthest'].turn, turn));
       externalSeek = true;
       match.seek(turn);
       interpGameTime = turn;
-    }, false);
+    };
 
     // set key options
     const conf = this.conf;
@@ -496,12 +478,6 @@ export default class Client {
           break;
         case 67: // "c" - Toggle Circle Bots
           conf.circleBots = !conf.circleBots;
-          break;
-        case 70: // "f" - Skip/Seek Forward
-          controls.forward();
-          break;
-        case 82: // "r" - Skip/Seek Backward
-          controls.rewind();
           break;
         case 86: // "v" - Toggle Indicator Dots and Lines
           conf.indicators = !conf.indicators;
@@ -528,8 +504,7 @@ export default class Client {
         if (match.current.turn === match.seekTo) {
           externalSeek = false;
         }
-      } else if (rewinding && match.current.turn <= 10) {
-        this.controls.rewind();
+      } else if (goalUPS < 0 && match.current.turn === 0) {
         this.controls.pause();
       } else if (Math.abs(interpGameTime - match.current.turn) < 10) {
         // only update time if we're not seeking

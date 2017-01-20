@@ -103,8 +103,6 @@ export default class Sidebar {
     <b class="red">Keyboard Shortcuts</b><br>
     LEFT - Step Back One Turn<br>
     RIGHT - Step Forward One Turn<br>
-    R - Skip/Seek Backward<br>
-    F - Skip/Seek Forward<br>
     P - Pause/Unpause<br>
     O - Stop<br>
     H - Toggle Health Bars<br>
