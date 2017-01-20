@@ -32,7 +32,7 @@ export default class Stats {
 
   readonly stats: string[] = ["Bullets", "Victory Points"];
   readonly robots: schema.BodyType[] = [
-    cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT
+    cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT, cst.TREE_BULLET
   ];
 
   constructor(conf: Config, images: AllImages) {
