@@ -164,7 +164,7 @@ export default class Client {
    * Loads canvas to display game world.
    */
   loadGameArea() {
-    this.gamearea = new GameArea(this.conf, this.imgs, this.mapeditor.canvas, this);
+    this.gamearea = new GameArea(this.conf, this.imgs, this.mapeditor.canvas);
     this.sidebar.cb = () => {
       this.gamearea.setCanvas();
       this.controls.setControls();

@@ -16,18 +16,16 @@ export default class GameArea {
   private readonly wrapper: HTMLDivElement;
   private readonly mapEditorCanvas: HTMLCanvasElement;
   private currentMode : Mode;
-  readonly client : Client;
 
   // Options
   private readonly conf: Config
 
-  constructor(conf: Config, images: AllImages, mapEditorCanvas: HTMLCanvasElement, client: Client) {
+  constructor(conf: Config, images: AllImages, mapEditorCanvas: HTMLCanvasElement) {
     this.div = document.createElement("div");
     this.div.id = "gamearea";
     this.conf = conf;
     this.images = images;
     this.mapEditorCanvas = mapEditorCanvas;
-	this.client = client;
 
     // Create the canvas
     const wrapper: HTMLDivElement = document.createElement("div");
