@@ -183,8 +183,8 @@ export default class Stats {
       teamDiv.appendChild(this.teamHeaderNode(teamName, inGameID, teamAvatar));
       teamDiv.appendChild(this.robotTable(teamID, inGameID));
       teamDiv.appendChild(this.overallStatsTable(teamID, inGameID));
-      teamDiv.appendChild(document.createElement("br"));
-      teamDiv.appendChild(document.createElement("br"));
+      /*teamDiv.appendChild(document.createElement("br"));
+      teamDiv.appendChild(document.createElement("br"));*/
 
       this.teams.appendChild(teamDiv);
     }

@@ -22,6 +22,12 @@
 .tournament-header {
     font-size: 72px;
 }
+.tournament-subheader {
+    font-size: 18px;
+}
+.tournament-extra {
+    color: gray;
+}
 
 .column-left {
     float: left;
@@ -45,6 +51,14 @@
     margin-bottom: 32px;
 }
 
+.big-avatar {
+    width: 25vw;
+    height: 25vw;
+    margin-bottom: 32px;
+}
+
 .scorecard {
-    font-size: 80px;
+    margin-top: 3px;
+    font-size: 40px;
+    margin-bottom: 32px;
 }

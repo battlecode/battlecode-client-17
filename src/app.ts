@@ -276,6 +276,7 @@ export default class Client {
 
         if (tournament) {
           this.tournament = tournament;
+          tournament.seek(2, 0);
           this.tournamentGameStart();
         }
       });
@@ -312,38 +313,53 @@ export default class Client {
 
   private tournamentGameStart() {
     if (this.tournament) {
-      if (!this.tournament) throw new Error("What?");
 
-      Splash.addScreen(this.conf, this.root, this.tournament.current(), this.tournament.rounds)
-      if (this.tournament.current().team2_name == "BYE") {
-        this.tournament.next();
-        this.tournamentGameStart();
-        return;
-      }
+      this.stats.resetScore();
 
-      this.tournament.readCurrent((err, data) => {
-        if (err) throw err;
-        if (!data) throw new Error("No match loaded from tournament?");
+      Splash.addScreen(this.conf, this.root, this.tournament.current(), this.tournament, this.tournament.rounds);
 
-        this.games = [new Game()];
-        this.games[0].loadFullGameRaw(data);
-        this.setGame(0);
-        this.setMatch(0);
-      });
+      setTimeout(() => {
+        Splash.removeScreen();
+        if (!this.tournament) throw new Error("What?");
+        
+        if (this.tournament.current().team2_name == "BYE") {
+          this.tournamentGameEnd();
+          return;
+        }
+
+        this.tournament.readCurrent((err, data) => {
+          if (err) throw err;
+          if (!data) throw new Error("No match loaded from tournament?");
+
+          this.games = [new Game()];
+          this.games[0].loadFullGameRaw(data);
+          this.setGame(0);
+          this.setMatch(0);
+        });
+      }, 5000);
     }
   }
 
   private tournamentGameEnd() {
     if (this.tournament) {
-      console.log("Finished game "+this.tournament.current().id);
+      const current = this.tournament.current();
+      console.log("Finished game "+current.id);
       if (this.conf.tournamentOnGameDone) {
-        this.conf.tournamentOnGameDone(this.tournament.current().id);
+        this.conf.tournamentOnGameDone(current.id);
       }
-      if (this.tournament.hasNext()) {
-        this.clearScreen();
-        this.tournament.next();
-        this.tournamentGameStart();
-      }
+      const winner = current.winner_id == current.team1_id? 'A' : 'B';
+      Splash.addWinnerScreen(this.conf, this.root, current, winner);
+
+      setTimeout(() => {
+        Splash.removeScreen();
+        if (!this.tournament) throw new Error("What?");
+
+        if (this.tournament.hasNext()) {
+          this.clearScreen();
+          this.tournament.next();
+          this.tournamentGameStart();
+        }
+      }, 3000);
     }
   }
 
@@ -460,6 +476,13 @@ export default class Client {
       const matchCount = this.games[this.currentGame as number].matchCount;
       if(this.currentMatch < matchCount - 1) {
         this.setMatch(this.currentMatch + 1);
+        if (this.tournament) {
+          if (!match.winner) {
+            console.log("NO WINNER WHOOPS");
+          } else {
+            this.stats.updateScore(match.winner);
+          }
+        }
       } else {
         // TOURNAMENT MODE
         if (this.tournament) {

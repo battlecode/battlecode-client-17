@@ -18,6 +18,16 @@
                 {
                   tournamentGetAvatar: function(id) {
                     return "avatars/team"+pad(id, 4)+".png";
+                  },
+                  tournamentOnGameDone: function(id) {
+                    require('child_process').exec(
+                        "python ../scripts/set_watched.py "+id,
+                        function(code, out, err) {
+                            console.log("set watched: "+out);
+                            console.warn("set watched: "+err);
+                            console.log("set watched: "+code);
+                        }
+                    );
                   }
                 }
             );

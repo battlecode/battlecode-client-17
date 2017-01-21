@@ -74,13 +74,13 @@ export interface Config {
    * Where to find avatars when running a tournament.
    * Should return paths to avatars that can be used by an <image> element.
    */
-  tournamentGetAvatar: (teamID: number) => string | null;
+  tournamentGetAvatar: ((teamID: number) => string) | null;
 
   /**
    * What to do when a game has run.
    * This is a hack needed only by Teh Devs.
    */
-  tournamentOnGameDone: (gameID: number) => string | null;
+  tournamentOnGameDone: ((gameID: number) => string) | null;
 
   /**
    * The mode of the game
