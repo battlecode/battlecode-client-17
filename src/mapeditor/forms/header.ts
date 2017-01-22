@@ -90,6 +90,10 @@ export default class HeaderForm {
 
       // Redraw the canvas
       this.cb();
+      
+      // Trigger a resize event for the splash screen
+      window.dispatchEvent(new Event('resize'));
+      
     };
 
     this.height.onchange = () => {
@@ -101,6 +105,10 @@ export default class HeaderForm {
 
       // Redraw the canvas
       this.cb();
+      
+      // Trigger a resize event for the splash screen
+      window.dispatchEvent(new Event('resize'));
+      
     };
   }
 

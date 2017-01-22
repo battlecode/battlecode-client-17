@@ -43,7 +43,7 @@ export default class GameArea {
 
     // Add elements to the main div
     this.div.appendChild(this.wrapper);
-    this.wrapper.appendChild(this.splashDiv);
+    this.div.appendChild(this.splashDiv);
   }
 
   /**
@@ -117,25 +117,56 @@ export default class GameArea {
     if (mode === Mode.HELP) return;
 
     // Otherwise clear the canvas area...
-    // Keep splash screen, as it is always behind
-    var children = this.wrapper.children
-    for(var i = 0; i < children.length; i++) {
-      var child = children[i]
-      if (child != this.splashDiv) {
-        this.wrapper.removeChild(children[i])
-      }
+    while(this.wrapper.firstChild) {
+      this.wrapper.removeChild(this.wrapper.firstChild);
     }
 
     // ...and add the correct one
+    var shouldListen = false;
     if (mode === Mode.MAPEDITOR) {
       this.wrapper.appendChild(this.mapEditorCanvas);
       this.currentMode = Mode.MAPEDITOR;
+      shouldListen = true;
     } else if (mode === Mode.SPLASH) {
       //this.wrapper.appendChild(this.splashDiv);
       this.currentMode = Mode.SPLASH;
+      
+      // Reset change listeners
+      window.onresize = function() {};
+      
     } else {
-      this.wrapper.appendChild(this.canvas);
+      this.wrapper.appendChild(this.canvas); // TODO: Only append if a game is available in client.games
       this.currentMode = Mode.GAME;
+      shouldListen = true;
+      console.log("Now a game");
     }
+    
+    if(shouldListen) {
+      window.onresize = function() {
+        var wrapper : HTMLDivElement | null = <HTMLDivElement> document.getElementById("canvas-wrapper")
+        var splash : HTMLDivElement | null = <HTMLDivElement> document.getElementById("battlecode-splash");
+        if(wrapper.firstChild && splash) {
+          var currentCanvas : HTMLCanvasElement = <HTMLCanvasElement> wrapper.firstChild;
+          
+          // This part is nasty, but handles the case where no game is in the canvas
+          // If the map dimensions just so happen to equal these parameters, this will
+          // still have the desired effect, as the client does not show with a map of
+          // that size
+          if(currentCanvas.clientHeight != 150 && currentCanvas.clientWidth != 300) {
+            splash.style.maxHeight = "" + currentCanvas.clientHeight + "px";
+            splash.style.maxWidth = "" + currentCanvas.clientWidth + "px";
+          } else {
+            splash.style.maxHeight = "";
+            splash.style.maxWidth = "";
+          }
+        }
+      };
+    }
+    
+    // Reset splash size and reconfigure
+    this.splashDiv.style.maxHeight = "";
+    this.splashDiv.style.maxWidth = "";
+    window.dispatchEvent(new Event('resize'));
+    
   };
 }
