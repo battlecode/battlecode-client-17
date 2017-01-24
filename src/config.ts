@@ -74,6 +74,11 @@ export interface Config {
    * The mode of the game
    */
   mode: Mode;
+
+  /**
+   * Whether to display the splash screen.
+   */
+  splash: boolean;
 }
 
 /**
@@ -93,7 +98,7 @@ export enum Mode {
 export function defaults(supplied?: any): Config {
   supplied = supplied || {};
   return {
-    gameVersion: supplied.gameVersion || "ANY",
+    gameVersion: supplied.gameVersion || "2017.1.4.0", //TODO: Change this on each release!
     fullscreen: supplied.fullscreen || false,
     width: supplied.width || 600,
     height: supplied.height || 600,
@@ -105,8 +110,9 @@ export function defaults(supplied?: any): Config {
     healthBars: supplied.healthBars || true,
     circleBots: supplied.circleBots || false,
     indicators: supplied.indicators || true,
+    mode: supplied.mode || Mode.QUEUE,
+    splash: supplied.splash || supplied.matchFileURL == null || true,
     sightRadius: supplied.sightRadius || false,
-    bulletSightRadius: supplied.bulletSightRadius || false,
-    mode: supplied.mode || Mode.GAME
+    bulletSightRadius: supplied.bulletSightRadius || false
   };
 }

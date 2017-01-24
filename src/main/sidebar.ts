@@ -199,7 +199,7 @@ export default class Sidebar {
       this.innerDiv.removeChild(this.innerDiv.firstChild);
     }
 
-    // Update the div and set the corret onkeydown events
+    // Update the div and set the correct onkeydown events
     switch (this.conf.mode) {
       case Mode.GAME:
         this.innerDiv.appendChild(this.stats.div);

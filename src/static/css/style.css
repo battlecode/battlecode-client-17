@@ -79,6 +79,9 @@ form {
 
 #canvas-wrapper {
     margin-top: -75px;
+    min-width: 569px;
+    text-align: center;
+    margin-right: 320px;
 }
 
 #export {
@@ -130,11 +133,6 @@ input[type='file'] {
     background: -o-linear-gradient(#bbb, #333);
     background: -moz-linear-gradient(#bbb, #333);
     background: linear-gradient(#bbb, #333);
-}
-
-#canvas-wrapper {
-    text-align: center;
-    padding-right: 320px;
 }
 
 .teamHeader {
@@ -223,6 +221,31 @@ input[type='file'] {
     font-size: 12px;
     text-align: left;
     overflow: scroll;
+}
+
+#splashSubtitle {
+    font-size: 24px;
+    font-family: Graduate;
+    color: white;
+    margin: 8px;
+}
+
+#splashTitle {
+    font-size: 56px;
+    font-family: Graduate;
+    font-weight: bold;
+    color: #e03636;
+    text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    1px 1px 0 #fff;
+    margin: 0px;
+}
+
+#splashNewVersion {
+    color: deepskyblue;
+
 }
 
 .mapInputBox {
@@ -319,4 +342,13 @@ input[type='file'] {
 .map-label.selected {
     color: black;
     background-color: #46ff00;
+}
+
+#battlecode-splash {
+    position: absolute;
+    text-align: center;
+    z-index: -1;
+    overflow: hidden;
+    margin-top: -39px;
+    margin-left: -161px;
 }

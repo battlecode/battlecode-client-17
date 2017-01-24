@@ -169,6 +169,7 @@ export default class Client {
       this.gamearea.setCanvas();
       this.controls.setControls();
     };
+
     return this.gamearea.div;
   }
 
@@ -184,7 +185,7 @@ export default class Client {
         this.scaffold = new ScaffoldCommunicator(scaffoldPath);
         this.sidebar.addScaffold(this.scaffold);
       } else {
-        console.log("Couldn't load scaffold: click \"Run Match\" to learn more.");
+        console.log("Couldn't load scaffold: click \"Queue\" to learn more.");
       }
     }
   }
@@ -193,6 +194,8 @@ export default class Client {
    * Marks the client as fully loaded.
    */
   ready() {
+    this.gamearea.setCanvas();
+
     if (this.conf.matchFileURL) {
       // Load a match file
       console.log(`Loading provided match file: ${this.conf.matchFileURL}`);
@@ -287,6 +290,10 @@ export default class Client {
 
   private runMatch() {
     console.log('Running match.');
+    
+    this.conf.mode = config.Mode.GAME;
+    this.conf.splash = false;
+    this.gamearea.setCanvas();
 
     // Cancel previous games if they're running
     this.clearScreen();
@@ -430,6 +437,11 @@ export default class Client {
         // remove game, set game to game - 1
         this.games.splice(game, 1);
         this.currentGame = game - 1;
+      }
+      
+      if(this.games.length == 0) {
+        this.conf.splash = true;
+        this.gamearea.setCanvas();
       }
 
       this.matchqueue.refreshGameList(this.games, this.currentGame ? this.currentGame: 0, this.currentMatch ? this.currentMatch : 0);
