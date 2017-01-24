@@ -23,6 +23,9 @@ export default class Renderer {
   readonly onRobotSelected: (id: number) => void;
   readonly onMouseover: (x: number, y: number) => void;
 
+  // For rendering robot information on click
+  private lastSelectedID: number;
+
   // other cached useful values
   //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
@@ -108,6 +111,7 @@ export default class Renderer {
     const length = bodies.length;
     const types = bodies.arrays.type;
     const teams = bodies.arrays.team;
+    const ids = bodies.arrays.id;
     const xs = bodies.arrays.x;
     const ys = bodies.arrays.y;
     const healths = bodies.arrays.health;
@@ -152,7 +156,6 @@ export default class Renderer {
         const img = this.imgs.tree.fullHealth;
         this.drawCircleBot(x, y, radius);
         this.drawImage(img, x, y, radius);
-        this.drawSightRadii(x, y, type);
         this.drawGoodies(x, y, radius, treeBullets[i], treeBodies[i]);
         this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
           world.minCorner, world.maxCorner);
@@ -162,7 +165,6 @@ export default class Renderer {
         const img = this.imgs.robot.bulletTree[team];
         this.drawCircleBot(x, y, radius);
         this.drawImage(img, x, y, radius);
-        this.drawSightRadii(x, y, type);
         this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
           world.minCorner, world.maxCorner);
       }
@@ -180,9 +182,13 @@ export default class Renderer {
         const img = this.imgs.robot[cst.bodyTypeToString(type)][team];
         this.drawCircleBot(x, y, radius);
         this.drawImage(img, x, y, radius);
-        this.drawSightRadii(x, y, type);
         this.drawHealthBar(x, y, radius, healths[i], maxHealths[i],
           world.minCorner, world.maxCorner);
+        
+        // Draw the sight radius if the robot is selected
+        if (this.lastSelectedID === undefined || ids[i] === this.lastSelectedID) {
+          this.drawSightRadii(x, y, type);
+        }
       }
     }
 
@@ -290,9 +296,9 @@ export default class Renderer {
     const radii: Float32Array = world.bodies.arrays.radius;
     const onRobotSelected = this.onRobotSelected;
 
-    this.canvas.onmousedown = function(event) {
-      let x = width * event.offsetX / this.offsetWidth + world.minCorner.x;
-      let y = height * event.offsetY / this.offsetHeight + world.minCorner.y;
+    this.canvas.onmousedown = (event: MouseEvent) => {
+      let x = width * event.offsetX / this.canvas.offsetWidth + world.minCorner.x;
+      let y = height * event.offsetY / this.canvas.offsetHeight + world.minCorner.y;
 
       // Get the ID of the selected robot
       let selectedRobotID;
@@ -308,6 +314,7 @@ export default class Renderer {
       }
 
       // Set the info string even if the robot is undefined
+      this.lastSelectedID = selectedRobotID;
       onRobotSelected(selectedRobotID);
     };
   }
@@ -373,6 +380,7 @@ export default class Renderer {
     const lines = world.indicatorLines;
 
     // Render the indicator dots
+    const dotsID = dots.arrays.id;
     const dotsX = dots.arrays.x;
     const dotsY = dots.arrays.y;
     const dotsRed = dots.arrays.red;
@@ -382,19 +390,22 @@ export default class Renderer {
     const maxY = world.maxCorner.y;
 
     for (let i = 0; i < dots.length; i++) {
-      const red = dotsRed[i];
-      const green = dotsGreen[i];
-      const blue = dotsBlue[i];
-      const x = dotsX[i];
-      const y = this.flip(dotsY[i], minY, maxY);
+      if (this.lastSelectedID === undefined || dotsID[i] === this.lastSelectedID) {
+        const red = dotsRed[i];
+        const green = dotsGreen[i];
+        const blue = dotsBlue[i];
+        const x = dotsX[i];
+        const y = this.flip(dotsY[i], minY, maxY);
 
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, cst.INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
-      this.ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
-      this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, cst.INDICATOR_DOT_SIZE, 0, 2 * Math.PI, false);
+        this.ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
+        this.ctx.fill();
+      }
     }
 
     // Render the indicator lines
+    const linesID = lines.arrays.id;
     const linesStartX = lines.arrays.startX;
     const linesStartY = lines.arrays.startY;
     const linesEndX = lines.arrays.endX;
@@ -405,19 +416,21 @@ export default class Renderer {
     this.ctx.lineWidth = cst.INDICATOR_LINE_WIDTH;
 
     for (let i = 0; i < lines.length; i++) {
-      const red = linesRed[i];
-      const green = linesGreen[i];
-      const blue = linesBlue[i];
-      const startX = linesStartX[i];
-      const startY = this.flip(linesStartY[i], minY, maxY);
-      const endX = linesEndX[i];
-      const endY = this.flip(linesEndY[i], minY, maxY);
+      if (this.lastSelectedID === undefined || linesID[i] === this.lastSelectedID) {
+        const red = linesRed[i];
+        const green = linesGreen[i];
+        const blue = linesBlue[i];
+        const startX = linesStartX[i];
+        const startY = this.flip(linesStartY[i], minY, maxY);
+        const endX = linesEndX[i];
+        const endY = this.flip(linesEndY[i], minY, maxY);
 
-      this.ctx.beginPath();
-      this.ctx.moveTo(startX, startY);
-      this.ctx.lineTo(endX, endY);
-      this.ctx.strokeStyle = `rgb(${red}, ${green}, ${blue})`;
-      this.ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.moveTo(startX, startY);
+        this.ctx.lineTo(endX, endY);
+        this.ctx.strokeStyle = `rgb(${red}, ${green}, ${blue})`;
+        this.ctx.stroke();
+      }
     }
   }
 }
