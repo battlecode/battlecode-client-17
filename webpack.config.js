@@ -81,7 +81,8 @@ module.exports = function(env) {
         'electron': 'electron',
         'os': 'os',
         'fs': 'fs',
-        'child_process': 'child_process'
+        'child_process': 'child_process',
+        'http': 'http'
       }
     });
   }

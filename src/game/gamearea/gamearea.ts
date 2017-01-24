@@ -4,7 +4,7 @@ import Client from '../../app';
 
 import {GameWorld} from 'battlecode-playback';
 
-import * as http from 'http';
+import {http} from '../../electron-modules';
 
 export default class GameArea {
 
@@ -15,7 +15,6 @@ export default class GameArea {
   readonly splashDiv: HTMLDivElement;
   private readonly wrapper: HTMLDivElement;
   private readonly mapEditorCanvas: HTMLCanvasElement;
-  private currentMode : Mode;
 
   // Options
   private readonly conf: Config
@@ -39,11 +38,9 @@ export default class GameArea {
     this.splashDiv = document.createElement("div");
     this.splashDiv.id = "battlecode-splash";
     this.loadSplashDiv();
-    this.currentMode = Mode.SPLASH;
 
     // Add elements to the main div
     this.div.appendChild(this.wrapper);
-    this.div.appendChild(this.splashDiv);
   }
 
   /**
@@ -72,46 +69,47 @@ export default class GameArea {
     splashSubtitle.appendChild(document.createTextNode("v" + this.conf.gameVersion));
     this.splashDiv.appendChild(splashSubtitle);
     
-    // Set the version string from http://www.battlecode.org/contestants/latest/
-    (async function (splashDiv, version) {
-		
-      var options = {
-        host: 'battlecode-maven.s3-website-us-east-1.amazonaws.com',
-        path: '/org/battlecode/battlecode/maven-metadata.xml'
-      };
-
-      var req = http.get(options, function(res) {
-        let data = "";
-        res.on('data', function(chunk) {
-          data += chunk
-        }).on('end', function() {
-          
-          var parser = new DOMParser();
-          var doc = parser.parseFromString(data, "application/xml");
-          var latest = doc.getElementsByTagName('release')[0].innerHTML;
-
-          if(latest.trim() != version.trim()) {
-            let newVersion = document.createElement("a");
-            newVersion.id = "splashNewVersion";
-            newVersion.href = "http://www.battlecode.org/contestants/releases/"
-            newVersion.target = "_blank";
-            newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + latest;
-            splashDiv.appendChild(newVersion);
-          }
-          
-        })
-      });
+    if (process.env.ELECTRON) {
+      // Set the version string from http://www.battlecode.org/contestants/latest/
+      (async function (splashDiv, version) {
       
-    })(this.splashDiv, this.conf.gameVersion);
-      
+        var options = {
+          host: 'battlecode-maven.s3-website-us-east-1.amazonaws.com',
+          path: '/org/battlecode/battlecode/maven-metadata.xml'
+        };
+
+        var req = http.get(options, function(res) {
+          let data = "";
+          res.on('data', function(chunk) {
+            data += chunk
+          }).on('end', function() {
+            
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(data, "application/xml");
+            var latest = doc.getElementsByTagName('release')[0].innerHTML;
+
+            if(latest.trim() != version.trim()) {
+              let newVersion = document.createElement("a");
+              newVersion.id = "splashNewVersion";
+              newVersion.href = "http://www.battlecode.org/contestants/releases/"
+              newVersion.target = "_blank";
+              newVersion.innerHTML = "New version available (download with <code>gradle build</code>): v" + latest;
+              splashDiv.appendChild(newVersion);
+            }
+            
+          })
+        });
+      })(this.splashDiv, this.conf.gameVersion);
+    }
   }
 
   /**
    * Displays the correct canvas depending on whether we are in game mode
    * or map editor mode
    */
-  setCanvas = () => {
+  setCanvas() {
     var mode = this.conf.mode;
+    var splash = this.conf.splash;
 
     // The canvas can be anything in help mode
     if (mode === Mode.HELP) return;
@@ -120,33 +118,31 @@ export default class GameArea {
     while(this.wrapper.firstChild) {
       this.wrapper.removeChild(this.wrapper.firstChild);
     }
+    this.splashDiv.remove();
 
     // ...and add the correct one
-    var shouldListen = false;
-    if (mode === Mode.MAPEDITOR) {
-      this.wrapper.appendChild(this.mapEditorCanvas);
-      this.currentMode = Mode.MAPEDITOR;
-      shouldListen = true;
-    } else if (mode === Mode.SPLASH) {
-      //this.wrapper.appendChild(this.splashDiv);
-      this.currentMode = Mode.SPLASH;
-      
+    var shouldListen = true;
+    if (splash) {
+      shouldListen = false;
+      this.div.appendChild(this.splashDiv);
+
       // Reset change listeners
       window.onresize = function() {};
-      
     } else {
-      this.wrapper.appendChild(this.canvas); // TODO: Only append if a game is available in client.games
-      this.currentMode = Mode.GAME;
-      shouldListen = true;
-      console.log("Now a game");
+      if (mode === Mode.MAPEDITOR) {
+        this.wrapper.appendChild(this.mapEditorCanvas);
+      } else {
+        this.wrapper.appendChild(this.canvas); // TODO: Only append if a game is available in client.games
+        console.log("Now a game");
+      }
     }
     
     if(shouldListen) {
       window.onresize = function() {
-        var wrapper : HTMLDivElement | null = <HTMLDivElement> document.getElementById("canvas-wrapper")
-        var splash : HTMLDivElement | null = <HTMLDivElement> document.getElementById("battlecode-splash");
+        var wrapper = <HTMLDivElement> document.getElementById("canvas-wrapper")
+        var splash = <HTMLDivElement> document.getElementById("battlecode-splash");
         if(wrapper.firstChild && splash) {
-          var currentCanvas : HTMLCanvasElement = <HTMLCanvasElement> wrapper.firstChild;
+          var currentCanvas = <HTMLCanvasElement> wrapper.firstChild;
           
           // This part is nasty, but handles the case where no game is in the canvas
           // If the map dimensions just so happen to equal these parameters, this will
@@ -167,6 +163,5 @@ export default class GameArea {
     this.splashDiv.style.maxHeight = "";
     this.splashDiv.style.maxWidth = "";
     window.dispatchEvent(new Event('resize'));
-    
   };
 }
