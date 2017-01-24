@@ -109,7 +109,8 @@ export default class GameArea {
    */
   setCanvas() {
     var mode = this.conf.mode;
-    var splash = this.conf.splash;
+    // haHAA 
+    var splash = this.conf.splash && mode !== Mode.MAPEDITOR;
 
     // The canvas can be anything in help mode
     if (mode === Mode.HELP) return;
