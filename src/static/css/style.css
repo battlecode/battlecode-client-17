@@ -260,7 +260,7 @@ input[type='file'] {
 .mapInputLabel {
     text-align: right;
     margin-right: 12px;
-  
+
 }
 
 #gameEditorHeaderTable {
@@ -351,4 +351,17 @@ input[type='file'] {
     overflow: hidden;
     margin-top: -39px;
     margin-left: -161px;
+}
+
+#stats-table {
+    width: 100%;
+}
+
+#stats-table td {
+    width: 25%;
+    padding: .2em;
+}
+
+.stat-bar {
+    height: 100%;
 }
