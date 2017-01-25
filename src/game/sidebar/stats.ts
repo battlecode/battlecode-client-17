@@ -226,6 +226,15 @@ export default class Stats {
     const statBar: StatBar = this.statBars.get(teamID).vps
     statBar.label.innerText = String(count);
     statBar.bar.style.height = `${100 * count / cst.VICTORY_POINT_THRESH}%`;
+
+    if (this.images.star.parentNode === statBar.bar) {
+      this.images.star.remove();
+    }
+
+    if (count >= cst.VICTORY_POINT_THRESH) {
+      this.images.star.id = "star";
+      statBar.bar.appendChild(this.images.star);
+    }
   }
 
   /**

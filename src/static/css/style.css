@@ -365,3 +365,8 @@ input[type='file'] {
 .stat-bar {
     height: 100%;
 }
+
+#star {
+    margin-top: 1em;
+    width: 40px;
+}
