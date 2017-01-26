@@ -36,10 +36,13 @@ export const MAX_DIMENSION = 100;
 
 // Server settings
 export const NUMBER_OF_TEAMS = 2;
-export const NUMBER_OF_INDICATOR_STRINGS = 3;
 export const MIN_NUMBER_OF_ARCHONS = 1;
 export const MAX_NUMBER_OF_ARCHONS = 3;
 export const MAX_ROUND_NUM = 3000;
+export const VICTORY_POINT_THRESH = 1000;
+
+// Other constants
+export const BULLET_THRESH = 10000;
 
 // Maps available in the server.
 export const SERVER_MAPS = [
