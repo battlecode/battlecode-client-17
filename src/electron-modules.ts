@@ -12,7 +12,7 @@
 declare function define(...args: any[]);
 
 // only define if non-browser
-if (!process.env.ELECTRON) {
+if (!process.env.ELECTRON && global['define']) {
   define('electron', [], () => null);
   define('os', [], () => null);
   define('fs', [], () => null);

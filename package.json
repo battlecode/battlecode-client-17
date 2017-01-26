@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/blue-tape": "^0.1.30",
     "@types/electron": "^1.4.30",
+    "@types/pako": "^0.2.31",
     "@types/victor": "^0.2.28",
     "awesome-typescript-loader": "^3.0.0-beta.17",
     "copy-webpack-plugin": "^4.0.0",
@@ -38,6 +39,7 @@
     "electron-builder": "^10.13.1",
     "file-loader": "^0.9.0",
     "json-loader": "^0.5.4",
+    "pako": "^1.0.4",
     "style-loader": "^0.13.1",
     "ts-loader": "^0.8.2",
     "tslint": "^3.15.1",

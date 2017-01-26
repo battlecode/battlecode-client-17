@@ -104,13 +104,20 @@ export default class Splash {
    * "Round m of n". Display "Quarterfinals", "Semifinals", and "Finals"
    * accordingly.
    */
-  private static getBracketString(currentRound: number, maxRound: number): string {
-    const difference = maxRound - currentRound;
-    switch(difference) {
-      case 0: return "Finals (Top 2)";
-      case 1: return "Semifinals (Top 4)";
-      case 2: return "Quarterfinals (Top 8)";
-      default: return `Round ${currentRound} of ${maxRound}`;
+  private static getBracketString(tournament: Tournament): string {
+    if (tournament.desc.type == "single-elimination") {
+      const difference = tournament.rounds - tournament.roundIndex;
+      switch(difference) {
+        case 0: return "Finals (Top 2)";
+        case 1: return "Semifinals (Top 4)";
+        case 2: return "Quarterfinals (Top 8)";
+        default: return `Round ${tournament.roundIndex} of ${tournament.rounds}`;
+      }
+    } else if (tournament.desc.name == "SEEDING") {
+      // SHRUG EMOJI
+      return tournament.desc.rounds[tournament.roundIndex].name;
+    } else {
+      return "MYSTERY BRACKET";
     }
   }
 
@@ -119,7 +126,7 @@ export default class Splash {
 
     this.loadScreen();
 
-    this.header.innerText = this.getBracketString(game.round, maxRound);
+    this.header.innerText = this.getBracketString(tournament);
     this.subHeader.innerText = `Game ${tournament.gameIndex+1} of ${tournament.roundLengths[tournament.roundIndex]}`;
 
     this.avatarA.src = conf.tournamentGetAvatar(game.team1_id) || "";

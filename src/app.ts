@@ -279,7 +279,8 @@ export default class Client {
 
         if (tournament) {
           this.tournament = tournament;
-          tournament.seek(2, 0);
+          // CHOOSE STARTING ROUND?
+          //tournament.seek(2, 0);
           this.tournamentGameStart();
         }
       });

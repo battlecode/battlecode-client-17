@@ -1,10 +1,10 @@
 import {path, fs} from './electron-modules';
 
 export function readTournament(dir: string, cb: (err: Error | null, t: Tournament | null) => void) {
-  if (!process.env.ELECTRON) {
+  /*if (!process.env.ELECTRON) {
     cb(new Error("Can't read tournaments outside of electron"), null);
     return;
-  }
+  }*/
 
   const desc_file = path.join(dir, 'tournament.json');
 
@@ -93,6 +93,12 @@ export class Tournament {
   }
 
   current(): TournamentGame {
+    if (this.roundIndex > this.rounds || this.gameIndex > this.roundLengths[this.roundIndex]) {
+      throw new Error(`BAD COMBO: ROUND ${this.roundIndex}, ${this.gameIndex}`);
+    }
+    if (this.desc.rounds[this.roundIndex] == undefined) {
+      throw new Error("Undefined round?? "+this.roundIndex);
+    }
     return this.desc.rounds[this.roundIndex].games[this.gameIndex];
   }
 
