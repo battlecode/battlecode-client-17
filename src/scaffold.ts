@@ -1,22 +1,11 @@
 import {electron, os, fs, path, child_process} from './electron-modules';
+import {SERVER_MAPS} from './constants';
 
 // Code that talks to the scaffold.
 
 const WINDOWS = process.platform === 'win32';
 
 const GRADLE_WRAPPER = WINDOWS ? 'gradlew.bat' : 'gradlew';
-
-// Maps available in the server.
-const SERVER_MAPS = [
-  "Barrier",
-  "DenseForest",
-  "Enclosure",
-  "Hurdle",
-  "LineOfFire",
-  "MagicWood",
-  "shrine",
-  "SparseForest"
-].sort();
 
 /**
  * Talk to the scaffold!
@@ -108,14 +97,14 @@ export default class ScaffoldCommunicator {
   /**
    * Asynchronously get a list of map paths.
    */
-  getMaps(cb: (err: Error | null, maps?: string[]) => void) {
+  getMaps(cb: (err: Error | null, maps?: Set<string>) => void) {
     fs.stat(this.mapPath, (err, stat) => {
       if (err != null) {
         // map path doesn't exist
-        return cb(null, SERVER_MAPS);
+        return cb(null, new Set(SERVER_MAPS));
       }
       if (!stat || !stat.isDirectory()) {
-        return cb(null, SERVER_MAPS);
+        return cb(null, new Set(SERVER_MAPS));
       }
 
       fs.readdir(this.mapPath, (err, files) => {
@@ -124,9 +113,9 @@ export default class ScaffoldCommunicator {
         }
 
         // paths are relative for readdir
-        return cb(null, files.filter((file) => file.endsWith('.map17'))
+        return cb(null, new Set(files.filter((file) => file.endsWith('.map17'))
                   .map((file) => file.substring(0, file.length - 6))
-                  .concat(SERVER_MAPS).sort());
+                  .concat(SERVER_MAPS)));
       });
     });
   }

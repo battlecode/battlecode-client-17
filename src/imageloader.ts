@@ -5,6 +5,7 @@ type Image = HTMLImageElement;
 export type AllImages = {
   background: Image,
   unknown: Image,
+  star: Image,
   tree: {
     fullHealth: Image,
     lowHealth: Image,
@@ -71,6 +72,7 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
 
   img(result, 'background', require(dirname + 'map/tiled_1.jpg'));
   img(result, 'unknown', require(dirname + 'sprites/unknown.png'));
+  img(result, 'star', require(dirname + 'yellow_star.png'));
 
   img(result.tree, 'fullHealth', require(dirname + 'map/full_health_tree.png'));
   img(result.tree, 'lowHealth', require(dirname + 'map/low_health_tree.png'));

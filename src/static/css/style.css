@@ -45,19 +45,19 @@
 }
 
 .active-match {
-  background: #ffffff;
-  padding: 4px;
-  border-radius: 4px;
+    background: #ffffff;
+    padding: 4px;
+    border-radius: 4px;
 }
 
 .inactive-match {
-  padding: 4px;
-  cursor: pointer;
+    padding: 4px;
+    cursor: pointer;
 }
 
 #mapEditor {
-  font-family: Tahoma, sans-serif;
-  font-size: 14px;
+    font-family: Tahoma, sans-serif;
+    font-size: 14px;
 }
 
 form {
@@ -72,18 +72,21 @@ form {
 }
 
 #gamearea {
-  display:flex;
-  align-items: center; /* Vertical center alignment */
-  justify-content: center; /* Horizontal center alignment */
+    display:flex;
+    align-items: center; /* Vertical center alignment */
+    justify-content: center; /* Horizontal center alignment */
 }
 
 #canvas-wrapper {
     margin-top: -75px;
+    min-width: 569px;
+    text-align: center;
+    margin-right: 320px;
 }
 
 #export {
-  font-size: 24px;
-  width: 90%;
+    font-size: 24px;
+    width: 90%;
 }
 
 #root {
@@ -130,11 +133,6 @@ input[type='file'] {
     background: -o-linear-gradient(#bbb, #333);
     background: -moz-linear-gradient(#bbb, #333);
     background: linear-gradient(#bbb, #333);
-}
-
-#canvas-wrapper {
-    text-align: center;
-    padding-right: 320px;
 }
 
 .teamHeader {
@@ -225,11 +223,61 @@ input[type='file'] {
     overflow: scroll;
 }
 
+#splashSubtitle {
+    font-size: 24px;
+    font-family: Graduate;
+    color: white;
+    margin: 8px;
+}
+
+#splashTitle {
+    font-size: 56px;
+    font-family: Graduate;
+    font-weight: bold;
+    color: #e03636;
+    text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    1px 1px 0 #fff;
+    margin: 0px;
+}
+
+#splashNewVersion {
+    color: deepskyblue;
+
+}
+
+.mapInputBox {
+    padding: 8px 8px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.mapInputLabel {
+    text-align: right;
+    margin-right: 12px;
+
+}
+
+#gameEditorHeaderTable {
+    margin-left: 16px;
+}
+
 #mapListContainer {
     text-align: left;
     margin-top: 8px;
     margin-bottom: 8px;
     padding-left: 48px;
+
+}
+
+#mapsDiv {
+    height: 200px;
+    overflow: scroll;
 }
 
 #runMatch {
@@ -244,7 +292,7 @@ input[type='file'] {
 }
 
 #compileLogs {
-    height: 160px;
+    height: 120px;
 }
 
 .errorLog {
@@ -281,4 +329,49 @@ input[type='file'] {
 .teamAvatar {
   width: 70px;
   height: 70px;
+}
+
+.map-label {
+    margin: 0px 36px;
+    font-size: 14px;
+    border: 1px solid #151515;
+    padding: 3px 10px;
+    text-align: left;
+    background-color: #555;
+}
+
+.map-label:hover {
+    cursor: pointer;
+}
+
+.map-label.selected {
+    color: black;
+    background-color: #46ff00;
+}
+
+#battlecode-splash {
+    position: absolute;
+    text-align: center;
+    z-index: -1;
+    overflow: hidden;
+    margin-top: -39px;
+    margin-left: -161px;
+}
+
+#stats-table {
+    width: 100%;
+}
+
+#stats-table td {
+    width: 25%;
+    padding: .2em;
+}
+
+.stat-bar {
+    height: 100%;
+}
+
+#star {
+    margin-top: 1em;
+    width: 40px;
 }

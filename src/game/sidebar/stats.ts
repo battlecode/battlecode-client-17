@@ -10,6 +10,11 @@ const hex: Object = {
   2: "#4f7ee6"
 };
 
+export type StatBar = {
+  bar: HTMLDivElement,
+  label: HTMLSpanElement
+};
+
 /**
 * Loads game stats: team name, victory points, bullets, robot count
 * We make the distinction between:
@@ -24,9 +29,9 @@ export default class Stats {
   private readonly teams: HTMLDivElement;
   private readonly images: AllImages;
 
-  // Key is the team ID, folllowed by the robot/stat type
-  private robotTds: Object = {};
-  private statTds: Object = {};
+  // Key is the team ID
+  private robotTds: Object = {}; // Secondary key is robot type
+  private statBars: Map<number, { bullets: StatBar, vps: StatBar }>;
 
   // Scorecard for tournaments
   private redID: number;
@@ -37,9 +42,8 @@ export default class Stats {
   // match info. Keep in mind if we ever change these, or implement this less
   // statically.
 
-  readonly stats: string[] = ["Bullets", "Victory Points"];
   readonly robots: schema.BodyType[] = [
-    cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT
+    cst.ARCHON, cst.GARDENER, cst.LUMBERJACK, cst.SOLDIER, cst.TANK, cst.SCOUT, cst.TREE_BULLET
   ];
 
   constructor(conf: Config, images: AllImages) {
@@ -81,7 +85,7 @@ export default class Stats {
    * Create the table that displays the robot images along with their counts.
    * Uses the teamID to decide which color image to display.
    */
-  private robotTable(teamID: number, inGameID: number) {
+  private robotTable(teamID: number, inGameID: number): HTMLTableElement {
     let table: HTMLTableElement = document.createElement("table");
     table.setAttribute("align", "center");
 
@@ -106,28 +110,54 @@ export default class Stats {
     return table;
   }
 
-  private overallStatsTable(teamID: number, inGameID: number) {
-    let table: HTMLTableElement = document.createElement("table");
+  private statsTable(teamIDs: Array<number>): HTMLTableElement {
+    const table = document.createElement("table");
+    const bars = document.createElement("tr");
+    const counts = document.createElement("tr");
+    const labels = document.createElement("tr");
+    table.id = "stats-table";
+    bars.id = "stats-bars";
     table.setAttribute("align", "center");
-    table.style.marginTop = "10px";
 
-    // Create a table row for each stat
-    for (let stat of this.stats) {
-      let tr: HTMLTableRowElement = document.createElement("tr");
+    // Add the bullet bars and labels
+    teamIDs.forEach((id: number) => {
+      const bar = document.createElement("td");
+      bar.height = 150;
+      bar.vAlign = "bottom";
+      bar.appendChild(this.statBars.get(id).bullets.bar);
+      bars.appendChild(bar);
 
-      let tdLabel: HTMLTableCellElement = document.createElement("td");
-      tdLabel.appendChild(document.createTextNode(stat));
-      tdLabel.className += ' tdLabel';
-      tdLabel.style.color = hex[inGameID];
-      tr.appendChild(tdLabel);
+      const count = document.createElement("td");
+      count.appendChild(this.statBars.get(id).bullets.label);
+      counts.appendChild(count);
+    });
 
-      let tdCount: HTMLTableCellElement = this.statTds[teamID][stat];
-      tdCount.className += ' tdCount';
-      tr.appendChild(tdCount);
+    // Add the VP bars and labels
+    teamIDs.forEach((id: number) => {
+      const bar = document.createElement("td");
+      bar.height = 150;
+      bar.vAlign = "bottom";
+      bar.appendChild(this.statBars.get(id).vps.bar);
+      bars.appendChild(bar);
 
-      table.appendChild(tr);
-    }
+      const count = document.createElement("td");
+      count.appendChild(this.statBars.get(id).vps.label);
+      counts.appendChild(count);
+    });
 
+    // Labels - "Bullets" and "Victory Points"
+    const labelBullets = document.createElement("td");
+    labelBullets.colSpan = 2;
+    labelBullets.innerText = "Bullets";
+    const labelVPs = document.createElement("td");
+    labelVPs.colSpan = 2;
+    labelVPs.innerText = "Victory Points";
+
+    table.appendChild(bars);
+    table.appendChild(counts);
+    table.appendChild(labels);
+    labels.appendChild(labelBullets);
+    labels.appendChild(labelVPs);
     return table;
   }
 
@@ -140,7 +170,7 @@ export default class Stats {
       this.teams.removeChild(this.teams.firstChild);
     }
     this.robotTds = {};
-    this.statTds = {};
+    this.statBars = new Map<number, { bullets: StatBar, vps: StatBar }>();
 
     // Store the team IDs as red and blue
     if (teamIDs.length >= 2) {
@@ -170,6 +200,7 @@ export default class Stats {
       }
       this.robotTds[teamID] = initialRobotCount;
 
+/*<<<<<<< HEAD
       // Similarly create td elements for the VPs, bullet count, and tree count;
       // maps stat type to count
       let initialStats: Object = {};
@@ -185,9 +216,43 @@ export default class Stats {
       teamDiv.appendChild(this.overallStatsTable(teamID, inGameID));
       /*teamDiv.appendChild(document.createElement("br"));
       teamDiv.appendChild(document.createElement("br"));*/
+//=======*
+      // Create the stat bar for bullets
+      let bullets = document.createElement("div");
+      bullets.className = "stat-bar";
+      bullets.style.backgroundColor = hex[inGameID];
+      let bulletsSpan = document.createElement("span");
+      bulletsSpan.innerHTML = "0";
+
+      // Create the stat bar for victory points
+      let vps = document.createElement("div");
+      vps.className = "stat-bar";
+      vps.style.backgroundColor = hex[inGameID];
+      let vpsSpan = document.createElement("span");
+      vpsSpan.innerHTML = "0";
+
+      // Store the stat bars
+      this.statBars.set(teamID, {
+        bullets: {
+          bar: bullets,
+          label: bulletsSpan
+        },
+        vps: {
+          bar: vps,
+          label: vpsSpan
+        }
+      });
+
+      // Add the team name banner and the robot count table
+      teamDiv.appendChild(this.teamHeaderNode(teamName, inGameID));
+      teamDiv.appendChild(this.robotTable(teamID, inGameID));
+      teamDiv.appendChild(document.createElement("br"));
+//>>>>>>> master
 
       this.teams.appendChild(teamDiv);
     }
+
+    this.div.appendChild(this.statsTable(teamIDs));
   }
 
   /**
@@ -202,16 +267,27 @@ export default class Stats {
    * Change the victory points of the given team
    */
   setVPs(teamID: number, count: number) {
-    let td: HTMLTableCellElement = this.statTds[teamID]["Victory Points"];
-    td.innerHTML = String(count);
+    const statBar: StatBar = this.statBars.get(teamID).vps
+    statBar.label.innerText = String(count);
+    statBar.bar.style.height = `${100 * count / cst.VICTORY_POINT_THRESH}%`;
+
+    if (this.images.star.parentNode === statBar.bar) {
+      this.images.star.remove();
+    }
+
+    if (count >= cst.VICTORY_POINT_THRESH) {
+      this.images.star.id = "star";
+      statBar.bar.appendChild(this.images.star);
+    }
   }
 
   /**
    * Change the bullets of the given team
    */
   setBullets(teamID: number, count: number) {
-    let td: HTMLTableCellElement = this.statTds[teamID]["Bullets"];
-    td.innerHTML = count.toFixed(2);
+    const statBar: StatBar = this.statBars.get(teamID).bullets;
+    statBar.label.innerText = String(count.toPrecision(5));
+    statBar.bar.style.height = `${100 * count / cst.BULLET_THRESH}%`;
   }
 
   /**
