@@ -30,6 +30,7 @@ export default class Stats {
   // Key is the team ID
   private robotTds: Object = {}; // Secondary key is robot type
   private statBars: Map<number, { bullets: StatBar, vps: StatBar }>;
+  private statsTableElement: HTMLTableElement;
 
   // Note: robot types and number of teams are currently fixed regardless of
   // match info. Keep in mind if we ever change these, or implement this less
@@ -46,6 +47,7 @@ export default class Stats {
 
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
+    this.statsTableElement = document.createElement("table");
     this.initializeGame(teamNames, teamIDs);
   }
 
@@ -208,7 +210,9 @@ export default class Stats {
       this.div.appendChild(teamDiv);
     }
 
-    this.div.appendChild(this.statsTable(teamIDs));
+    this.statsTableElement.remove();
+    this.statsTableElement = this.statsTable(teamIDs);
+    this.div.appendChild(this.statsTableElement);
   }
 
   /**
