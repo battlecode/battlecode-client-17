@@ -571,15 +571,18 @@ export default class Client {
           match.current.turn + 1 < match.deltas.length &&
           goalUPS < rendersPerSecond.tps) {
 
+        const delta = match.deltas[match.current.turn + 1];
+
         nextStep.loadNextStep(
           match.current,
-          match.deltas[match.current.turn + 1]
+          delta
         );
 
         let lerp = Math.min(interpGameTime - match.current.turn, 1);
 
         renderer.render(match.current,
                         match.current.minCorner, match.current.maxCorner,
+                        delta,
                         nextStep, lerp);
       } else {
         // interpGameTime might be incorrect if we haven't computed fast enough

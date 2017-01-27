@@ -26,8 +26,9 @@ export default class Renderer {
   // For rendering robot information on click
   private lastSelectedID: number;
 
+  readonly explosion: Animation;
+
   // other cached useful values
-  //readonly treeMedHealth: number;
   readonly bgPattern: CanvasPattern;
 
   constructor(canvas: HTMLCanvasElement, imgs: AllImages, conf: config.Config, metadata: Metadata,
@@ -50,7 +51,8 @@ export default class Renderer {
     this.ctx['imageSmoothingEnabled'] = false;
 
     this.bgPattern = this.ctx.createPattern(imgs.background, 'repeat');
-    //this.treeMedHealth = metadata.types[schema.BodyType.TREE_NEUTRAL].maxHealth / 2;
+    
+    this.explosion = new Animation(imgs.anim.explode);
   }
 
   /**
@@ -59,7 +61,7 @@ export default class Renderer {
    * viewMin: min corner of view (in world units)
    * viewMax: max corner of view (in world units)
    */
-  render(world: GameWorld, viewMin: Victor, viewMax: Victor, nextStep?: NextStep, lerpAmount?: number) {
+  render(world: GameWorld, viewMin: Victor, viewMax: Victor, delta?: schema.Round, nextStep?: NextStep, lerpAmount?: number) {
     // setup correct rendering
     const viewWidth = viewMax.x - viewMin.x
     const viewHeight = viewMax.y - viewMin.y
@@ -75,6 +77,11 @@ export default class Renderer {
     this.renderBullets(world, lerpAmount);
 
     this.renderIndicatorDotsLines(world);
+
+    if (delta) {
+      this.renderAnimations(world, delta, lerpAmount || 0);
+    }
+
     this.setMouseoverEvent(world);
 
     // restore default rendering
@@ -193,6 +200,43 @@ export default class Renderer {
     }
 
     this.setInfoStringEvent(world, realXs, realYs);
+  }
+
+  /**
+   * Render standalone animations.
+   */
+  private renderAnimations(world: GameWorld, delta: schema.Round, lerpAmount: number) {
+    if (delta.diedIDsLength() > 0) {
+      const diedIDs = delta.diedIDsArray(); 
+      // indices into world.bodies
+      // this function is supposed to be internal so it's kinda janky here
+      // - you can't call it twice, it caches its array and will overwrite
+      // - the returned array is usually longer than the input with junk at the end
+      // :shrug emoji:
+      const deadIndices = world.bodies.lookupIndices(diedIDs);
+
+      for (let i = 0; i < diedIDs.length; i++) {
+        const si = deadIndices[i];
+
+        const sourceX = world.bodies.arrays.x[si];
+        const sourceY = this.flip(world.bodies.arrays.y[si], world.minCorner.y, world.maxCorner.y);
+        // choose death animation frame via lerpAmount
+        this.drawImage(this.explosion.getFrame(lerpAmount), sourceX, sourceY, 1);
+      }
+    }
+    
+    const actions = delta.actionsArray();
+    // this invalidates deadIndices
+    const actionSourceIndices = world.bodies.lookupIndices(delta.actionIDsArray());
+
+    // render
+    for (let i = 0; i < actions.length; i++) {
+      const action = actions[i];
+      // source index
+      const si = sourceIndices[i]
+      
+      // ...do stuff like before...
+    }
   }
 
   /**
@@ -432,5 +476,27 @@ export default class Renderer {
         this.ctx.stroke();
       }
     }
+  }
+}
+
+class Animation {
+  frames: Array<HTMLImageElement>;
+
+  constructor(frames: Array<HTMLImageElement>) {
+    if (frames.length == 0) {
+      throw new Error("Can't animate nothing");
+    }
+    this.frames = frames;
+  }
+
+  /**
+   * Time is a number from 0 to 1, where 0 is the first frame and 1 is the last.
+   */
+  getFrame(time: number): HTMLImageElement {
+    const index = time == 1?
+      this.frames.length - 1 :
+      Math.floor(time * this.frames.length);
+
+    return this.frames[index];
   }
 }

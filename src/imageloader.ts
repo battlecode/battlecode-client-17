@@ -36,12 +36,21 @@ export type AllImages = {
     matchForward: Image,
     matchBackward: Image,
     upload: Image
+  },
+  anim: {
+    explode: Array<Image>
   }
 };
 
 export function loadAll(config: Config, finished: (AllImages) => void) {
   let expected = 0, loaded = 0;
-  let result: any = {tree: {}, bullet: {}, robot: {archon: [], gardener: [], lumberjack: [], scout: [], soldier: [], tank: [], bulletTree: []}, controls: {}};
+  let result: any = {
+    tree: {},
+    bullet: {},
+    robot: {archon: [], gardener: [], lumberjack: [], scout: [], soldier: [], tank: [], bulletTree: []},
+    controls: {},
+    anim: {explode: []}
+  };
 
   // write loaded image to obj[slot]
   function img(obj, slot, url: string) {
@@ -109,6 +118,15 @@ export function loadAll(config: Config, finished: (AllImages) => void) {
   img(result.robot.tank, 0, require(dirname + 'sprites/tank_neutral.png'));
   img(result.robot.tank, 1, require(dirname + 'sprites/tank_red.png'));
   img(result.robot.tank, 2, require(dirname + 'sprites/tank_blue.png'));
+
+  img(result.anim.explode, 0, require(dirname + 'anim/explode/explode64_f01.png'));
+  img(result.anim.explode, 1, require(dirname + 'anim/explode/explode64_f02.png'));
+  img(result.anim.explode, 2, require(dirname + 'anim/explode/explode64_f03.png'));
+  img(result.anim.explode, 3, require(dirname + 'anim/explode/explode64_f04.png'));
+  img(result.anim.explode, 4, require(dirname + 'anim/explode/explode64_f05.png'));
+  img(result.anim.explode, 5, require(dirname + 'anim/explode/explode64_f06.png'));
+  img(result.anim.explode, 6, require(dirname + 'anim/explode/explode64_f07.png'));
+  img(result.anim.explode, 7, require(dirname + 'anim/explode/explode64_f08.png'));
 
   img(result.controls, 'goNext', require(dirname + 'controls/go-next.png'));
   img(result.controls, 'goPrevious', require(dirname + 'controls/go-previous.png'));
