@@ -29,7 +29,8 @@ export default class MapFilter {
   private readonly filterType: Map<MapType, HTMLInputElement>;
 
   // Map types available (NOTE: Update after each tournament)
-  private readonly types: MapType[] = [MapType.DEFAULT, MapType.CUSTOM, MapType.SPRINT];
+  private readonly types: MapType[] = [MapType.DEFAULT, MapType.SPRINT,
+    MapType.SEEDING, MapType.CUSTOM];
 
   // All the maps displayed on the client
   private maps: Array<MapSchema>;
@@ -212,6 +213,49 @@ export default class MapFilter {
       case "Sprinkles": return MapType.SPRINT;
       case "Standoff": return MapType.SPRINT;
       case "Waves": return MapType.SPRINT;
+      case "1337Tree": return MapType.SEEDING;
+      case "Aligned": return MapType.SEEDING;
+      case "Alone": return MapType.SEEDING;
+      case "Blitzkrieg": return MapType.SEEDING;
+      case "BugTrap": return MapType.SEEDING;
+      case "Captive": return MapType.SEEDING;
+      case "Caterpillar": return MapType.SEEDING;
+      case "Chevron": return MapType.SEEDING;
+      case "Conga": return MapType.SEEDING;
+      case "CropCircles": return MapType.SEEDING;
+      case "Croquembouche": return MapType.SEEDING;
+      case "DarkSide": return MapType.SEEDING;
+      case "DeathStar": return MapType.SEEDING;
+      case "Defenseless": return MapType.SEEDING;
+      case "Fancy": return MapType.SEEDING;
+      case "FlappyTree": return MapType.SEEDING;
+      case "Grass": return MapType.SEEDING;
+      case "GreatDekuTree": return MapType.SEEDING;
+      case "GreenHouse": return MapType.SEEDING;
+      case "HedgeMaze": return MapType.SEEDING;
+      case "HiddenTunnel": return MapType.SEEDING;
+      case "HouseDivided": return MapType.SEEDING;
+      case "Interference": return MapType.SEEDING;
+      case "Lanes": return MapType.SEEDING;
+      case "Levels": return MapType.SEEDING;
+      case "LilMaze": return MapType.SEEDING;
+      case "Misaligned": return MapType.SEEDING;
+      case "ModernArt": return MapType.SEEDING;
+      case "Ocean": return MapType.SEEDING;
+      case "Oxygen": return MapType.SEEDING;
+      case "PacMan": return MapType.SEEDING;
+      case "PeacefulEncounter": return MapType.SEEDING;
+      case "Planets": return MapType.SEEDING;
+      case "Present": return MapType.SEEDING;
+      case "PureImagination": return MapType.SEEDING;
+      case "Shortcut": return MapType.SEEDING;
+      case "Slant": return MapType.SEEDING;
+      case "Snowflake": return MapType.SEEDING;
+      case "TheOtherSide": return MapType.SEEDING;
+      case "TicTacToe": return MapType.SEEDING;
+      case "TreeFarm": return MapType.SEEDING;
+      case "Turtle": return MapType.SEEDING;
+      case "Whirligig": return MapType.SEEDING;
       default: return MapType.CUSTOM;
     }
   }
