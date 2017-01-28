@@ -225,6 +225,7 @@ export default class Renderer {
       }
     }
     
+    /*
     const actions = delta.actionsArray();
     // this invalidates deadIndices
     const actionSourceIndices = world.bodies.lookupIndices(delta.actionIDsArray());
@@ -233,10 +234,11 @@ export default class Renderer {
     for (let i = 0; i < actions.length; i++) {
       const action = actions[i];
       // source index
-      const si = sourceIndices[i]
+      const si = actionSourceIndices[i]
       
       // ...do stuff like before...
     }
+    */
   }
 
   /**
