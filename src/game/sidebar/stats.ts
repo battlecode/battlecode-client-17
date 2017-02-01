@@ -37,7 +37,6 @@ export default class Stats {
   // Scorecard for tournaments
   private redID: number;
   private blueID: number;
-  private statsTableElement: HTMLTableElement;
   private scorecard: Scorecard = new Scorecard();
 
   // Note: robot types and number of teams are currently fixed regardless of
@@ -55,7 +54,6 @@ export default class Stats {
     this.teams = document.createElement("div");
     this.div.appendChild(this.teams);
     this.div.appendChild(this.scorecard.div);
-    this.statsTableElement = document.createElement("table");
 
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
