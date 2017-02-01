@@ -11,6 +11,7 @@
     "prod": "webpack",
     "watch": "echo '--- open localhost:8080 in your browser ---' && webpack-dev-server --env.dev",
     "electron": "webpack --env.electron --env.dev && electron .",
+    "tournament": "webpack --env.electron && electron .",
     "prod-electron": "webpack --env.electron && build -mwl --dir --ia32 --x64"
   },
   "repository": {

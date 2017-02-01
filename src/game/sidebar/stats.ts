@@ -246,7 +246,7 @@ export default class Stats {
       });
 
       // Add the team name banner and the robot count table
-      teamDiv.appendChild(this.teamHeaderNode(teamName, inGameID));
+      teamDiv.appendChild(this.teamHeaderNode(teamName, inGameID, teamAvatar));
       teamDiv.appendChild(this.robotTable(teamID, inGameID));
       teamDiv.appendChild(document.createElement("br"));
 //>>>>>>> master

@@ -113,11 +113,9 @@ export default class Splash {
         case 2: return "Quarterfinals (Top 8)";
         default: return `Round ${tournament.roundIndex} of ${tournament.rounds}`;
       }
-    } else if (tournament.desc.name == "SEEDING") {
+    } else {
       // SHRUG EMOJI
       return tournament.desc.rounds[tournament.roundIndex].name;
-    } else {
-      return "MYSTERY BRACKET";
     }
   }
 
