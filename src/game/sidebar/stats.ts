@@ -32,6 +32,7 @@ export default class Stats {
   // Key is the team ID
   private robotTds: Object = {}; // Secondary key is robot type
   private statBars: Map<number, { bullets: StatBar, vps: StatBar }>;
+  private statsTableElement: HTMLTableElement;
 
   // Scorecard for tournaments
   private redID: number;
@@ -58,6 +59,7 @@ export default class Stats {
 
     let teamNames: Array<string> = ["?????", "?????"];
     let teamIDs: Array<number> = [1, 2];
+    this.statsTableElement = document.createElement("table");
     this.initializeGame(teamNames, teamIDs);
   }
 

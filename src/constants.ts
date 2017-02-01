@@ -23,8 +23,8 @@ export const HEALTH_BAR_WIDTH_HALF = HEALTH_BAR_WIDTH / 2;
 export const SIGHT_RADIUS_LINE_WIDTH = .15
 
 // Game canvas rendering parameters
-export const HIGH_SPEED_THRESH = (2*2) - .00001;
-export const MED_SPEED_THRESH = (1.5*1.5) - .00001;
+export const HIGH_SPEED_THRESH = (4*4) - .00001;
+export const MED_SPEED_THRESH = (2*2) - .00001;
 
 // Map editor canvas parameters
 export const DELTA = .0001;
@@ -72,7 +72,50 @@ export const SERVER_MAPS = [
   "Shrubbery",
   "Sprinkles",
   "Standoff",
-  "Waves"
+  "Waves",
+  "1337Tree",
+  "Aligned",
+  "Alone",
+  "Blitzkrieg",
+  "BugTrap",
+  "Captive",
+  "Caterpillar",
+  "Chevron",
+  "Conga",
+  "CropCircles",
+  "Croquembouche",
+  "DarkSide",
+  "DeathStar",
+  "Defenseless",
+  "Fancy",
+  "FlappyTree",
+  "Grass",
+  "GreatDekuTree",
+  "GreenHouse",
+  "HedgeMaze",
+  "HiddenTunnel",
+  "HouseDivided",
+  "Interference",
+  "Lanes",
+  "Levels",
+  "LilMaze",
+  "Misaligned",
+  "ModernArt",
+  "Ocean",
+  "Oxygen",
+  "PacMan",
+  "PeacefulEncounter",
+  "Planets",
+  "Present",
+  "PureImagination",
+  "Shortcut",
+  "Slant",
+  "Snowflake",
+  "TheOtherSide",
+  "TicTacToe",
+  "TreeFarm",
+  "Turtle",
+  "Whirligig"
 ];
 
 export function bodyTypeToString(bodyType: schema.BodyType) {
