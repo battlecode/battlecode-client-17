@@ -16,7 +16,7 @@ function finish(lengths: Array<Array<number>>) {
   console.log();
   console.log(JSON.stringify(lengths));
   let soFar = 0 /*s*/;
-  for (let i = lengths.length - 1; i > 0; i--) {
+  for (let i = lengths.length - 1; i >= 0; i--) {
     const matches = lengths[i].length;
     soFar += matches * BETWEEN;
     for (let matchLength of lengths[i]) {
