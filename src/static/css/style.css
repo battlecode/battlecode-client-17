@@ -137,7 +137,7 @@ input[type='file'] {
 
 .teamHeader {
     padding: 14px;
-    font-size: 20px;
+    font-size: 28px;
     margin-top: 5px;
     margin-bottom: 10px;
 }
@@ -195,7 +195,7 @@ input[type='file'] {
     background-color: #151515;
     color: white;
     text-align: center;
-    font-size: 16px;
+    font-size: 20px;
     font-family: "Graduate";
 
     /* Inner formatting */
@@ -324,6 +324,11 @@ input[type='file'] {
 
 .slide-control-button:hover {
     cursor: pointer;
+}
+
+.teamAvatar {
+  width: 70px;
+  height: 70px;
 }
 
 .map-label {

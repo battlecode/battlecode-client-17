@@ -2,6 +2,8 @@ import {Config, Mode} from '../config';
 import * as imageloader from '../imageloader';
 import * as cst from '../constants';
 
+import {path} from '../electron-modules';
+
 /**
  * Game controls: pause/unpause, fast forward, rewind
  */
@@ -21,12 +23,14 @@ export default class Controls {
   // Callbacks initialized from outside Controls
   // Yeah, it's pretty gross :/
   onGameLoaded: (data: ArrayBuffer) => void;
+  onTournamentLoaded: (path: string) => void;
   onTogglePause: () => void;
   onToggleUPS: () => void;
   onToggleRewind: () => void;
   onStepForward: () => void;
   onStepBackward: () => void;
   onSeek: (frame: number) => void;
+  onNextMatch: () => void;
 
   // qualities of progress bar
   canvas: HTMLCanvasElement;
@@ -41,7 +45,8 @@ export default class Controls {
     playbackStop: HTMLImageElement,
     goNext: HTMLImageElement,
     goPrevious: HTMLImageElement,
-    upload: HTMLImageElement
+    upload: HTMLImageElement,
+    matchForward: HTMLImageElement
   };
 
   constructor(conf: Config, images: imageloader.AllImages) {
@@ -58,8 +63,13 @@ export default class Controls {
       playbackStop: images.controls.playbackStop,
       goNext: images.controls.goNext,
       goPrevious: images.controls.goPrevious,
-      upload: images.controls.upload
+      upload: images.controls.upload,
+      matchForward: document.createElement('img')
     }
+    // this is needed for silly reasons
+    // we've already used this ImageElement at another location on the page, so we can't use it here
+    // TODO fix
+    this.imgs.matchForward.src = require('../static/img/controls/skip-forward.png');
 
     let table = document.createElement("table");
     let tr = document.createElement("tr");
@@ -86,6 +96,7 @@ export default class Controls {
     buttons.appendChild(this.createButton("goPrevious", () => this.stepBackward()));
     buttons.appendChild(this.createButton("goNext", () => this.stepForward()));
     buttons.appendChild(this.uploadFileButton());
+    buttons.appendChild(this.createButton("matchForward", () => this.onNextMatch()));
     buttons.appendChild(document.createElement("br"));
     buttons.appendChild(this.locationReadout);
 
@@ -118,6 +129,7 @@ export default class Controls {
     button.setAttribute("type", "button");
     button.id = content;
 
+    console.log(this.imgs, content);
     button.appendChild(this.imgs[content]);
 
     if (hiddenContent != null) {
@@ -141,7 +153,7 @@ export default class Controls {
     let upload = document.createElement('input');
     upload.id = "file-upload";
     upload.setAttribute('type', 'file');
-    upload.accept = '.bc17';
+    upload.accept = '.bc17,.json';
     upload.onchange = () => this.loadMatch(upload.files as FileList);
     uploadLabel.appendChild(upload);
 
@@ -251,14 +263,18 @@ export default class Controls {
    * Upload a battlecode match file.
    */
   loadMatch(files: FileList) {
-    console.log(files);
     const file = files[0];
     console.log(file);
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.onGameLoaded(reader.result);
-    };
-    reader.readAsArrayBuffer(file);
+    if (file.path.endsWith(".json")) {
+      this.onTournamentLoaded(path.dirname(file.path));
+      // TODO handle non-tournament json files
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.onGameLoaded(reader.result);
+      };
+      reader.readAsArrayBuffer(file);
+    }
   }
 
   /**

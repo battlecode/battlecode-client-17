@@ -71,6 +71,18 @@ export interface Config {
   bulletSightRadius: boolean;
 
   /**
+   * Where to find avatars when running a tournament.
+   * Should return paths to avatars that can be used by an <image> element.
+   */
+  tournamentGetAvatar: ((teamID: number) => string) | null;
+
+  /**
+   * What to do when a game has run.
+   * This is a hack needed only by Teh Devs.
+   */
+  tournamentOnGameDone: ((gameID: number) => string) | null;
+
+  /**
    * The mode of the game
    */
   mode: Mode;
@@ -110,9 +122,11 @@ export function defaults(supplied?: any): Config {
     healthBars: supplied.healthBars || true,
     circleBots: supplied.circleBots || false,
     indicators: supplied.indicators || true,
-    mode: supplied.mode || Mode.QUEUE,
     splash: supplied.splash || supplied.matchFileURL == null || true,
     sightRadius: supplied.sightRadius || false,
-    bulletSightRadius: supplied.bulletSightRadius || false
+    bulletSightRadius: supplied.bulletSightRadius || false,
+    mode: supplied.mode || Mode.GAME,
+    tournamentGetAvatar: supplied.tournamentGetAvatar || null,
+    tournamentOnGameDone: supplied.tournamentOnGameDone || null,
   };
 }

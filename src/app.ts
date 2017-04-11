@@ -3,9 +3,7 @@ import * as cst from './constants';
 import * as config from './config';
 import * as imageloader from './imageloader';
 
-import Sidebar from './main/sidebar';
-import Controls from './main/controls';
-
+import {Sidebar, Controls, Splash} from './main/index';
 import {Stats, Console, MatchQueue, GameArea, Renderer, NextStep, TickCounter} from './game/index';
 import {MapEditor} from './mapeditor/index';
 
@@ -14,9 +12,12 @@ import ScaffoldCommunicator from './scaffold';
 
 import {electron} from './electron-modules';
 
+import {Tournament, readTournament} from './tournament';
+
 // webpack magic
 // this loads the stylesheet and injects it into the dom
 require('./static/css/style.css');
+require('./static/css/tournament.css');
 
 // open devtools on f12
 document.addEventListener("keydown", function (e) {
@@ -68,6 +69,12 @@ export default class Client {
   listener: WebSocketListener | null;
 
   games: Game[];
+
+  tournament?: Tournament;
+
+  // used by tournament logic
+  // ...yeah, it's pretty ugly
+  onMatchDone: (() => void) | null;
 
   currentGame: number | null;
   currentMatch: number | null;
@@ -258,6 +265,26 @@ export default class Client {
         }
       );
     }
+
+    this.controls.onTournamentLoaded = (path: string) => {
+      if (!process.env.ELECTRON) {
+        console.error("Can't load tournament outside of electron!");
+        return;
+      }
+      readTournament(path, (err, tournament) => {
+        if (err) {
+          console.error(`Can't load tournament: ${err}`);
+          return;
+        }
+
+        if (tournament) {
+          this.tournament = tournament;
+          // CHOOSE STARTING ROUND?
+          tournament.seek(0, 0);
+          this.tournamentGameStart();
+        }
+      });
+    };
   }
 
   clearScreen() {
@@ -288,6 +315,59 @@ export default class Client {
     }
   }
 
+  private tournamentGameStart() {
+    if (this.tournament) {
+
+      this.stats.resetScore();
+
+      Splash.addScreen(this.conf, this.root, this.tournament.current(), this.tournament, this.tournament.rounds);
+
+      setTimeout(() => {
+        Splash.removeScreen();
+        if (!this.tournament) throw new Error("What?");
+        
+        if (this.tournament.current().team2_name == "BYE") {
+          this.tournamentGameEnd();
+          return;
+        }
+
+        this.tournament.readCurrent((err, data) => {
+          if (err) throw err;
+          if (!data) throw new Error("No match loaded from tournament?");
+
+          this.games = [new Game()];
+          this.games[0].loadFullGameRaw(data);
+          this.setGame(0);
+          this.setMatch(0);
+        });
+      }, 5000);
+    }
+  }
+
+  private tournamentGameEnd() {
+    if (this.tournament) {
+      const current = this.tournament.current();
+      console.log("Finished game "+current.id);
+      if (this.conf.tournamentOnGameDone) {
+        this.conf.tournamentOnGameDone(current.id);
+      }
+      const winner = current.winner_id == current.team1_id? 'A' : 'B';
+      Splash.addWinnerScreen(this.conf, this.root, current, winner);
+
+      setTimeout(() => {
+        Splash.removeScreen();
+        if (!this.tournament) throw new Error("What?");
+
+        if (this.tournament.hasNext()) {
+          this.clearScreen();
+          this.tournament.next();
+          this.tournamentGameStart();
+        }
+      }, 3000);
+    }
+  }
+
+
   private runMatch() {
     console.log('Running match.');
     
@@ -309,11 +389,28 @@ export default class Client {
     // Reset the stats bar
     let teamNames = new Array();
     let teamIDs = new Array();
+    let teamAvatars = new Array();
     for (let team in meta.teams) {
       teamNames.push(meta.teams[team].name);
-      teamIDs.push(meta.teams[team].teamID);
+      const id = meta.teams[team].teamID;
+
+      teamIDs.push(id);
+
+      if (this.tournament && this.conf.tournamentGetAvatar) {
+        if (id == 1) {
+          teamAvatars.push(this.conf.tournamentGetAvatar(this.tournament.current().team1_id));
+        } else {
+          teamAvatars.push(this.conf.tournamentGetAvatar(this.tournament.current().team2_id));
+        }
+      }
     }
-    this.stats.initializeGame(teamNames, teamIDs);
+
+    // so uh
+    // it just kinda
+    // happens to work? that team A lines up with team B
+    // ...
+
+    this.stats.initializeGame(teamNames, teamIDs, teamAvatars);
     this.console.setLogsRef(match.logs);
 
     // keep around to avoid reallocating
@@ -387,7 +484,19 @@ export default class Client {
       const matchCount = this.games[this.currentGame as number].matchCount;
       if(this.currentMatch < matchCount - 1) {
         this.setMatch(this.currentMatch + 1);
+        if (this.tournament) {
+          if (!match.winner) {
+            console.log("NO WINNER WHOOPS");
+          } else {
+            this.stats.updateScore(match.winner);
+          }
+        }
       } else {
+        // TOURNAMENT MODE
+        if (this.tournament) {
+          this.tournamentGameEnd();
+          return;
+        }
         if(this.currentGame < this.games.length - 1) {
           this.setGame(this.currentGame + 1);
           this.setMatch(0);
@@ -412,7 +521,6 @@ export default class Client {
 
     };
     this.matchqueue.removeGame = (game: number) => {
-
       if (game > this.currentGame) {
         this.games.splice(game, 1);
       } else if (this.currentGame == game) {
@@ -459,6 +567,7 @@ export default class Client {
       match.seek(turn);
       interpGameTime = turn;
     };
+    this.controls.onNextMatch = () => this.matchqueue.onNextMatch();
 
     // set key options
     const conf = this.conf;

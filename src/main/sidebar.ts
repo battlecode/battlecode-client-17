@@ -71,12 +71,17 @@ export default class Sidebar {
     // Initialize div structure
     this.loadStyles();
     this.div.appendChild(this.battlecodeLogo());
-    this.div.appendChild(this.modeButton(Mode.GAME, "Game"));
-    this.div.appendChild(this.modeButton(Mode.QUEUE, "Queue"));
-    this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
-    this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
-    this.div.appendChild(this.modeButton(Mode.HELP, "Help"));
-    this.div.appendChild(document.createElement("br"));
+
+    // TOURNAMENT MODE
+    this.div.appendChild(this.tournamentInfo());
+
+    // this.div.appendChild(this.modeButton(Mode.GAME, "Game"));
+    // this.div.appendChild(this.modeButton(Mode.QUEUE, "Queue"));
+    // this.div.appendChild(this.modeButton(Mode.CONSOLE, "Console"));
+    // this.div.appendChild(this.modeButton(Mode.MAPEDITOR, "Map Editor"));
+    // this.div.appendChild(this.modeButton(Mode.HELP, "Help"));
+    // this.div.appendChild(document.createElement("br"));
+    
     this.div.appendChild(document.createElement("br"));
     this.div.appendChild(this.innerDiv);
     this.innerDiv.appendChild(this.stats.div);
@@ -88,6 +93,15 @@ export default class Sidebar {
   addScaffold(scaffold: ScaffoldCommunicator): void {
     this.mapeditor.addScaffold(scaffold);
     this.matchrunner.addScaffold(scaffold);
+  }
+
+  /**
+   * Points to battlecode.org/info
+   */
+  private tournamentInfo(): HTMLDivElement {
+    const div = document.createElement("div");
+    div.appendChild(document.createTextNode("battlecode.org/info"));
+    return div;
   }
 
   /**
